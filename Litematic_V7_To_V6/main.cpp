@@ -1,7 +1,6 @@
 ﻿#include "Litematic_V7_To_V6.h"
 
 #include <stdio.h>
-#include <string>
 
 int main(int argc, char *argv[])
 {
