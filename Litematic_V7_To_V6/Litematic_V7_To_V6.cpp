@@ -7,6 +7,10 @@
 #include <vector>
 #include <thread>
 
+#define V6_MINECRAFT_DATA_VERSION 3700
+#define V6_LITEMATIC_VERSION 6
+#define V6_LITEMATIC_SUBVERSION 1
+
 //找到一个唯一文件名
 std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &sEnd, uint32_t u32TryCount = 10)//默认最多重试10次
 {
@@ -28,6 +32,11 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 	return std::string{};
 }
 
+bool HandleRegion(const NBT_Type::String &sRegionName, const NBT_Type::Compound &cpdRegionData)
+{
+
+}
+
 
 bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Compound &cpdV6Output)
 {
@@ -38,23 +47,54 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	}
 
 	//获取根部，并插入根部，最后获取根部引用
-	NBT_Type::Compound &cpdV7DataRoot = *pRoot;
+	auto &cpdV7DataRoot = *pRoot;
 	auto [it, b] = cpdV6Output.PutCompound(MU8STR(""), {});
 	MyAssert(b);//插入不许失败
+	auto &cpdV6DataRoot = GetCompound(it->second);
 
+	//先处理版本信息
+	//忽略Version与SubVersion
+	auto *pMinecraftDataVersion = cpdV7DataRoot.HasInt(MU8STR("MinecraftDataVersion"));
+	NBT_Type::Int iDataVersion =
+		pMinecraftDataVersion != NULL
+		? *pMinecraftDataVersion
+		: 0;
 
-	auto *pMetadata = cpdV7Input.HasCompound(MU8STR("Metadata"));
+	//版本验证失败
+	if (iDataVersion != 0 && iDataVersion <= V6_MINECRAFT_DATA_VERSION)
+	{
+		return false;
+	}
+
+	//基础数据
+	auto *pMetadata = cpdV7DataRoot.HasCompound(MU8STR("Metadata"));
 	if (pMetadata == NULL)
 	{
 		return false;
 	}
 
-	
+	//直接转移所有权，消除拷贝
+	cpdV6DataRoot.PutCompound(MU8STR("Metadata"), std::move(*pMetadata));
 
+	//设置基础版本信息
+	cpdV6DataRoot.PutInt(MU8STR("MinecraftDataVersion"), V6_MINECRAFT_DATA_VERSION);
+	cpdV6DataRoot.PutInt(MU8STR("Version"), V6_LITEMATIC_VERSION);
+	cpdV6DataRoot.PutInt(MU8STR("SubVersion"), V6_LITEMATIC_SUBVERSION);
 
+	//遍历选区
+	auto *pRegions = cpdV7DataRoot.HasCompound(MU8STR("Regions"));
+	if (pRegions == NULL)
+	{
+		return false;
+	}
 
-
-
+	for (auto &[sRegionName, cpdRegionData] : *pRegions)
+	{
+		if (!HandleRegion(sRegionName, cpdRegionData))
+		{
+			return false;
+		}
+	}
 
 	return true;
 }
