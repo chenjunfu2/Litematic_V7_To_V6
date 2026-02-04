@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.36631.11
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Litematic_V7_To_V6", "Litematic_V7_To_V6\Litematic_V7_To_V6.vcxproj", "{D81BACB5-EBF4-4844-B85F-21E3E459005E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D81BACB5-EBF4-4844-B85F-21E3E459005E}.Debug|x64.ActiveCfg = Debug|x64
+		{D81BACB5-EBF4-4844-B85F-21E3E459005E}.Debug|x64.Build.0 = Debug|x64
+		{D81BACB5-EBF4-4844-B85F-21E3E459005E}.Debug|x86.ActiveCfg = Debug|Win32
+		{D81BACB5-EBF4-4844-B85F-21E3E459005E}.Debug|x86.Build.0 = Debug|Win32
+		{D81BACB5-EBF4-4844-B85F-21E3E459005E}.Release|x64.ActiveCfg = Release|x64
+		{D81BACB5-EBF4-4844-B85F-21E3E459005E}.Release|x64.Build.0 = Release|x64
+		{D81BACB5-EBF4-4844-B85F-21E3E459005E}.Release|x86.ActiveCfg = Release|Win32
+		{D81BACB5-EBF4-4844-B85F-21E3E459005E}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5E6D18B7-9DC5-47E8-B325-4513AE4EE006}
+	EndGlobalSection
+EndGlobal

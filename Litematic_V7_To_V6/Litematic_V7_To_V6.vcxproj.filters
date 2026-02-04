@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="头文件\nbt_cpp">
+      <UniqueIdentifier>{3d053e47-4bf5-47c1-a3d7-ac039cb013a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件\util">
+      <UniqueIdentifier>{c37076e8-27b2-4ec6-bff1-8fbf6c633cf5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Litematic_V7_To_V6.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="nbt_cpp\Compiler_Define.h">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\MUTF8_Tool.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_All.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Array.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Compound.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Endian.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Hash.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Helper.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_IO.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_List.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Node.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Node_View.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Print.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Reader.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_String.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_TAG.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Type.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\NBT_Writer.hpp">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="nbt_cpp\vcpkg_config.h">
+      <Filter>头文件\nbt_cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="util\CodeTimer.hpp">
+      <Filter>头文件\util</Filter>
+    </ClInclude>
+    <ClInclude Include="util\MyAssert.hpp">
+      <Filter>头文件\util</Filter>
+    </ClInclude>
+    <ClInclude Include="Litematic_V7_To_V6.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
