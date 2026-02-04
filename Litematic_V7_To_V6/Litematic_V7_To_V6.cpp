@@ -29,10 +29,27 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 }
 
 
-bool ConvertLitematicData_V7_To_V6(const NBT_Type::Compound &cpdV7Input, NBT_Type::Compound &cpdV6Output)
+bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Compound &cpdV6Output)
 {
+	auto *pRoot = cpdV7Input.HasCompound(MU8STR(""));
+	if (pRoot == NULL)
+	{
+		return false;
+	}
+
+	//获取根部，并插入根部，最后获取根部引用
+	NBT_Type::Compound &cpdV7DataRoot = *pRoot;
+	auto [it, b] = cpdV6Output.PutCompound(MU8STR(""), {});
+	MyAssert(b);//插入不许失败
 
 
+	auto *pMetadata = cpdV7Input.HasCompound(MU8STR("Metadata"));
+	if (pMetadata == NULL)
+	{
+		return false;
+	}
+
+	
 
 
 
