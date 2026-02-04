@@ -32,9 +32,15 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 bool ConvertLitematicData_V7_To_V6(const NBT_Type::Compound &cpdV7Input, NBT_Type::Compound &cpdV6Output)
 {
 
+
+
+
+
+
+
+
+	return true;
 }
-
-
 
 
 bool ConvertLitematicFile_V7_To_V6(const std::string &sV7FilePath)
