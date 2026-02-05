@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <vector>
 #include <thread>
+#include <tuple>
 
 #define V6_MINECRAFT_DATA_VERSION 3700
 #define V6_LITEMATIC_VERSION 6
@@ -32,8 +33,19 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 	return std::string{};
 }
 
+
+bool ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData)
+{
+
+}
+
+bool ProcessTileEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData)
+{
+
+}
+
 //V7到V6仅转换Entity与TileEntity，其余不变
-bool ProcessRegion(const NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV6RegionData)
+bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV6RegionData)
 {
 	//先转移不变数据，然后处理实体与方块实体
 
@@ -41,22 +53,99 @@ bool ProcessRegion(const NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound
 	auto *pPosition = cpdV7RegionData.HasCompound(MU8STR("Position"));
 	auto *pSize = cpdV7RegionData.HasCompound(MU8STR("Size"));
 
+	if (pPosition == NULL || pSize == NULL)
+	{
+		return false;
+	}
+
+	bool bPutSuccess;
+	bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("Position"), std::move(*pPosition)).second;
+	MyAssert(bPutSuccess);
+	bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("Size"), std::move(*pSize)).second;
+	MyAssert(bPutSuccess);
+
 	//下面的可能没有，没有跳过插入
 	auto *pPendingBlockTicks = cpdV7RegionData.HasList(MU8STR("PendingBlockTicks"));
+	if (pPendingBlockTicks != NULL)
+	{
+		bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("PendingBlockTicks"), std::move(*pPendingBlockTicks)).second;
+		MyAssert(bPutSuccess);
+	}
+
 	auto *pPendingFluidTicks = cpdV7RegionData.HasList(MU8STR("PendingFluidTicks"));
+	if (pPendingFluidTicks != NULL)
+	{
+		bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("PendingFluidTicks"), std::move(*pPendingFluidTicks)).second;
+		MyAssert(bPutSuccess);
+	}
 
 
 	auto *pBlockStatePalette = cpdV7RegionData.HasList(MU8STR("BlockStatePalette"));
+	if (pBlockStatePalette != NULL)
+	{
+		bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("BlockStatePalette"), std::move(*pBlockStatePalette)).second;
+		MyAssert(bPutSuccess);
+	}
+
 	auto *pBlockStates = cpdV7RegionData.HasLongArray(MU8STR("BlockStates"));
+	if (pBlockStates != NULL)
+	{
+		bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("BlockStates"), std::move(*pBlockStates)).second;
+		MyAssert(bPutSuccess);
+	}
 
 
 	//如果没有则跳过转换处理
-	auto *pEntities = cpdV7RegionData.HasList(MU8STR("Entities"));
-	auto *pTileEntities = cpdV7RegionData.HasList(MU8STR("TileEntities"));
+	do
+	{
+		auto *pEntities = cpdV7RegionData.HasList(MU8STR("Entities"));
+		if (pEntities == NULL)
+		{
+			break;
+		}
+
+		auto [it, bPutSuccess] = cpdV6RegionData.PutList(MU8STR("Entities"), {});
+		MyAssert(bPutSuccess);
+		auto &listV6EntityList = GetList(it->second);
+
+		for (auto &nodeEntity : *pEntities)
+		{
+			auto [it, bAddSuccess] = listV6EntityList.AddBackCompound({});
+			MyAssert(bAddSuccess);
+
+			if (!ProcessEntity(GetCompound(nodeEntity), GetCompound(*it)));
+			{
+				return false;
+			}
+		}
+	} while (false);
+	
+	do
+	{
+		auto *pTileEntities = cpdV7RegionData.HasList(MU8STR("TileEntities"));
+		if (pTileEntities == NULL)
+		{
+			break;
+		}
+
+		auto [it, bPutSuccess] = cpdV6RegionData.PutList(MU8STR("TileEntities"), {});
+		MyAssert(bPutSuccess);
+		auto &listV6EntityList = GetList(it->second);
+
+		for (auto &nodeTileEntity : *pTileEntities)
+		{
+			auto [it, bAddSuccess] = listV6EntityList.AddBackCompound({});
+			MyAssert(bAddSuccess);
+
+			if (!ProcessTileEntity(GetCompound(nodeTileEntity), GetCompound(*it)));
+			{
+				return false;
+			}
+		}
+	} while (false);
 
 
-
-
+	return true;
 }
 
 
@@ -114,14 +203,14 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	auto &cpdV6Regions = GetCompound(it2->second);
 
 	//遍历选区
-	for (auto &[sV7RegionName, cpdV7RegionData] : *pRegions)
+	for (auto &[sV7RegionName, nodeV7RegionData] : *pRegions)
 	{
 		auto [itNew, bSucc] = cpdV6Regions.PutCompound(sV7RegionName, {});
 		MyAssert(bSucc);
 
 		auto &cpdNewV6RegionData = GetCompound(itNew->second);
 
-		if (!ProcessRegion(cpdV7RegionData, cpdNewV6RegionData))
+		if (!ProcessRegion(GetCompound(nodeV7RegionData), cpdNewV6RegionData))
 		{
 			return false;
 		}
