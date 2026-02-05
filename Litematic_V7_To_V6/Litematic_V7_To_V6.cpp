@@ -37,11 +37,22 @@ bool ProcessRegion(const NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound
 {
 	//先转移不变数据，然后处理实体与方块实体
 
+	//这两个必须有，否则失败
+	auto *pPosition = cpdV7RegionData.HasCompound(MU8STR("Position"));
+	auto *pSize = cpdV7RegionData.HasCompound(MU8STR("Size"));
+
+	//下面的可能没有，没有跳过插入
+	auto *pPendingBlockTicks = cpdV7RegionData.HasList(MU8STR("PendingBlockTicks"));
+	auto *pPendingFluidTicks = cpdV7RegionData.HasList(MU8STR("PendingFluidTicks"));
 
 
+	auto *pBlockStatePalette = cpdV7RegionData.HasList(MU8STR("BlockStatePalette"));
+	auto *pBlockStates = cpdV7RegionData.HasLongArray(MU8STR("BlockStates"));
 
 
-
+	//如果没有则跳过转换处理
+	auto *pEntities = cpdV7RegionData.HasList(MU8STR("Entities"));
+	auto *pTileEntities = cpdV7RegionData.HasList(MU8STR("TileEntities"));
 
 
 
