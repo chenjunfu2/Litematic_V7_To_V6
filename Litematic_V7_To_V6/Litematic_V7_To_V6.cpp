@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <vector>
 #include <thread>
-#include <tuple>
 
 #define V6_MINECRAFT_DATA_VERSION 3700
 #define V6_LITEMATIC_VERSION 6
@@ -49,51 +48,36 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 {
 	//先转移不变数据，然后处理实体与方块实体
 
-	//这两个必须有，否则失败
-	auto *pPosition = cpdV7RegionData.HasCompound(MU8STR("Position"));
-	auto *pSize = cpdV7RegionData.HasCompound(MU8STR("Size"));
+	//简易处理函数
+	auto TransferDirectOptionalField = [&](const NBT_Type::String &strKey, NBT_TAG tag) -> bool
+	{
+		auto *pField = cpdV7RegionData.Search(strKey);
+		if (pField != NULL &&
+			(tag == NBT_TAG::ENUM_END || pField->GetTag() == tag))//ENUM_END表示接受任意类型，否则强匹配指定类型
+		{
+			MyAssert(cpdV6RegionData.Put(strKey, std::move(*pField)).second);
+			return true;
+		}
 
-	if (pPosition == NULL || pSize == NULL)
+		return false;
+	};
+
+	//这两个必须有，否则失败
+	if (!TransferDirectOptionalField(MU8STR("Position"), NBT_TAG::Compound))
 	{
 		return false;
 	}
 
-	bool bPutSuccess;
-	bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("Position"), std::move(*pPosition)).second;
-	MyAssert(bPutSuccess);
-	bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("Size"), std::move(*pSize)).second;
-	MyAssert(bPutSuccess);
-
-	//下面的可能没有，没有跳过插入
-	auto *pPendingBlockTicks = cpdV7RegionData.HasList(MU8STR("PendingBlockTicks"));
-	if (pPendingBlockTicks != NULL)
+	if (!TransferDirectOptionalField(MU8STR("Size"), NBT_TAG::Compound))
 	{
-		bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("PendingBlockTicks"), std::move(*pPendingBlockTicks)).second;
-		MyAssert(bPutSuccess);
+		return false;
 	}
 
-	auto *pPendingFluidTicks = cpdV7RegionData.HasList(MU8STR("PendingFluidTicks"));
-	if (pPendingFluidTicks != NULL)
-	{
-		bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("PendingFluidTicks"), std::move(*pPendingFluidTicks)).second;
-		MyAssert(bPutSuccess);
-	}
-
-
-	auto *pBlockStatePalette = cpdV7RegionData.HasList(MU8STR("BlockStatePalette"));
-	if (pBlockStatePalette != NULL)
-	{
-		bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("BlockStatePalette"), std::move(*pBlockStatePalette)).second;
-		MyAssert(bPutSuccess);
-	}
-
-	auto *pBlockStates = cpdV7RegionData.HasLongArray(MU8STR("BlockStates"));
-	if (pBlockStates != NULL)
-	{
-		bPutSuccess = cpdV6RegionData.PutCompound(MU8STR("BlockStates"), std::move(*pBlockStates)).second;
-		MyAssert(bPutSuccess);
-	}
-
+	//下面的可能没有，没有则跳过插入
+	(void)TransferDirectOptionalField(MU8STR("PendingBlockTicks"), NBT_TAG::List);
+	(void)TransferDirectOptionalField(MU8STR("PendingFluidTicks"), NBT_TAG::List);
+	(void)TransferDirectOptionalField(MU8STR("BlockStatePalette"), NBT_TAG::List);
+	(void)TransferDirectOptionalField(MU8STR("BlockStates"), NBT_TAG::LongArray);
 
 	//如果没有则跳过转换处理
 	do
@@ -110,10 +94,10 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 
 		for (auto &nodeEntity : *pEntities)
 		{
-			auto [it, bAddSuccess] = listV6EntityList.AddBackCompound({});
+			auto [itNode, bAddSuccess] = listV6EntityList.AddBackCompound({});
 			MyAssert(bAddSuccess);
 
-			if (!ProcessEntity(GetCompound(nodeEntity), GetCompound(*it)));
+			if (!ProcessEntity(GetCompound(nodeEntity), GetCompound(*itNode)));
 			{
 				return false;
 			}
@@ -134,10 +118,10 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 
 		for (auto &nodeTileEntity : *pTileEntities)
 		{
-			auto [it, bAddSuccess] = listV6EntityList.AddBackCompound({});
+			auto [itNode, bAddSuccess] = listV6EntityList.AddBackCompound({});
 			MyAssert(bAddSuccess);
 
-			if (!ProcessTileEntity(GetCompound(nodeTileEntity), GetCompound(*it)));
+			if (!ProcessTileEntity(GetCompound(nodeTileEntity), GetCompound(*itNode)));
 			{
 				return false;
 			}
