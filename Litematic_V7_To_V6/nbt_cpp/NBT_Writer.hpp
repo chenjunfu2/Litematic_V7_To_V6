@@ -714,73 +714,73 @@ catch(...)\
 		case NBT_TAG::Byte:
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::Byte>;
-				eRet = PutbuiltInType<CurType>(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutbuiltInType<CurType>(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::Short:
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::Short>;
-				eRet = PutbuiltInType<CurType>(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutbuiltInType<CurType>(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::Int:
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::Int>;
-				eRet = PutbuiltInType<CurType>(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutbuiltInType<CurType>(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::Long:
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::Long>;
-				eRet = PutbuiltInType<CurType>(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutbuiltInType<CurType>(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::Float:
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::Float>;
-				eRet = PutbuiltInType<CurType>(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutbuiltInType<CurType>(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::Double:
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::Double>;
-				eRet = PutbuiltInType<CurType>(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutbuiltInType<CurType>(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::ByteArray:
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::ByteArray>;
-				eRet = PutArrayType<CurType>(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutArrayType<CurType>(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::String://类型唯一，非模板函数
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::String>;
-				eRet = PutStringType(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutStringType(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::List://可能递归，需要处理szStackDepth
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::List>;
-				eRet = PutListType<bSortCompound>(tData, nodeNbt.GetData<CurType>(), szStackDepth, funcErrInfo);
+				eRet = PutListType<bSortCompound>(tData, nodeNbt.Get<CurType>(), szStackDepth, funcErrInfo);
 			}
 			break;
 		case NBT_TAG::Compound://可能递归，需要处理szStackDepth
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::Compound>;
-				eRet = PutCompoundType<false, bSortCompound>(tData, nodeNbt.GetData<CurType>(), szStackDepth, funcErrInfo);
+				eRet = PutCompoundType<false, bSortCompound>(tData, nodeNbt.Get<CurType>(), szStackDepth, funcErrInfo);
 			}
 			break;
 		case NBT_TAG::IntArray:
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::IntArray>;
-				eRet = PutArrayType<CurType>(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutArrayType<CurType>(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::LongArray:
 			{
 				using CurType = NBT_Type::TagToType_T<NBT_TAG::LongArray>;
-				eRet = PutArrayType<CurType>(tData, nodeNbt.GetData<CurType>(), funcErrInfo);
+				eRet = PutArrayType<CurType>(tData, nodeNbt.Get<CurType>(), funcErrInfo);
 			}
 			break;
 		case NBT_TAG::End://注意end标签绝对不可以进来

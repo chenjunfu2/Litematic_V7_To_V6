@@ -177,6 +177,7 @@
     <ClInclude Include="nbt_cpp\NBT_Type.hpp" />
     <ClInclude Include="nbt_cpp\NBT_Writer.hpp" />
     <ClInclude Include="nbt_cpp\vcpkg_config.h" />
+    <ClInclude Include="Process_Litematic_Data.hpp" />
     <ClInclude Include="util\CodeTimer.hpp" />
     <ClInclude Include="util\MyAssert.hpp" />
   </ItemGroup>

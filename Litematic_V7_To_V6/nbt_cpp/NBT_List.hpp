@@ -323,13 +323,33 @@ public:
 		return List::at(szPos);
 	}
 
-	/// @brief 根据位置获取值
+	/// @brief 根据位置获取值（常量版本）
 	/// @param szPos 要查找的位置
 	/// @return 位置对应的值的常量引用
 	/// @note 如果位置不存在则抛出异常，请参考std::vector对于at的描述
 	const typename List::value_type &Get(const typename List::size_type &szPos) const
 	{
 		return List::at(szPos);
+	}
+
+	/// @brief 根据位置查找值
+	/// @param szPos 要查找的位置
+	/// @return 位置对应的值的指针，如果值不存在则为NULL
+	typename List::value_type *Has(const typename List::size_type &szPos) noexcept
+	{
+		return szPos < List::size()
+			? &List::operator[](szPos)
+			: NULL;
+	}
+
+	/// @brief 根据位置查找值（常量版本）
+	/// @param szPos 要查找的位置
+	/// @return 位置对应的值的指针，如果值不存在则为NULL
+	const typename List::value_type *Has(const typename List::size_type &szPos) const noexcept
+	{
+		return szPos < List::size()
+			? &List::operator[](szPos)
+			: NULL;
 	}
 
 	/// @brief 获取列表开头的元素
@@ -340,7 +360,7 @@ public:
 		return List::front();
 	}
 
-	/// @brief 获取列表开头的元素
+	/// @brief 获取列表开头的元素（常量版本）
 	/// @return 开头的元素的常量引用
 	/// @note 如果当前列表为空，行为未定义，请参考std::vector对于front的描述
 	const typename List::value_type &Front(void) const noexcept
@@ -356,7 +376,7 @@ public:
 		return List::back();
 	}
 
-	/// @brief 获取列表最后的元素
+	/// @brief 获取列表最后的元素（常量版本）
 	/// @return 最后的元素的引用
 	/// @note 如果当前列表为空，行为未定义，请参考std::vector对于back的描述
 	const typename List::value_type &Back(void) const noexcept
@@ -678,7 +698,7 @@ public:
 /// @note 用户不应该使用此宏（实际上宏已在使用后取消定义），标注仅为消除doxygen警告
 #define TYPE_GET_FUNC(type)\
 /**
- @brief 获取指定位置的 type 类型数据
+ @brief 获取指定位置的 type 类型数据（常量版本）
  @param szPos 位置索引
  @return type 类型数据的常量引用
  @note 如果位置不存在或类型不匹配则抛出异常，
@@ -702,7 +722,33 @@ typename NBT_Type::type &Get##type(const typename List::size_type &szPos)\
 }\
 \
 /**
- @brief 获取列表第一个 type 类型数据
+ @brief 获取指定位置的 type 类型数据（常量版本）
+ @param szPos 位置索引
+ @return type 类型数据的指针，如果位置不存在或类型不对则返回NULL
+ */\
+const typename NBT_Type::type *Has##type(const typename List::size_type &szPos) const noexcept\
+{\
+	auto *p = Has(szPos);\
+	return p != NULL && p->Is##type()\
+		? &p->Get##type()\
+		: NULL;\
+}\
+\
+/**
+ @brief 获取指定位置的 type 类型数据
+ @param szPos 位置索引
+ @return type 类型数据的指针，如果位置不存在或类型不对则返回NULL
+ */\
+typename NBT_Type::type *Has##type(const typename List::size_type &szPos) noexcept\
+{\
+	auto *p = Has(szPos);\
+	return p != NULL && p->Is##type()\
+		? &p->Get##type()\
+		: NULL;\
+}\
+\
+/**
+ @brief 获取列表第一个 type 类型数据（常量版本）
  @return type 类型数据的常量引用
  @note 如果列表为空或类型不匹配则抛出异常，
  具体请参考std::vector关于front的说明与std::get的说明
@@ -723,7 +769,7 @@ typename NBT_Type::type &Front##type(void)\
 	return List::front().Get##type(); \
  }\
 /**
- @brief 获取列表最后一个 type 类型数据
+ @brief 获取列表最后一个 type 类型数据（常量版本）
  @return type 类型数据的常量引用
  @note 如果列表为空或类型不匹配则抛出异常，
  具体请参考std::vector关于back的说明与std::get的说明

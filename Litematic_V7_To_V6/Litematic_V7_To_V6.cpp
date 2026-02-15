@@ -1,6 +1,6 @@
-﻿#include "nbt_cpp/NBT_All.hpp"
+﻿#include "Process_Litematic_Data.hpp"
+
 #include "util/CodeTimer.hpp"
-#include "util/MyAssert.hpp"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -38,8 +38,36 @@ bool ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 
 }
 
-bool ProcessTileEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData)
+bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData)
 {
+	if (!FixTileEntityId(cpdV7TileEntityData))
+	{
+		return false;
+	}
+
+	for (auto &itTE : cpdV7TileEntityData)
+	{
+
+
+
+
+
+
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
 
@@ -51,7 +79,7 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 	//简易处理函数
 	auto TransferDirectOptionalField = [&](const NBT_Type::String &strKey, NBT_TAG tag) -> bool
 	{
-		auto *pField = cpdV7RegionData.Search(strKey);
+		auto *pField = cpdV7RegionData.Has(strKey);
 		if (pField != NULL &&
 			(tag == NBT_TAG::ENUM_END || pField->GetTag() == tag))//ENUM_END表示接受任意类型，否则强匹配指定类型
 		{

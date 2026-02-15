@@ -197,7 +197,7 @@ public:
 	/// @return 对存储数据的常量引用
 	/// @note 如果类型不存在或当前存储的不是指定类型的指针，则抛出异常，具体请参考std::get的说明
 	template<typename T>
-	const T &GetData() const
+	const T &Get() const
 	{
 		return std::get<T>(data);
 	}
@@ -207,7 +207,7 @@ public:
 	/// @return 对存储数据的引用
 	/// @note 如果类型不存在或当前存储的不是指定类型的指针，则抛出异常，具体请参考std::get的说明
 	template<typename T>
-	T &GetData()
+	T &Get()
 	{
 		return std::get<T>(data);
 	}
