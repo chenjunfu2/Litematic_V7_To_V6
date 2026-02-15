@@ -99,10 +99,10 @@ bool FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 			}
 		}
 
-		//附加条件为空，或不为空且匹配，直接插入id并返回成功与否
+		//附加条件为空，或不为空且全部匹配，直接插入id并返回成功与否
 		return cpdTileEntity.PutString(MU8STR("id"), strIdGuess).second;
 
-		//附加条件有任意一个不匹配
+		//附加条件有任意一个不匹配，重试下一个
 	Continue_Outer:
 		continue;
 	}
