@@ -128,6 +128,8 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		return;
 	}
 
+	NBT_Type::List listV7 = nodeV7Tag.GetList();
+	NBT_Type::List listV6 = nodeV6Tag.emplace<NBT_Type::List>();
 
 
 

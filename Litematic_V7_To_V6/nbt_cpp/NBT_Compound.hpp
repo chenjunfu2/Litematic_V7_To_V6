@@ -384,6 +384,7 @@ bool Contains##type(const typename Compound::key_type &sTagName) const\
 	auto *p = Has(sTagName);\
 	return p != NULL && p->GetTag() == NBT_TAG::type;\
 }\
+\
 /**
  @brief 获取指定标签名的 type 类型数据（常量版本）
  @param sTagName 标签名
@@ -495,6 +496,7 @@ std::pair<typename Compound::iterator, bool> Put##type(K &&sTagName, typename NB
 {\
 	return Put(std::forward<K>(sTagName), std::move(vTagVal));\
 }\
+\
  /**
  @brief 尝试插入 type 类型的键值对（拷贝）
  @tparam K 标签名类型，必须可构造为key_type
