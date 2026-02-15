@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <vector>
 #include <thread>
+#include <unordered_map>
+#include <functional>
 
 #define V6_MINECRAFT_DATA_VERSION 3700
 #define V6_LITEMATIC_VERSION 6
@@ -45,30 +47,45 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		return false;
 	}
 
-	for (auto &itTE : cpdV7TileEntityData)
+
+	struct ValType
 	{
+		NBT_Type::String strNewKey;
+		std::function<bool(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)> funcProcess;
+	};
 
+	std::unordered_map<NBT_Type::String, ValType> mapProccess =
+	{
+		{ MU8STR("Items"), {MU8STR(""), ProcessItems}},
+		{ MU8STR(""), {MU8STR(""), }},
+		{ MU8STR(""), {MU8STR(""), }},
+		{ MU8STR(""), {MU8STR(""), }},
+	};
 
+	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)
+	{
+		//查找是否有匹配的处理过程
+		auto itFind = mapProccess.find(itV7TagKey);
+		if (itFind == mapProccess.end())
+		{
+			//不匹配直接移动处理
+			cpdV6TileEntityData.Put(itV7TagKey, std::move(itV7TagVal));
+			continue;
+		}
 
+		//进行处理
+		NBT_Node nodeV6TagVal;
+		ValType &vt = itFind->second;
+		if (!vt.funcProcess(itV7TagVal, nodeV6TagVal))
+		{
+			return false;
+		}
 
-
-
+		//成功后插入新值
+		cpdV6TileEntityData.PutCompound(vt.strNewKey, std::move(nodeV6TagVal));
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	return true;
 }
 
 //V7到V6仅转换Entity与TileEntity，其余不变

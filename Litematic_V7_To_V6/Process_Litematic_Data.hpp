@@ -15,7 +15,8 @@ bool FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 	const auto *pId = cpdTileEntity.HasString(MU8STR("Id"));
 	if (pId != NULL)
 	{
-		return cpdTileEntity.PutString(MU8STR("id"), *pId).second;
+		cpdTileEntity.PutString(MU8STR("id"), *pId);//转化为小写id
+		return true;
 	}
 
 	//找不到Id或者Id类型不是字符串，通过其它项猜测类型
@@ -100,7 +101,8 @@ bool FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 		}
 
 		//附加条件为空，或不为空且全部匹配，直接插入id并返回成功与否
-		return cpdTileEntity.PutString(MU8STR("id"), strIdGuess).second;
+		cpdTileEntity.PutString(MU8STR("id"), strIdGuess);
+		return true;
 
 		//附加条件有任意一个不匹配，重试下一个
 	Continue_Outer:
@@ -108,9 +110,19 @@ bool FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 	}
 
 	//完全无法猜测，插入空值返回
-	return cpdTileEntity.PutString(MU8STR("id"), MU8STR("")).second;
+	cpdTileEntity.PutString(MU8STR("id"), MU8STR(""));
+	return true;
 }
 
 
+bool ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
 
+
+
+
+
+
+
+}
 
