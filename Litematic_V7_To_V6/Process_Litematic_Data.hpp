@@ -3,6 +3,7 @@
 #include "nbt_cpp/NBT_All.hpp"
 
 #include <vector>
+#include <unordered_map>
 
 void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 {
@@ -129,10 +130,105 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	}
 
 	NBT_Type::List listV7 = nodeV7Tag.GetList();
-	NBT_Type::List listV6 = nodeV6Tag.emplace<NBT_Type::List>();
+	NBT_Type::List listV6 = nodeV6Tag.SetList();
 
+	NBT_Type::Int iDefaultColor = 0;
+	std::unordered_map<NBT_Type::String, NBT_Type::Int> mapColor = 
+	{
+		{MU8STR("white"), 0},		{MU8STR("orange"), 1},		{MU8STR("magenta"), 2},		{MU8STR("light_blue"), 3},
+		{MU8STR("yellow"), 4},		{MU8STR("lime"), 5},		{MU8STR("pink"), 6},		{MU8STR("gray"), 7},
+		{MU8STR("light_gray"), 8},	{MU8STR("cyan"), 9},		{MU8STR("purple"), 10},		{MU8STR("blue"), 11},
+		{MU8STR("brown"), 12},		{MU8STR("green"), 13},		{MU8STR("red"), 14},		{MU8STR("black"), 15}
+	};
 
+	NBT_Type::String strDefaultPattern = MU8STR("b");
+	std::unordered_map<NBT_Type::String, NBT_Type::String> mapPattern =
+	{
+		{ MU8STR("minecraft:base"),						MU8STR("b") },
+		{ MU8STR("minecraft:square_bottom_left"),		MU8STR("bl") },
+		{ MU8STR("minecraft:square_bottom_right"),		MU8STR("br") },
+		{ MU8STR("minecraft:square_top_left"),			MU8STR("tl") },
+		{ MU8STR("minecraft:square_top_right"),			MU8STR("tr") },
+		{ MU8STR("minecraft:stripe_bottom"),			MU8STR("bs") },
+		{ MU8STR("minecraft:stripe_top"),				MU8STR("ts") },
+		{ MU8STR("minecraft:stripe_left"),				MU8STR("ls") },
+		{ MU8STR("minecraft:stripe_right"),				MU8STR("rs") },
+		{ MU8STR("minecraft:stripe_center"),			MU8STR("cs") },
+		{ MU8STR("minecraft:stripe_middle"),			MU8STR("ms") },
+		{ MU8STR("minecraft:stripe_downright"),			MU8STR("drs") },
+		{ MU8STR("minecraft:stripe_downleft"),			MU8STR("dls") },
+		{ MU8STR("minecraft:small_stripes"),			MU8STR("ss") },
+		{ MU8STR("minecraft:cross"),					MU8STR("cr") },
+		{ MU8STR("minecraft:straight_cross"),			MU8STR("sc") },
+		{ MU8STR("minecraft:triangle_bottom"),			MU8STR("bt") },
+		{ MU8STR("minecraft:triangle_top"),				MU8STR("tt") },
+		{ MU8STR("minecraft:triangles_bottom"),			MU8STR("bts") },
+		{ MU8STR("minecraft:triangles_top"),			MU8STR("tts") },
+		{ MU8STR("minecraft:diagonal_left"),			MU8STR("ld") },
+		{ MU8STR("minecraft:diagonal_up_right"),		MU8STR("rd") },
+		{ MU8STR("minecraft:diagonal_up_left"),			MU8STR("lud") },
+		{ MU8STR("minecraft:diagonal_right"),			MU8STR("rud") },
+		{ MU8STR("minecraft:circle"),					MU8STR("mc") },
+		{ MU8STR("minecraft:rhombus"),					MU8STR("mr") },
+		{ MU8STR("minecraft:half_vertical"),			MU8STR("vh") },
+		{ MU8STR("minecraft:half_horizontal"),			MU8STR("hh") },
+		{ MU8STR("minecraft:half_vertical_right"),		MU8STR("vhr") },
+		{ MU8STR("minecraft:half_horizontal_bottom"),	MU8STR("hhb") },
+		{ MU8STR("minecraft:border"),					MU8STR("bo") },
+		{ MU8STR("minecraft:curly_border"),				MU8STR("cbo") },
+		{ MU8STR("minecraft:gradient"),					MU8STR("gra") },
+		{ MU8STR("minecraft:gradient_up"),				MU8STR("gru") },
+		{ MU8STR("minecraft:bricks"),					MU8STR("bri") },
+		{ MU8STR("minecraft:globe"),					MU8STR("glb") },
+		{ MU8STR("minecraft:creeper"),					MU8STR("cre") },
+		{ MU8STR("minecraft:skull"),					MU8STR("sku") },
+		{ MU8STR("minecraft:flower"),					MU8STR("flo") },
+		{ MU8STR("minecraft:mojang"),					MU8STR("moj") },
+		{ MU8STR("minecraft:piglin"),					MU8STR("pig") },
+	};
 
+	for (auto &itEntry : listV7)
+	{
+		if (!itEntry.IsCompound())
+		{
+			continue;
+		}
+
+		auto &cpdV7Entry = itEntry.GetCompound();
+		auto &cpdV6Entry = listV6.AddBackCompound({}).first->GetCompound();
+
+		//查找并映射颜色
+		NBT_Type::Int iColor = iDefaultColor;
+
+		auto *pstrColor = cpdV7Entry.HasString(MU8STR("color"));
+		if (pstrColor != NULL)
+		{
+			auto itFind = mapColor.find(*pstrColor);
+			if (itFind != mapColor.end())
+			{
+				iColor = itFind->second;
+			}
+		}
+
+		//插入
+		cpdV6Entry.PutInt(MU8STR("Color"), iColor);
+
+		//查找并映射图样
+		NBT_Type::String strPattern = strDefaultPattern;
+
+		auto *pstrPattern = cpdV7Entry.HasString(MU8STR("pattern"));
+		if (pstrPattern != NULL)
+		{
+			auto itFind = mapPattern.find(*pstrPattern);
+			if (itFind != mapPattern.end())
+			{
+				strPattern = itFind->second;
+			}
+		}
+
+		//插入
+		cpdV6Entry.PutString(MU8STR("Pattern"), strPattern);
+	}
 
 	return;
 }
