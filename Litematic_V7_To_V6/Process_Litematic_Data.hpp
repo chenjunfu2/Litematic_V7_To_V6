@@ -7,15 +7,15 @@
 
 bool FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 {
-	if (cpdTileEntity.Contains(MU8STR("id")))
+	if (cpdTileEntity.ContainsString(MU8STR("id")))
 	{
 		return true;
 	}
 
-	const auto *pId = cpdTileEntity.Has(MU8STR("Id"));
-	if (pId != NULL && pId->GetTag() == NBT_TAG::String)
+	const auto *pId = cpdTileEntity.HasString(MU8STR("Id"));
+	if (pId != NULL)
 	{
-		return cpdTileEntity.PutString(MU8STR("id"), pId->GetString()).second;
+		return cpdTileEntity.PutString(MU8STR("id"), *pId).second;
 	}
 
 	//找不到Id或者Id类型不是字符串，通过其它项猜测类型
