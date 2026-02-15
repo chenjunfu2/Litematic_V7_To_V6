@@ -42,24 +42,20 @@ bool ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 
 bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData)
 {
-	if (!FixTileEntityId(cpdV7TileEntityData))
-	{
-		return false;
-	}
-
+	FixTileEntityId(cpdV7TileEntityData);
 
 	struct ValType
 	{
 	public:
-		using TagProcessFunc_T = std::function<bool(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
+		using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
 
 	public:
 		NBT_Type::String strNewKey;
 		TagProcessFunc_T funcTagProcess;
-		std::function<bool(TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal)> funcProcess;
+		std::function<void(TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal)> funcProcess;
 
 	public:
-		bool operator()(NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal)
+		void operator()(NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal)
 		{
 			return funcProcess(funcTagProcess, strNewKey, cpdV6TileEntityData, strV7TagKey, nodeV7TagVal);
 		}
@@ -67,27 +63,20 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 	//通用处理
 	auto funcDefaultProcess =
-	[](ValType::TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> bool
+	[](ValType::TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> void
 	{
 		NBT_Node nodeV6TagVal;
-		if (!funcTagProcess(nodeV7TagVal, nodeV6TagVal))
-		{
-			return false;
-		}
-
+		funcTagProcess(nodeV7TagVal, nodeV6TagVal);
 		cpdV6TileEntityData.Put(strNewKey, std::move(nodeV6TagVal));
-		return true;
 	};
 
 	//特殊处理
 	auto funcJukeboxProcess =
-	[](ValType::TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> bool
+	[](ValType::TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> void
 	{
 		cpdV6TileEntityData.PutLong(MU8STR("RecordStartTick"), 0);
 		cpdV6TileEntityData.PutLong(MU8STR("TickCount"), nodeV7TagVal.IsLong() ? nodeV7TagVal.GetLong() : 0);
 		cpdV6TileEntityData.PutByte(MU8STR("IsPlaying"), 0);
-
-		return true;
 	};
 
 	std::unordered_map<NBT_Type::String, ValType> mapProccess =
@@ -120,10 +109,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 		//进行处理
 		ValType &vtProcess = itFind->second;
-		if (!vtProcess(cpdV6TileEntityData, itV7TagKey, itV7TagVal))
-		{
-			return false;
-		}
+		vtProcess(cpdV6TileEntityData, itV7TagKey, itV7TagVal);
 	}
 
 	return true;
@@ -141,7 +127,7 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 		if (pField != NULL &&
 			(tag == NBT_TAG::ENUM_END || pField->GetTag() == tag))//ENUM_END表示接受任意类型，否则强匹配指定类型
 		{
-			MyAssert(cpdV6RegionData.Put(strKey, std::move(*pField)).second);
+			cpdV6RegionData.Put(strKey, std::move(*pField));
 			return true;
 		}
 
@@ -166,6 +152,8 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 	(void)TransferDirectOptionalField(MU8STR("BlockStates"), NBT_TAG::LongArray);
 
 	//如果没有则跳过转换处理
+
+	//实体处理
 	do
 	{
 		auto *pEntities = cpdV7RegionData.HasList(MU8STR("Entities"));
@@ -174,14 +162,12 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 			break;
 		}
 
-		auto [it, bPutSuccess] = cpdV6RegionData.PutList(MU8STR("Entities"), {});
-		MyAssert(bPutSuccess);
+		auto it = cpdV6RegionData.PutList(MU8STR("Entities"), {}).first;
 		auto &listV6EntityList = GetList(it->second);
 
 		for (auto &nodeEntity : *pEntities)
 		{
-			auto [itNode, bAddSuccess] = listV6EntityList.AddBackCompound({});
-			MyAssert(bAddSuccess);
+			auto itNode = listV6EntityList.AddBackCompound({}).first;
 
 			if (!ProcessEntity(GetCompound(nodeEntity), GetCompound(*itNode)));
 			{
@@ -190,6 +176,7 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 		}
 	} while (false);
 	
+	//方块实体处理
 	do
 	{
 		auto *pTileEntities = cpdV7RegionData.HasList(MU8STR("TileEntities"));
@@ -198,14 +185,12 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 			break;
 		}
 
-		auto [it, bPutSuccess] = cpdV6RegionData.PutList(MU8STR("TileEntities"), {});
-		MyAssert(bPutSuccess);
+		auto it = cpdV6RegionData.PutList(MU8STR("TileEntities"), {}).first;
 		auto &listV6EntityList = GetList(it->second);
 
 		for (auto &nodeTileEntity : *pTileEntities)
 		{
-			auto [itNode, bAddSuccess] = listV6EntityList.AddBackCompound({});
-			MyAssert(bAddSuccess);
+			auto itNode = listV6EntityList.AddBackCompound({}).first;
 
 			if (!ProcessTileEntity(GetCompound(nodeTileEntity), GetCompound(*itNode)));
 			{
@@ -229,8 +214,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 
 	//获取根部，并插入根部，最后获取根部引用
 	auto &cpdV7DataRoot = *pRoot;
-	auto [it, b] = cpdV6Output.PutCompound(MU8STR(""), {});
-	MyAssert(b);//插入不许失败
+	auto it = cpdV6Output.PutCompound(MU8STR(""), {}).first;
 	auto &cpdV6DataRoot = GetCompound(it->second);
 
 	//先处理版本信息
@@ -268,16 +252,13 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	}
 
 	//插入选区根
-	auto [it2, b2] = cpdV6DataRoot.PutCompound(MU8STR("Regions"), {});
-	MyAssert(b2);
+	auto it2 = cpdV6DataRoot.PutCompound(MU8STR("Regions"), {}).first;
 	auto &cpdV6Regions = GetCompound(it2->second);
 
 	//遍历选区
 	for (auto &[sV7RegionName, nodeV7RegionData] : *pRegions)
 	{
-		auto [itNew, bSucc] = cpdV6Regions.PutCompound(sV7RegionName, {});
-		MyAssert(bSucc);
-
+		auto itNew = cpdV6Regions.PutCompound(sV7RegionName, {}).first;
 		auto &cpdNewV6RegionData = GetCompound(itNew->second);
 
 		if (!ProcessRegion(GetCompound(nodeV7RegionData), cpdNewV6RegionData))

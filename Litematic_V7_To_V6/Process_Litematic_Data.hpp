@@ -1,22 +1,21 @@
 ﻿#pragma once
 
 #include "nbt_cpp/NBT_All.hpp"
-#include "util/MyAssert.hpp"
 
 #include <vector>
 
-bool FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
+void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 {
 	if (cpdTileEntity.ContainsString(MU8STR("id")))
 	{
-		return true;
+		return;
 	}
 
 	const auto *pId = cpdTileEntity.HasString(MU8STR("Id"));
 	if (pId != NULL)
 	{
 		cpdTileEntity.PutString(MU8STR("id"), *pId);//转化为小写id
-		return true;
+		return;
 	}
 
 	//找不到Id或者Id类型不是字符串，通过其它项猜测类型
@@ -102,7 +101,7 @@ bool FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 
 		//附加条件为空，或不为空且全部匹配，直接插入id并返回成功与否
 		cpdTileEntity.PutString(MU8STR("id"), strIdGuess);
-		return true;
+		return;
 
 		//附加条件有任意一个不匹配，重试下一个
 	Continue_Outer:
@@ -111,61 +110,70 @@ bool FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 
 	//完全无法猜测，插入空值返回
 	cpdTileEntity.PutString(MU8STR("id"), MU8STR(""));
-	return true;
+	return;
 }
 
 
-bool ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
-	return true;
+	return;
 }
 
-bool ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
+	if (!nodeV7Tag.IsList())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
-	return true;
+
+
+
+
+	return;
 }
 
-bool ProcessSkullOwner(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessSkullOwner(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
-	return true;
+	return;
 }
 
-bool ProcessFlowerPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessFlowerPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
-	return true;
+	return;
 }
 
-bool ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
-	return true;
+	return;
 }
 
-bool ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
-	return true;
+	return;
 }
 
-bool ProcessRecordItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessRecordItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
-	return true;
+	return;
 }
 
-bool ProcessBook(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessBook(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
-	return true;
+	return;
 }
 
-bool ProcessCustomName(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessCustomName(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
-	return true;
+	return;
 }
 
