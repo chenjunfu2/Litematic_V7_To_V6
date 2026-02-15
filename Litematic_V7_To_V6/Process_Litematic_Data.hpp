@@ -118,11 +118,54 @@ bool FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 bool ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
+	return true;
+}
 
+bool ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
 
+	return true;
+}
 
+bool ProcessSkullOwner(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
 
+	return true;
+}
 
+bool ProcessFlowerPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
 
+	return true;
+}
+
+bool ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+
+	return true;
+}
+
+bool ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+
+	return true;
+}
+
+bool ProcessRecordItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+
+	return true;
+}
+
+bool ProcessBook(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+
+	return true;
+}
+
+bool ProcessCustomName(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+
+	return true;
 }
 

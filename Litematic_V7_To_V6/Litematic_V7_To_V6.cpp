@@ -50,16 +50,59 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 	struct ValType
 	{
+	public:
+		using TagProcessFunc_T = std::function<bool(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
+
+	public:
 		NBT_Type::String strNewKey;
-		std::function<bool(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)> funcProcess;
+		TagProcessFunc_T funcTagProcess;
+		std::function<bool(TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal)> funcProcess;
+
+	public:
+		bool operator()(NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal)
+		{
+			return funcProcess(funcTagProcess, strNewKey, cpdV6TileEntityData, strV7TagKey, nodeV7TagVal);
+		}
+	};
+
+	auto funcDefaultProcess =
+	[](ValType::TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> bool
+	{
+		NBT_Node nodeV6TagVal;
+		if (!funcTagProcess(nodeV7TagVal, nodeV6TagVal))
+		{
+			return false;
+		}
+
+		cpdV6TileEntityData.Put(strNewKey, std::move(nodeV6TagVal));
+		return true;
+	};
+
+	auto funcJukeboxProcess =
+	[](ValType::TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> bool
+	{
+		cpdV6TileEntityData.PutLong(MU8STR("RecordStartTick"), 0);
+		cpdV6TileEntityData.PutLong(MU8STR("TickCount"), nodeV7TagVal.IsLong() ? nodeV7TagVal.GetLong() : 0);
+		cpdV6TileEntityData.PutByte(MU8STR("IsPlaying"), 0);
+
+		return true;
 	};
 
 	std::unordered_map<NBT_Type::String, ValType> mapProccess =
 	{
-		{ MU8STR("Items"), {MU8STR(""), ProcessItems}},
-		{ MU8STR(""), {MU8STR(""), }},
-		{ MU8STR(""), {MU8STR(""), }},
-		{ MU8STR(""), {MU8STR(""), }},
+		{ MU8STR("Items"),						{ MU8STR("Items"),		ProcessItems,		funcDefaultProcess } },
+		{ MU8STR("patterns"),					{ MU8STR("Patterns"),	ProcessPatterns,	funcDefaultProcess } },
+		{ MU8STR("profile"),					{ MU8STR("SkullOwner"),	ProcessSkullOwner,	funcDefaultProcess } },
+		{ MU8STR("flower_pos"),					{ MU8STR("FlowerPos"),	ProcessFlowerPos,	funcDefaultProcess } },
+		{ MU8STR("bees"),						{ MU8STR("Bees"),		ProcessBees,		funcDefaultProcess } },
+		{ MU8STR("item"),						{ MU8STR("item"),		ProcessSingleItem,	funcDefaultProcess } },
+
+		{ MU8STR("ticks_since_song_started"),	{ {},					{},					funcJukeboxProcess } },
+
+		{ MU8STR("RecordItem"),					{MU8STR("RecordItem"),	ProcessRecordItem,	funcDefaultProcess } },
+		{ MU8STR("Book"),						{MU8STR("Book"),		ProcessBook,		funcDefaultProcess } },
+		{ MU8STR("CustomName"),					{MU8STR("CustomName"),	ProcessCustomName,	funcDefaultProcess } },
+		{ MU8STR("custom_name"),				{MU8STR("CustomName"),	ProcessCustomName,	funcDefaultProcess } },
 	};
 
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)
@@ -74,15 +117,11 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		}
 
 		//进行处理
-		NBT_Node nodeV6TagVal;
 		ValType &vt = itFind->second;
-		if (!vt.funcProcess(itV7TagVal, nodeV6TagVal))
+		if (!vt(cpdV6TileEntityData, itV7TagKey, itV7TagVal))
 		{
 			return false;
 		}
-
-		//成功后插入新值
-		cpdV6TileEntityData.PutCompound(vt.strNewKey, std::move(nodeV6TagVal));
 	}
 
 	return true;
