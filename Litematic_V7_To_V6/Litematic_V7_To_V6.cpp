@@ -65,6 +65,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		}
 	};
 
+	//通用处理
 	auto funcDefaultProcess =
 	[](ValType::TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> bool
 	{
@@ -78,6 +79,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		return true;
 	};
 
+	//特殊处理
 	auto funcJukeboxProcess =
 	[](ValType::TagProcessFunc_T &funcTagProcess, NBT_Type::String &strNewKey, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> bool
 	{
@@ -97,7 +99,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		{ MU8STR("bees"),						{ MU8STR("Bees"),		ProcessBees,		funcDefaultProcess } },
 		{ MU8STR("item"),						{ MU8STR("item"),		ProcessSingleItem,	funcDefaultProcess } },
 
-		{ MU8STR("ticks_since_song_started"),	{ {},					{},					funcJukeboxProcess } },
+		{ MU8STR("ticks_since_song_started"),	{ {},					{},					funcJukeboxProcess } }, //音符盒特殊处理
 
 		{ MU8STR("RecordItem"),					{MU8STR("RecordItem"),	ProcessRecordItem,	funcDefaultProcess } },
 		{ MU8STR("Book"),						{MU8STR("Book"),		ProcessBook,		funcDefaultProcess } },
@@ -117,8 +119,8 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		}
 
 		//进行处理
-		ValType &vt = itFind->second;
-		if (!vt(cpdV6TileEntityData, itV7TagKey, itV7TagVal))
+		ValType &vtProcess = itFind->second;
+		if (!vtProcess(cpdV6TileEntityData, itV7TagKey, itV7TagVal))
 		{
 			return false;
 		}
