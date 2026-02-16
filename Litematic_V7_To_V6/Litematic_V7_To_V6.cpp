@@ -7,7 +7,6 @@
 #include <vector>
 #include <thread>
 #include <unordered_map>
-#include <functional>
 
 #define V6_MINECRAFT_DATA_VERSION 3700
 #define V6_LITEMATIC_VERSION 6
@@ -47,7 +46,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 	//特殊处理
 	const static auto funcJukeboxProcess =
-	[](NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> void
+	[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
 	{
 		cpdV6TileEntityData.PutLong(MU8STR("RecordStartTick"), 0);
 		cpdV6TileEntityData.PutLong(MU8STR("TickCount"), nodeV7TagVal.IsLong() ? nodeV7TagVal.GetLong() : 0);
@@ -58,8 +57,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 	using std::placeholders::_2;
 	using std::placeholders::_3;
 
-	using MapFunc_T = std::function<void(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)>;
-	const static std::unordered_map<NBT_Type::String, MapFunc_T> mapProccess =
+	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
 	{
 		{ MU8STR("Items"),						std::bind(DefaultProcess,	MU8STR("Items"),		ProcessItems,		_1, _2, _3) },
 		{ MU8STR("patterns"),					std::bind(DefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,	_1, _2, _3) },

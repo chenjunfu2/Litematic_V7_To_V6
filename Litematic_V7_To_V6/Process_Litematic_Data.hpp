@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <functional>
 #include <utility>
 
 template<typename T, typename V>
@@ -132,6 +133,8 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 
 //实际转换
 using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
+//用于Map值
+using MapValFunc_T = std::function<void(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)>;
 
 //通用处理
 void DefaultProcess(const NBT_Type::String &strNewKey, TagProcessFunc_T funcTagProcess, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
