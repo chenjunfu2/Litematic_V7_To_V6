@@ -179,9 +179,7 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		}
 
 		cpdV6Entry.PutString(MU8STR("id"), std::move(*pId));
-
-		auto *pCount = cpdV7Entry.HasString(MU8STR("count"));
-		cpdV6Entry.PutString(MU8STR("Count"), MoveOrElse(pCount, {}));
+		cpdV6Entry.PutString(MU8STR("Count"), MoveOrElse(cpdV7Entry.HasString(MU8STR("count")), {}));
 
 
 		listV6.AddBackCompound(std::move(cpdV6Entry));
@@ -351,11 +349,8 @@ void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		auto &cpdV7Entry = itV7Entry.GetCompound();
 		auto &cpdV6Entry = listV6.AddBackCompound({}).first->GetCompound();
 
-		auto *pTicksInHive = cpdV7Entry.HasInt(MU8STR("ticks_in_hive"));
-		cpdV6Entry.PutInt(MU8STR("TicksInHive"), CopyOrElse(pTicksInHive, 0));
-
-		auto *pMinOccupationTicks = cpdV7Entry.HasInt(MU8STR("min_ticks_in_hive"));
-		cpdV6Entry.PutInt(MU8STR("MinOccupationTicks"), CopyOrElse(pMinOccupationTicks, 0));
+		cpdV6Entry.PutInt(MU8STR("TicksInHive"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("ticks_in_hive")), 0));
+		cpdV6Entry.PutInt(MU8STR("MinOccupationTicks"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("min_ticks_in_hive")), 0));
 
 		//处理实体数据转换
 		auto *pFind = cpdV7Entry.HasCompound(MU8STR("entity_data"));
@@ -391,11 +386,8 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	auto &cpdV7Item = nodeV7Tag.GetCompound();
 	auto &cpdV6Item = nodeV6Tag.SetCompound();
 
-	auto *pId = cpdV7Item.HasString(MU8STR("id"));
-	auto &strId = cpdV6Item.PutString(MU8STR("id"), MoveOrElse(pId, {})).first->second.GetString();
-
-	auto *pCount = cpdV7Item.HasInt(MU8STR("Count"));
-	cpdV6Item.PutByte(MU8STR("count"), CopyOrElse(pCount, 1));
+	auto &strId = cpdV6Item.PutString(MU8STR("id"), MoveOrElse(cpdV7Item.HasString(MU8STR("id")), { MU8STR("")})).first->second.GetString();
+	cpdV6Item.PutByte(MU8STR("count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("Count")), 1));
 
 	auto *pTag = cpdV7Item.HasCompound(MU8STR("components"));
 	if (pTag != NULL)
