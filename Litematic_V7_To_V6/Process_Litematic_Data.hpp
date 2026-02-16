@@ -162,8 +162,11 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	auto &listV7 = nodeV7Tag.GetList();
 	auto &listV6 = nodeV6Tag.SetList();
 
+	NBT_Type::Byte bSlot = 0;
 	for (auto &itV7Entry : listV7)
 	{
+		++bSlot;//槽位计数，用于默认值修复
+
 		if (!itV7Entry.IsCompound())
 		{
 			continue;
@@ -178,9 +181,17 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 			continue;
 		}
 
-		cpdV6Entry.PutString(MU8STR("id"), std::move(*pId));
-		cpdV6Entry.PutString(MU8STR("Count"), MoveOrElse(cpdV7Entry.HasString(MU8STR("count")), {}));
+		const auto & strId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
+		cpdV6Entry.PutByte(MU8STR("Slot"), CopyOrElse(cpdV7Entry.HasByte(MU8STR("Slot")), (NBT_Type::Byte)(bSlot - 1)));
 
+		auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components"));
+		if (pV7Tag != NULL)
+		{
+			NBT_Type::Compound cpdV6Tag;
+			ProcessItemTag(*pV7Tag, strId, cpdV6Tag);
+			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
+		}
 
 		listV6.AddBackCompound(std::move(cpdV6Entry));
 	}
