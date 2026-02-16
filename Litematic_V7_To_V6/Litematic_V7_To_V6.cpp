@@ -38,6 +38,7 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 bool ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData)
 {
 
+	return true;
 }
 
 bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData)
@@ -49,7 +50,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 	//通用处理
 	auto funcDefaultProcess =
-	[](NBT_Type::String &strNewKey, ProcessFunc_T &funcTagProcess, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> void
+	[](const NBT_Type::String &strNewKey, ProcessFunc_T funcTagProcess, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> void
 	{
 		NBT_Node nodeV6TagVal;
 		funcTagProcess(nodeV7TagVal, nodeV6TagVal);
@@ -284,7 +285,7 @@ bool ConvertLitematicFile_V7_To_V6(const std::string &sV7FilePath)
 			vDataV7Stream = std::move(vFileV7Stream);//尝试以未压缩流处理，而不是失败
 		}
 
-		if (!NBT_Reader::ReadNBT(vDataV7Stream, cpdV7Input))
+		if (!NBT_Reader::ReadNBT(vDataV7Stream, 0, cpdV7Input))
 		{
 			printf("Unable to parse data from stream!\n");
 			return false;
@@ -301,7 +302,7 @@ bool ConvertLitematicFile_V7_To_V6(const std::string &sV7FilePath)
 	//写出cpdV6Output到文件sV6FilePath
 	{
 		std::vector<uint8_t> vDataV6Stream{};
-		if (!NBT_Writer::WriteNBT(vDataV6Stream, cpdV6Output))
+		if (!NBT_Writer::WriteNBT(vDataV6Stream, 0, cpdV6Output))
 		{
 			printf("Unable to write data into stream!\n");
 			return false;
