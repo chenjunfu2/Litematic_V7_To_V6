@@ -45,20 +45,8 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 {
 	FixTileEntityId(cpdV7TileEntityData);
 
-	using ProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
-	using MapFunc_T = std::function<void(NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal)>;
-
-	//通用处理
-	auto funcDefaultProcess =
-	[](const NBT_Type::String &strNewKey, ProcessFunc_T funcTagProcess, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> void
-	{
-		NBT_Node nodeV6TagVal;
-		funcTagProcess(nodeV7TagVal, nodeV6TagVal);
-		cpdV6TileEntityData.Put(strNewKey, std::move(nodeV6TagVal));
-	};
-
 	//特殊处理
-	auto funcJukeboxProcess =
+	const static auto funcJukeboxProcess =
 	[](NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal) -> void
 	{
 		cpdV6TileEntityData.PutLong(MU8STR("RecordStartTick"), 0);
@@ -70,22 +58,23 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 	using std::placeholders::_2;
 	using std::placeholders::_3;
 
+	using MapFunc_T = std::function<void(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)>;
 	const static std::unordered_map<NBT_Type::String, MapFunc_T> mapProccess =
 	{
-		{ MU8STR("Items"),						std::bind(funcDefaultProcess,	MU8STR("Items"),		ProcessItems,		_1, _2, _3) },
-		{ MU8STR("patterns"),					std::bind(funcDefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,	_1, _2, _3) },
-		{ MU8STR("profile"),					std::bind(funcDefaultProcess,	MU8STR("SkullOwner"),	ProcessSkullProfile,_1, _2, _3) },
-		{ MU8STR("flower_pos"),					std::bind(funcDefaultProcess,	MU8STR("FlowerPos"),	ProcessBlockPos,	_1, _2, _3) },
-		{ MU8STR("exit_portal"),				std::bind(funcDefaultProcess,	MU8STR("ExitPortal"),	ProcessBlockPos,	_1, _2, _3) },
-		{ MU8STR("bees"),						std::bind(funcDefaultProcess,	MU8STR("Bees"),			ProcessBees,		_1, _2, _3) },
-		{ MU8STR("item"),						std::bind(funcDefaultProcess,	MU8STR("item"),			ProcessSingleItem,	_1, _2, _3) },
+		{ MU8STR("Items"),						std::bind(DefaultProcess,	MU8STR("Items"),		ProcessItems,		_1, _2, _3) },
+		{ MU8STR("patterns"),					std::bind(DefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,	_1, _2, _3) },
+		{ MU8STR("profile"),					std::bind(DefaultProcess,	MU8STR("SkullOwner"),	ProcessSkullProfile,_1, _2, _3) },
+		{ MU8STR("flower_pos"),					std::bind(DefaultProcess,	MU8STR("FlowerPos"),	ProcessBlockPos,	_1, _2, _3) },
+		{ MU8STR("exit_portal"),				std::bind(DefaultProcess,	MU8STR("ExitPortal"),	ProcessBlockPos,	_1, _2, _3) },
+		{ MU8STR("bees"),						std::bind(DefaultProcess,	MU8STR("Bees"),			ProcessBees,		_1, _2, _3) },
+		{ MU8STR("item"),						std::bind(DefaultProcess,	MU8STR("item"),			ProcessSingleItem,	_1, _2, _3) },
 
 		{ MU8STR("ticks_since_song_started"),	funcJukeboxProcess }, //音符盒特殊处理
 
-		{ MU8STR("RecordItem"),					std::bind(funcDefaultProcess,	MU8STR("RecordItem"),	ProcessRecordItem,	_1, _2, _3) },
-		{ MU8STR("Book"),						std::bind(funcDefaultProcess,	MU8STR("Book"),			ProcessBook,		_1, _2, _3) },
-		{ MU8STR("CustomName"),					std::bind(funcDefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,	_1, _2, _3) },
-		{ MU8STR("custom_name"),				std::bind(funcDefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,	_1, _2, _3) },
+		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessRecordItem,	_1, _2, _3) },
+		{ MU8STR("Book"),						std::bind(DefaultProcess,	MU8STR("Book"),			ProcessBook,		_1, _2, _3) },
+		{ MU8STR("CustomName"),					std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,	_1, _2, _3) },
+		{ MU8STR("custom_name"),				std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,	_1, _2, _3) },
 	};
 
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)
@@ -101,7 +90,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 		//进行处理
 		auto &funcProcess = itFind->second;
-		funcProcess(cpdV6TileEntityData, itV7TagKey, itV7TagVal);
+		funcProcess(itV7TagKey, itV7TagVal, cpdV6TileEntityData);
 	}
 
 	return true;

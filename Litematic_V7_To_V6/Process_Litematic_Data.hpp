@@ -114,8 +114,24 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 	return;
 }
 
+
+//实际转换
+using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
+
+//通用处理
+void DefaultProcess(const NBT_Type::String &strNewKey, TagProcessFunc_T funcTagProcess, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+{
+	NBT_Node nodeV6TagVal;
+	funcTagProcess(nodeV7TagVal, nodeV6TagVal);
+	cpdV6TileEntityData.Put(strNewKey, std::move(nodeV6TagVal));
+};
+
 void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId, NBT_Type::Compound &cpdV6Tag)
 {
+	
+
+
+
 
 
 
