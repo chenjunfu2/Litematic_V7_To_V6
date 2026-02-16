@@ -114,6 +114,13 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 	return;
 }
 
+void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, NBT_Type::Compound &cpdV6Tag)
+{
+
+
+
+	return;
+}
 
 void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
@@ -245,6 +252,7 @@ void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	//V6为Compound打包的x、y、z的Int类型成员
 	if (!nodeV7Tag.IsIntArray())
 	{
+		nodeV6Tag = std::move(nodeV7Tag);
 		return;
 	}
 
@@ -265,12 +273,79 @@ void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 
 void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
+	if (!nodeV7Tag.IsList())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &listV7 = nodeV7Tag.GetList();
+	auto &listV6 = nodeV6Tag.SetList();
+
+	for (auto &itV7Entry : listV7)
+	{
+		if (!itV7Entry.IsCompound())
+		{
+			continue;
+		}
+
+		//获取类型，并新建类型
+		auto &cpdV7Entry = itV7Entry.GetCompound();
+		auto &cpdV6Entry = listV6.AddBackCompound({}).first->GetCompound();
+
+		NBT_Type::Int iTicksInHive = 0;
+		{
+			auto *pFind = cpdV7Entry.HasInt(MU8STR("ticks_in_hive"));
+			if (pFind != NULL)
+			{
+				iTicksInHive = *pFind;
+			}
+		}
+		cpdV6Entry.PutInt(MU8STR("TicksInHive"), iTicksInHive);
+
+		NBT_Type::Int iMinOccupationTicks = 0;
+		{
+			auto *pFind = cpdV7Entry.HasInt(MU8STR("min_ticks_in_hive"));
+			if (pFind != NULL)
+			{
+				iMinOccupationTicks = *pFind;
+			}
+		}
+		cpdV6Entry.PutInt(MU8STR("MinOccupationTicks"), iMinOccupationTicks);
+
+		//处理实体数据转换
+		auto *pFind = cpdV7Entry.HasCompound(MU8STR("entity_data"));
+		if (pFind == NULL)
+		{
+			cpdV6Entry.PutCompound(MU8STR("EntityData"), {});//没有则插入空值返回
+			continue;
+		}
+
+		//前向声明
+		bool ProcessEntity(NBT_Type::Compound & cpdV7EntityData, NBT_Type::Compound & cpdV6EntityData);
+
+		//实体转换代理
+		NBT_Type::Compound cpdV6EntityData;
+		if (!ProcessEntity(*pFind, cpdV6EntityData))
+		{
+			continue;
+		}
+		cpdV6Entry.PutCompound(MU8STR("EntityData"), std::move(cpdV6EntityData));
+	}
 
 	return;
 }
 
 void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+
+
 
 	return;
 }
