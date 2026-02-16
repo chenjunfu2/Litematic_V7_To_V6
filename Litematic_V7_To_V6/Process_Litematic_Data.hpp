@@ -114,7 +114,7 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 	return;
 }
 
-void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, NBT_Type::Compound &cpdV6Tag)
+void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId, NBT_Type::Compound &cpdV6Tag)
 {
 
 
@@ -216,9 +216,7 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 				iColor = itFind->second;
 			}
 		}
-
-		//插入
-		cpdV6Entry.PutInt(MU8STR("Color"), iColor);
+		cpdV6Entry.PutInt(MU8STR("Color"), iColor);//插入
 
 		//查找并映射图样
 		NBT_Type::String strPattern = strDefaultPattern;
@@ -232,9 +230,7 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 				strPattern = itFind->second;
 			}
 		}
-
-		//插入
-		cpdV6Entry.PutString(MU8STR("Pattern"), strPattern);
+		cpdV6Entry.PutString(MU8STR("Pattern"), strPattern);//插入
 	}
 
 	return;
@@ -293,25 +289,11 @@ void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		auto &cpdV7Entry = itV7Entry.GetCompound();
 		auto &cpdV6Entry = listV6.AddBackCompound({}).first->GetCompound();
 
-		NBT_Type::Int iTicksInHive = 0;
-		{
-			auto *pFind = cpdV7Entry.HasInt(MU8STR("ticks_in_hive"));
-			if (pFind != NULL)
-			{
-				iTicksInHive = *pFind;
-			}
-		}
-		cpdV6Entry.PutInt(MU8STR("TicksInHive"), iTicksInHive);
+		auto *pTicksInHive = cpdV7Entry.HasInt(MU8STR("ticks_in_hive"));
+		cpdV6Entry.PutInt(MU8STR("TicksInHive"), pTicksInHive != NULL ? *pTicksInHive : 0);
 
-		NBT_Type::Int iMinOccupationTicks = 0;
-		{
-			auto *pFind = cpdV7Entry.HasInt(MU8STR("min_ticks_in_hive"));
-			if (pFind != NULL)
-			{
-				iMinOccupationTicks = *pFind;
-			}
-		}
-		cpdV6Entry.PutInt(MU8STR("MinOccupationTicks"), iMinOccupationTicks);
+		auto *pMinOccupationTicks = cpdV7Entry.HasInt(MU8STR("min_ticks_in_hive"));
+		cpdV6Entry.PutInt(MU8STR("MinOccupationTicks"), pMinOccupationTicks != NULL ? *pMinOccupationTicks : 0);
 
 		//处理实体数据转换
 		auto *pFind = cpdV7Entry.HasCompound(MU8STR("entity_data"));
@@ -344,8 +326,22 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		return;
 	}
 
+	auto &cpdV7Item = nodeV7Tag.GetCompound();
+	auto &cpdV6Item = nodeV6Tag.SetCompound();
 
+	auto *pId = cpdV7Item.HasString(MU8STR("id"));
+	auto &strId = cpdV6Item.PutString(MU8STR("id"), pId != NULL ? std::move(*pId) : NBT_Type::String{}).first->second.GetString();
 
+	auto *pCount = cpdV7Item.HasInt(MU8STR("Count"));
+	cpdV6Item.PutByte(MU8STR("count"), pCount != NULL ? *pCount : 1);
+
+	auto *pTag = cpdV7Item.HasCompound(MU8STR("components"));
+	if (pTag != NULL)
+	{
+		NBT_Type::Compound cpdV6Tag;
+		ProcessItemTag(*pTag, strId, cpdV6Tag);
+		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
+	}
 
 	return;
 }
