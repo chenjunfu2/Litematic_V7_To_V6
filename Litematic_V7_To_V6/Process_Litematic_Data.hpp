@@ -239,8 +239,26 @@ void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
-void ProcessFlowerPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
+	//V7为IntArray顺序存储的xyz坐标
+	//V6为Compound打包的x、y、z的Int类型成员
+	if (!nodeV7Tag.IsIntArray())
+	{
+		return;
+	}
+
+	//坐标只有3个
+	auto &iarrBlockPos = nodeV7Tag.GetIntArray();
+	if (iarrBlockPos.size() != 3)
+	{
+		return;
+	}
+
+	auto &cpdBlockPos = nodeV6Tag.SetCompound();
+	cpdBlockPos.PutInt(MU8STR("X"), iarrBlockPos[0]);
+	cpdBlockPos.PutInt(MU8STR("Y"), iarrBlockPos[1]);
+	cpdBlockPos.PutInt(MU8STR("Z"), iarrBlockPos[2]);
 
 	return;
 }
