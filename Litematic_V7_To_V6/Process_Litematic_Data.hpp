@@ -144,12 +144,46 @@ void DefaultProcess(const NBT_Type::String &strNewKey, TagProcessFunc_T funcTagP
 	cpdV6TileEntityData.Put(strNewKey, std::move(nodeV6TagVal));
 };
 
+void RenameProcess(const NBT_Type::String &strNewKey, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+{
+	cpdV6TileEntityData.Put(strNewKey, std::move(nodeV7TagVal));
+}
+
 void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId, NBT_Type::Compound &cpdV6Tag)
 {
-	
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+	using std::placeholders::_3;
 
+	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
+	{
+		{MU8STR(""),	std::bind(DefaultProcess,	MU8STR(""),	,	_1, _2, _3)},
+		{MU8STR(""),	std::bind(DefaultProcess,	MU8STR(""),	,	_1, _2, _3)},
+		{MU8STR(""),	std::bind(DefaultProcess,	MU8STR(""),	,	_1, _2, _3)},
+		{MU8STR(""),	std::bind(DefaultProcess,	MU8STR(""),	,	_1, _2, _3)},
+		{MU8STR(""),	std::bind(DefaultProcess,	MU8STR(""),	,	_1, _2, _3)},
+		{MU8STR(""),	std::bind(DefaultProcess,	MU8STR(""),	,	_1, _2, _3)},
+		{MU8STR(""),	std::bind(DefaultProcess,	MU8STR(""),	,	_1, _2, _3)},
+		{MU8STR(""),	std::bind(DefaultProcess,	MU8STR(""),	,	_1, _2, _3)},
+		{MU8STR(""),	std::bind(DefaultProcess,	MU8STR(""),	,	_1, _2, _3)},
 
+	};
 
+	for (auto &[itV7TagKey, itV7TagVal] : cpdV7Tag)
+	{
+		//查找是否有匹配的处理过程
+		auto itFind = mapProccess.find(itV7TagKey);
+		if (itFind == mapProccess.end())
+		{
+			//不匹配直接移动处理
+			cpdV6Tag.Put(itV7TagKey, std::move(itV7TagVal));
+			continue;
+		}
+
+		//进行处理
+		auto &funcProcess = itFind->second;
+		funcProcess(itV7TagKey, itV7TagVal, cpdV6Tag);
+	}
 
 
 
