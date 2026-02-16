@@ -27,7 +27,7 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 		NBT_Type::String strIdGuess;
 	};
 
-	const std::vector<GuessNode> listIdGuess =
+	const static std::vector<GuessNode> listIdGuess =
 	{
 		{MU8STR("Bees"),					{},														MU8STR("minecraft:beehive")},
 		{MU8STR("bees"),					{},														MU8STR("minecraft:beehive")},
@@ -132,8 +132,8 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	NBT_Type::List listV7 = nodeV7Tag.GetList();
 	NBT_Type::List listV6 = nodeV6Tag.SetList();
 
-	NBT_Type::Int iDefaultColor = 0;
-	std::unordered_map<NBT_Type::String, NBT_Type::Int> mapColor = 
+	const static NBT_Type::Int iDefaultColor = 0;
+	const static std::unordered_map<NBT_Type::String, NBT_Type::Int> mapColor =
 	{
 		{MU8STR("white"), 0},		{MU8STR("orange"), 1},		{MU8STR("magenta"), 2},		{MU8STR("light_blue"), 3},
 		{MU8STR("yellow"), 4},		{MU8STR("lime"), 5},		{MU8STR("pink"), 6},		{MU8STR("gray"), 7},
@@ -141,8 +141,8 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		{MU8STR("brown"), 12},		{MU8STR("green"), 13},		{MU8STR("red"), 14},		{MU8STR("black"), 15}
 	};
 
-	NBT_Type::String strDefaultPattern = MU8STR("b");
-	std::unordered_map<NBT_Type::String, NBT_Type::String> mapPattern =
+	const static NBT_Type::String strDefaultPattern = MU8STR("b");
+	const static std::unordered_map<NBT_Type::String, NBT_Type::String> mapPattern =
 	{
 		{ MU8STR("minecraft:base"),						MU8STR("b") },
 		{ MU8STR("minecraft:square_bottom_left"),		MU8STR("bl") },
@@ -233,7 +233,7 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
-void ProcessSkullOwner(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
 	return;

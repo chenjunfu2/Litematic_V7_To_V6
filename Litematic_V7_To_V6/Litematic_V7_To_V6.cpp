@@ -83,7 +83,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 	{
 		{ MU8STR("Items"),						{ MU8STR("Items"),		ProcessItems,		funcDefaultProcess } },
 		{ MU8STR("patterns"),					{ MU8STR("Patterns"),	ProcessPatterns,	funcDefaultProcess } },
-		{ MU8STR("profile"),					{ MU8STR("SkullOwner"),	ProcessSkullOwner,	funcDefaultProcess } },
+		{ MU8STR("profile"),					{ MU8STR("SkullOwner"),	ProcessSkullProfile,funcDefaultProcess } },
 		{ MU8STR("flower_pos"),					{ MU8STR("FlowerPos"),	ProcessFlowerPos,	funcDefaultProcess } },
 		{ MU8STR("bees"),						{ MU8STR("Bees"),		ProcessBees,		funcDefaultProcess } },
 		{ MU8STR("item"),						{ MU8STR("item"),		ProcessSingleItem,	funcDefaultProcess } },
