@@ -6,16 +6,18 @@
 #include <unordered_map>
 #include <utility>
 
-template<typename T>
-T CopyOrElse(T *p, T &&d)
+template<typename T, typename V>
+requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructible_v<T, V>)
+T CopyOrElse(T *p, V &&d)
 {
-	return p != NULL ? *p : std::forward<T>(d);
+	return p != NULL ? *p : std::forward<V>(d);
 }
 
-template<typename T>
-T MoveOrElse(T *p, T &&d)
+template<typename T, typename V>
+requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructible_v<T, V>)
+T MoveOrElse(T *p, V &&d)
 {
-	return p != NULL ? std::move(*p) : std::forward<T>(d);
+	return p != NULL ? std::move(*p) : std::forward<V>(d);
 }
 
 void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
@@ -162,7 +164,7 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	auto &listV7 = nodeV7Tag.GetList();
 	auto &listV6 = nodeV6Tag.SetList();
 
-	NBT_Type::Byte bSlot = 0;
+	NBT_Type::Byte bSlot = -1;
 	for (auto &itV7Entry : listV7)
 	{
 		++bSlot;//槽位计数，用于默认值修复
@@ -183,7 +185,7 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 
 		const auto & strId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
 		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
-		cpdV6Entry.PutByte(MU8STR("Slot"), CopyOrElse(cpdV7Entry.HasByte(MU8STR("Slot")), (NBT_Type::Byte)(bSlot - 1)));
+		cpdV6Entry.PutByte(MU8STR("Slot"), CopyOrElse(cpdV7Entry.HasByte(MU8STR("Slot")), bSlot));
 
 		auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components"));
 		if (pV7Tag != NULL)
@@ -397,7 +399,7 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	auto &cpdV7Item = nodeV7Tag.GetCompound();
 	auto &cpdV6Item = nodeV6Tag.SetCompound();
 
-	auto &strId = cpdV6Item.PutString(MU8STR("id"), MoveOrElse(cpdV7Item.HasString(MU8STR("id")), { MU8STR("")})).first->second.GetString();
+	auto &strId = cpdV6Item.PutString(MU8STR("id"), MoveOrElse(cpdV7Item.HasString(MU8STR("id")), MU8STR(""))).first->second.GetString();
 	cpdV6Item.PutByte(MU8STR("count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("Count")), 1));
 
 	auto *pTag = cpdV7Item.HasCompound(MU8STR("components"));
