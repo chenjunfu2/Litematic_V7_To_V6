@@ -4,6 +4,19 @@
 
 #include <vector>
 #include <unordered_map>
+#include <utility>
+
+template<typename T>
+T CopyOrElse(T *p, T &&d)
+{
+	return p != NULL ? *p : std::forward<T>(d);
+}
+
+template<typename T>
+T MoveOrElse(T *p, T &&d)
+{
+	return p != NULL ? std::move(*p) : std::forward<T>(d);
+}
 
 void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 {
@@ -140,6 +153,39 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId,
 
 void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
+	if (!nodeV7Tag.IsList())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &listV7 = nodeV7Tag.GetList();
+	auto &listV6 = nodeV6Tag.SetList();
+
+	for (auto &itV7Entry : listV7)
+	{
+		if (!itV7Entry.IsCompound())
+		{
+			continue;
+		}
+
+		auto &cpdV7Entry = itV7Entry.GetCompound();
+		NBT_Type::Compound cpdV6Entry;
+
+		auto *pId = cpdV7Entry.HasString(MU8STR("id"));
+		if (pId == NULL)
+		{
+			continue;
+		}
+
+		cpdV6Entry.PutString(MU8STR("id"), std::move(*pId));
+
+		auto *pCount = cpdV7Entry.HasString(MU8STR("count"));
+		cpdV6Entry.PutString(MU8STR("Count"), MoveOrElse(pCount, {}));
+
+
+		listV6.AddBackCompound(std::move(cpdV6Entry));
+	}
 
 	return;
 }
@@ -306,10 +352,10 @@ void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		auto &cpdV6Entry = listV6.AddBackCompound({}).first->GetCompound();
 
 		auto *pTicksInHive = cpdV7Entry.HasInt(MU8STR("ticks_in_hive"));
-		cpdV6Entry.PutInt(MU8STR("TicksInHive"), pTicksInHive != NULL ? *pTicksInHive : 0);
+		cpdV6Entry.PutInt(MU8STR("TicksInHive"), CopyOrElse(pTicksInHive, 0));
 
 		auto *pMinOccupationTicks = cpdV7Entry.HasInt(MU8STR("min_ticks_in_hive"));
-		cpdV6Entry.PutInt(MU8STR("MinOccupationTicks"), pMinOccupationTicks != NULL ? *pMinOccupationTicks : 0);
+		cpdV6Entry.PutInt(MU8STR("MinOccupationTicks"), CopyOrElse(pMinOccupationTicks, 0));
 
 		//处理实体数据转换
 		auto *pFind = cpdV7Entry.HasCompound(MU8STR("entity_data"));
@@ -346,10 +392,10 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	auto &cpdV6Item = nodeV6Tag.SetCompound();
 
 	auto *pId = cpdV7Item.HasString(MU8STR("id"));
-	auto &strId = cpdV6Item.PutString(MU8STR("id"), pId != NULL ? std::move(*pId) : NBT_Type::String{}).first->second.GetString();
+	auto &strId = cpdV6Item.PutString(MU8STR("id"), MoveOrElse(pId, {})).first->second.GetString();
 
 	auto *pCount = cpdV7Item.HasInt(MU8STR("Count"));
-	cpdV6Item.PutByte(MU8STR("count"), pCount != NULL ? *pCount : 1);
+	cpdV6Item.PutByte(MU8STR("count"), CopyOrElse(pCount, 1));
 
 	auto *pTag = cpdV7Item.HasCompound(MU8STR("components"));
 	if (pTag != NULL)
