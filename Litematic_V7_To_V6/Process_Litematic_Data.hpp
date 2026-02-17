@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "nbt_cpp/NBT_All.hpp"
-#include ""
 
 #include <vector>
 #include <unordered_map>
@@ -159,7 +158,7 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId,
 	using std::placeholders::_2;
 	using std::placeholders::_3;
 
-	enum class TagType
+	enum class UseTagType
 	{
 		V6Tag,
 		BlockEntityTag,
@@ -168,49 +167,57 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId,
 
 	struct MapVal_T
 	{
-		TagType enTagType;
+		UseTagType enUseTagType;
 		MapValFunc_T funcProcess;
 	};
 
 	const static std::unordered_map<NBT_Type::String, MapVal_T > mapProccess =
 	{
-		{ MU8STR("minecraft:can_break"),				{ TagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CanDestroy"),			_1, _2, _3) } },
-		{ MU8STR("minecraft:can_place_on"),				{ TagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CanPlaceOn"),			_1, _2, _3) } },
-		{ MU8STR("minecraft:custom_model_data"),		{ TagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CustomModelData"),		_1, _2, _3) } },
-		{ MU8STR("minecraft:damage"),					{ TagType::V6Tag,	std::bind(RenameProcess,	MU8STR("Damage"),				_1, _2, _3) } },
-		{ MU8STR("minecraft:debug_stick_state"),		{ TagType::V6Tag,	std::bind(RenameProcess,	MU8STR("DebugProperty"),		_1, _2, _3) } },
-		{ MU8STR("minecraft:note_block_sound"),			{ TagType::V6Tag,	std::bind(RenameProcess,	MU8STR("note_block_sound"),		_1, _2, _3) } },
-		{ MU8STR("minecraft:repair_cost"),				{ TagType::V6Tag,	std::bind(RenameProcess,	MU8STR("RepairCost"),			_1, _2, _3) } },
+		{ MU8STR("minecraft:can_break"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CanDestroy"),			_1, _2, _3) } },
+		{ MU8STR("minecraft:can_place_on"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CanPlaceOn"),			_1, _2, _3) } },
+		{ MU8STR("minecraft:custom_model_data"),		{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CustomModelData"),		_1, _2, _3) } },
+		{ MU8STR("minecraft:damage"),					{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("Damage"),				_1, _2, _3) } },
+		{ MU8STR("minecraft:debug_stick_state"),		{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("DebugProperty"),		_1, _2, _3) } },
+		{ MU8STR("minecraft:note_block_sound"),			{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("note_block_sound"),		_1, _2, _3) } },
+		{ MU8STR("minecraft:repair_cost"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("RepairCost"),			_1, _2, _3) } },
 
-		{ MU8STR("minecraft:lore"),						{ TagType::DisplayTag,	std::bind(RenameProcess,	MU8STR("Lore"),					_1, _2, _3) } },
-		{ MU8STR("minecraft:map_color"),				{ TagType::DisplayTag,	std::bind(RenameProcess,	MU8STR("MapColor"),				_1, _2, _3) } },
+		{ MU8STR("minecraft:attribute_modifiers"),		{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("AttributeModifiers"),	ProcessAttributes,				_1, _2, _3) } },
+		{ MU8STR("minecraft:block_state"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("BlockStateTag"),		ProcessBlockState,				_1, _2, _3) } },
+		{ MU8STR("minecraft:bundle_contents"),			{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Items"),				ProcessItemsTag,				_1, _2, _3) } },
+		{ MU8STR("minecraft:enchantments"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Enchantments"),			ProcessEnchantments,			_1, _2, _3) } },
+		{ MU8STR("minecraft:entity_data"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("EntityTag"),			ProcessEntity,					_1, _2, _3) } },
+		{ MU8STR("minecraft:stored_enchantments"),		{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("StoredEnchantments"),	ProcessEnchantments,			_1, _2, _3) } },
+		{ MU8STR("minecraft:fireworks"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Fireworks"),			ProcessFireworks,				_1, _2, _3) } },
+		{ MU8STR("minecraft:firework_explosion"),		{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Explosion"),			ProcessFireworkExplosion,		_1, _2, _3) } },
+		{ MU8STR("minecraft:instrument"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("instrument"),			ProcessInstrument,				_1, _2, _3) } },
+		{ MU8STR("minecraft:map_id"),					{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("map"),					ProcessMapId,					_1, _2, _3) } },
+		{ MU8STR("minecraft:map_decorations"),			{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Decorations"),			ProcessMapDecorations,			_1, _2, _3) } },
+		{ MU8STR("minecraft:profile"),					{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("SkullOwner"),			ProcessSkullProfile,			_1, _2, _3) } },
+		{ MU8STR("minecraft:recipes"),					{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Recipes"),				ProcessRecipes,					_1, _2, _3) } },
+		{ MU8STR("minecraft:suspicious_stew_effects"),	{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("effects"),				ProcessSuspiciousStewEffects,	_1, _2, _3) } },
+		{ MU8STR("minecraft:trim"),						{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Trim"),					ProcessTrim,					_1, _2, _3) } },
+		{ MU8STR("minecraft:unbreakable"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Unbreakable"),			ProcessUnbreakable,				_1, _2, _3) } },
 
-		{ MU8STR("minecraft:attribute_modifiers"),		{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("AttributeModifiers"),	ProcessAttributes,				_1, _2, _3) } },
-		{ MU8STR("minecraft:block_state"),				{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("BlockStateTag"),		ProcessBlockState,				_1, _2, _3) } },
-		{ MU8STR("minecraft:bundle_contents"),			{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Items"),				ProcessItemsTag,				_1, _2, _3) } },
-		{ MU8STR("minecraft:custom_name"),				{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Name"),					ProcessCustomNameTag,			_1, _2, _3) } },
-		{ MU8STR("minecraft:dyed_color"),				{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("color"),				ProcessDyedColor,				_1, _2, _3) } },
-		{ MU8STR("minecraft:enchantments"),				{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Enchantments"),			ProcessEnchantments,			_1, _2, _3) } },
-		{ MU8STR("minecraft:entity_data"),				{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("EntityTag"),			ProcessEntity,					_1, _2, _3) } },
-		{ MU8STR("minecraft:stored_enchantments"),		{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("StoredEnchantments"),	ProcessEnchantments,			_1, _2, _3) } },
-		{ MU8STR("minecraft:fireworks"),				{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Fireworks"),			ProcessFireworks,				_1, _2, _3) } },
-		{ MU8STR("minecraft:firework_explosion"),		{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Explosion"),			ProcessFireworkExplosion,		_1, _2, _3) } },
-		{ MU8STR("minecraft:instrument"),				{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("instrument"),			ProcessInstrument,				_1, _2, _3) } },
-		{ MU8STR("minecraft:item_name"),				{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Name"),					ProcessItemName,				_1, _2, _3) } },
-		{ MU8STR("minecraft:map_id"),					{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("map"),					ProcessMapId,					_1, _2, _3) } },
-		{ MU8STR("minecraft:map_decorations"),			{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Decorations"),			ProcessMapDecorations,			_1, _2, _3) } },
-		{ MU8STR("minecraft:profile"),					{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("SkullOwner"),			ProcessSkullProfile,			_1, _2, _3) } },
-		{ MU8STR("minecraft:recipes"),					{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Recipes"),				ProcessRecipes,					_1, _2, _3) } },
-		{ MU8STR("minecraft:suspicious_stew_effects"),	{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("effects"),				ProcessSuspiciousStewEffects,	_1, _2, _3) } },
-		{ MU8STR("minecraft:trim"),						{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Trim"),					ProcessTrim,					_1, _2, _3) } },
-		{ MU8STR("minecraft:unbreakable"),				{ TagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Unbreakable"),			ProcessUnbreakable,				_1, _2, _3) } },
+		{ MU8STR("minecraft:custom_data"),				{ UseTagType::V6Tag,	CustomDataProcess } },
+		{ MU8STR("minecraft:lodestone_tracker"),		{ UseTagType::V6Tag,	LodestoneTrackerProcess } },
+		{ MU8STR("minecraft:potion_contents"),			{ UseTagType::V6Tag,	PotionContentsProcess } },
 
 
-		{ MU8STR("minecraft:block_entity_data"),		{ TagType::V6Tag,	BlockEntityDataProcess } },
-		{ MU8STR("minecraft:bucket_entity_data"),		{ TagType::V6Tag,	BucketEntityDataProcess } },
-		{ MU8STR("minecraft:custom_data"),				{ TagType::V6Tag,	CustomDataProcess } },
-		{ MU8STR("minecraft:lodestone_tracker"),		{ TagType::V6Tag,	LodestoneTrackerProcess } },
-		{ MU8STR("minecraft:potion_contents"),			{ TagType::V6Tag,	PotionContentsProcess } },
+
+		{ MU8STR("minecraft:lore"),						{ UseTagType::DisplayTag,	std::bind(RenameProcess,	MU8STR("Lore"),					_1, _2, _3) } },
+		{ MU8STR("minecraft:map_color"),				{ UseTagType::DisplayTag,	std::bind(RenameProcess,	MU8STR("MapColor"),				_1, _2, _3) } },
+
+		{ MU8STR("minecraft:custom_name"),				{ UseTagType::DisplayTag,	std::bind(DefaultProcess,	MU8STR("Name"),					ProcessCustomNameTag,			_1, _2, _3) } },
+		{ MU8STR("minecraft:dyed_color"),				{ UseTagType::DisplayTag,	std::bind(DefaultProcess,	MU8STR("color"),				ProcessDyedColor,				_1, _2, _3) } },
+		{ MU8STR("minecraft:item_name"),				{ UseTagType::DisplayTag,	std::bind(DefaultProcess,	MU8STR("Name"),					ProcessItemName,				_1, _2, _3) } },
+
+
+
+		{ MU8STR("minecraft:block_entity_data"),		{ UseTagType::BlockEntityTag,	BlockEntityDataProcess } },
+		{ MU8STR("minecraft:bucket_entity_data"),		{ UseTagType::BlockEntityTag,	BucketEntityDataProcess } },
+
+
+		
 
 
 
@@ -232,16 +239,16 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId,
 
 		//进行处理
 		auto &mapVal = itFind->second;
-		switch (mapVal.enTagType)
+		switch (mapVal.enUseTagType)
 		{
 		default:
-		case TagType::V6Tag:
+		case UseTagType::V6Tag:
 			mapVal.funcProcess(itV7TagKey, itV7TagVal, cpdV6Tag);
 			break;
-		case TagType::BlockEntityTag:
+		case UseTagType::BlockEntityTag:
 			mapVal.funcProcess(itV7TagKey, itV7TagVal, cpdBlockEntityTag);
 			break;
-		case TagType::DisplayTag:
+		case UseTagType::DisplayTag:
 			mapVal.funcProcess(itV7TagKey, itV7TagVal, cpdDisplayTag);
 			break;
 		}
