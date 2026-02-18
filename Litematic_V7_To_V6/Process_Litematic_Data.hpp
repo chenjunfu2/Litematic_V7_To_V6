@@ -338,7 +338,94 @@ void ProcessEnchantments(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
+void ProcessFireworkExplosion(NBT_Type::Compound &cpdV7Tag, NBT_Type::Compound &cpdV6Tag)
+{
+	static const std::unordered_map<NBT_Type::String, NBT_Type::Byte> mapShape =
+	{
+		{ MU8STR("small_ball"),	0 },
+		{ MU8STR("large_ball"),	1 },
+		{ MU8STR("star"),		2 },
+		{ MU8STR("creeper"),	3 },
+		{ MU8STR("burst"),		4 },
+	};
 
+	auto *pShape = cpdV7Tag.HasString(MU8STR("shape"));
+	if (pShape != NULL)
+	{
+		NBT_Type::Byte bType = 0;//default
+
+		auto itFind = mapShape.find(*pShape);
+		if (itFind != mapShape.end())
+		{
+			bType = itFind->second;
+		}
+
+		cpdV6Tag.PutByte(MU8STR("Type"), bType);
+	}
+
+	auto *pColors = cpdV7Tag.HasIntArray(MU8STR("colors"));
+	if (pColors != NULL)
+	{
+		cpdV6Tag.PutIntArray(MU8STR("Colors"), *pColors);
+	}
+
+	auto *pFadeColors = cpdV7Tag.HasIntArray(MU8STR("fade_colors"));
+	if (pFadeColors != NULL)
+	{
+		cpdV6Tag.PutIntArray(MU8STR("FadeColors"), *pFadeColors);
+	}
+
+	auto *pHasTrail = cpdV7Tag.HasByte(MU8STR("has_trail"));
+	if (pHasTrail != NULL)
+	{
+		cpdV6Tag.PutByte(MU8STR("Trail"), *pHasTrail);
+	}
+
+	auto *pHasTwinkle = cpdV7Tag.HasByte(MU8STR("has_twinkle"));
+	if (pHasTwinkle != NULL)
+	{
+		cpdV6Tag.PutByte(MU8STR("Flicker"), *pHasTwinkle);
+	}
+
+	return;
+}
+
+void ProcessFireworks(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &cpdV7 = nodeV7Tag.GetCompound();
+	auto &cpdV6 = nodeV6Tag.SetCompound();
+
+	cpdV6.PutByte(MU8STR("Flight"), CopyOrElse(cpdV7.HasByte(MU8STR("flight_duration")), 1));
+
+	auto *pExplosions = cpdV7.HasList(MU8STR("explosions"));
+	if (pExplosions != NULL)
+	{
+		auto &listV7 = *pExplosions;
+		NBT_Type::List listV6;
+
+		for (auto &itV7Entry : listV7)
+		{
+			if (!itV7Entry.IsCompound())
+			{
+				continue;
+			}
+
+			NBT_Type::Compound cpdV6Explosion;
+			ProcessFireworkExplosion(itV7Entry.GetCompound(), cpdV6Explosion);
+			listV6.AddBackCompound(std::move(cpdV6Explosion));
+		}
+
+		cpdV6.PutList(MU8STR("Explosions"), std::move(listV6));
+	}
+
+	return;
+}
 
 //实际转换
 using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
