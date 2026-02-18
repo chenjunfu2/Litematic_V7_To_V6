@@ -133,6 +133,176 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 	return;
 }
 
+NBT_Type::String AttributeNameMap(const NBT_Type::String& strAttrName)
+{
+	const static std::unordered_map<NBT_Type::String, NBT_Type::String> mapAttributeName =
+	{
+		{ MU8STR("minecraft:armor"),							MU8STR("minecraft:generic.armor") },
+		{ MU8STR("minecraft:armor_toughness"),					MU8STR("minecraft:generic.armor_toughness") },
+		{ MU8STR("minecraft:attack_damage"),					MU8STR("minecraft:generic.attack_damage") },
+		{ MU8STR("minecraft:attack_knockback"),					MU8STR("minecraft:generic.attack_knockback") },
+		{ MU8STR("minecraft:attack_speed"),						MU8STR("minecraft:generic.attack_speed") },
+		{ MU8STR("minecraft:flying_speed"),						MU8STR("minecraft:generic.flying_speed") },
+		{ MU8STR("minecraft:follow_range"),						MU8STR("minecraft:generic.follow_range") },
+		{ MU8STR("minecraft:jump_strength"),					MU8STR("minecraft:horse.jump_strength") },
+		{ MU8STR("minecraft:knockback_resistance"),				MU8STR("minecraft:generic.knockback_resistance") },
+		{ MU8STR("minecraft:luck"),								MU8STR("minecraft:generic.luck") },
+		{ MU8STR("minecraft:max_absorption"),					MU8STR("minecraft:generic.max_absorption") },
+		{ MU8STR("minecraft:max_health"),						MU8STR("minecraft:generic.max_health") },
+		{ MU8STR("minecraft:movement_speed"),					MU8STR("minecraft:generic.movement_speed") },
+		{ MU8STR("minecraft:spawn_reinforcements"),				MU8STR("minecraft:zombie.spawn_reinforcements") },
+		{ MU8STR("minecraft:block_break_speed"),				MU8STR("minecraft:player.block_break_speed") },
+		{ MU8STR("minecraft:block_interaction_range"),			MU8STR("minecraft:player.block_interaction_range") },
+		{ MU8STR("minecraft:burning_time"),						MU8STR("minecraft:generic.burning_time") },
+		{ MU8STR("minecraft:explosion_knockback_resistance"),	MU8STR("minecraft:generic.explosion_knockback_resistance") },
+		{ MU8STR("minecraft:entity_interaction_range"),			MU8STR("minecraft:player.entity_interaction_range") },
+		{ MU8STR("minecraft:fall_damage_multiplier"),			MU8STR("minecraft:generic.fall_damage_multiplier") },
+		{ MU8STR("minecraft:gravity"),							MU8STR("minecraft:generic.gravity") },
+		{ MU8STR("minecraft:mining_efficiency"),				MU8STR("minecraft:player.mining_efficiency") },
+		{ MU8STR("minecraft:movement_efficiency"),				MU8STR("minecraft:generic.movement_efficiency") },
+		{ MU8STR("minecraft:oxygen_bonus"),						MU8STR("minecraft:generic.oxygen_bonus") },
+		{ MU8STR("minecraft:safe_fall_distance"),				MU8STR("minecraft:generic.safe_fall_distance") },
+		{ MU8STR("minecraft:scale"),							MU8STR("minecraft:generic.scale") },
+		{ MU8STR("minecraft:sneaking_speed"),					MU8STR("minecraft:player.sneaking_speed") },
+		{ MU8STR("minecraft:step_height"),						MU8STR("minecraft:generic.step_height") },
+		{ MU8STR("minecraft:submerged_mining_speed"),			MU8STR("minecraft:player.submerged_mining_speed") },
+		{ MU8STR("minecraft:sweeping_damage_ratio"),			MU8STR("minecraft:player.sweeping_damage_ratio") },
+		{ MU8STR("minecraft:water_movement_efficiency"),		MU8STR("minecraft:generic.water_movement_efficiency") },
+	};
+
+	auto itFind = mapAttributeName.find(strAttrName);
+	return itFind != mapAttributeName.end() ? itFind->second : strAttrName;
+}
+
+void ProcessAttributeModifiers(NBT_Type::List &listV7Tag, NBT_Type::List &listV6Tag)
+{
+	for (auto &itV7Entry : listV7Tag)
+	{
+		if (!itV7Entry.IsCompound())
+		{
+			continue;
+		}
+
+		auto &cpdV7Entry = itV7Entry.GetCompound();
+		NBT_Type::Compound cpdV6Entry;
+
+		if (cpdV7Entry.Contains(MU8STR("type")))
+		{
+			auto *pType = cpdV7Entry.HasString(MU8STR("type"));
+			cpdV6Entry.PutString(MU8STR("Name"), AttributeNameMap(pType != NULL ? *pType : MU8STR("")));
+			cpdV6Entry.PutDouble(MU8STR("Base"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("amount")), 0.0));
+
+		}
+		else
+		{
+			auto *pId = cpdV7Entry.HasString(MU8STR("id"));
+			if (pId != NULL && *pId == MU8STRV("minecraft:random_spawn_bonus"))
+			{
+				cpdV6Entry.PutString(MU8STR("Name"), MU8STR("Random spawn bonus"));
+			}
+			else
+			{
+				cpdV6Entry.PutString(MU8STR("Name"), MU8STR(""));
+			}
+			cpdV6Entry.PutDouble(MU8STR("Amount"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("amount")), 0.0));
+		}
+
+		std::unordered_map<NBT_Type::String, NBT_Type::Int> mapOperation =
+		{
+			{ MU8STR("add_value"),				0 },
+			{ MU8STR("add_multiplied_base"),	1 },
+			{ MU8STR("add_multiplied_total"),	2 },
+		};
+
+		NBT_Type::Int iOperation = 0;//default
+		if (auto *pOperation = cpdV7Entry.HasString(MU8STR("operation")); pOperation != NULL)
+		{
+			if (auto itFind = mapOperation.find(*pOperation); itFind != mapOperation.end())
+			{
+				iOperation = itFind->second;
+			}
+		}
+		cpdV6Entry.PutInt(MU8STR("Operation"), iOperation);
+
+		if (auto *pUUID = cpdV7Entry.Has(MU8STR("UUID")); pUUID != NULL)
+		{
+			cpdV6Entry.Put(MU8STR("UUID"), *pUUID);
+		}
+
+		listV6Tag.AddBack(std::move(cpdV6Entry));
+	}
+}
+
+void ProcessAttributes(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+	if (!nodeV7Tag.IsList())
+	{
+		if (!nodeV7Tag.IsCompound())//如果不是列表也不是集合，那么跳过
+		{
+			nodeV6Tag = std::move(nodeV7Tag);
+			return;
+		}
+
+		auto &cpdV7 = nodeV7Tag.GetCompound();
+		auto &listV6 = nodeV6Tag.SetList();
+
+		for (auto &[strV7Key, strV7Val] : cpdV7)
+		{
+			if (strV7Key == MU8STRV("modifiers") && strV7Val.IsList())
+			{
+				ProcessAttributeModifiers(strV7Val.GetList(), listV6);
+				return;
+			}
+		}
+	}
+
+	auto &listV7 = nodeV7Tag.GetList();
+	auto &listV6 = nodeV6Tag.SetList();
+
+	for (auto &itV7Entry : listV7)
+	{
+		if (!itV7Entry.IsCompound())
+		{
+			continue;
+		}
+
+		auto &cpdV7Entry = itV7Entry.GetCompound();
+		NBT_Type::Compound cpdV6Entry;
+
+		if (cpdV7Entry.Contains(MU8STR("type")))
+		{
+			auto *pType = cpdV7Entry.HasString(MU8STR("type"));
+			cpdV6Entry.PutString(MU8STR("Name"), AttributeNameMap(pType != NULL ? *pType : MU8STR("")));
+			cpdV6Entry.PutDouble(MU8STR("Base"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("amount")), 0.0));
+		}
+		else
+		{
+			auto *pId = cpdV7Entry.HasString(MU8STR("id"));
+			cpdV6Entry.PutString(MU8STR("Name"), AttributeNameMap(pId != NULL ? *pId : MU8STR("")));
+			cpdV6Entry.PutDouble(MU8STR("Base"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("base")), 0.0));
+		}
+
+
+		auto *pModifiers = cpdV7Entry.HasList(MU8STR("modifiers"));
+		if (pModifiers != NULL)
+		{
+			NBT_Type::List listV6Modifiers;
+			ProcessAttributeModifiers(*pModifiers, listV6Modifiers);
+			if (!listV6Modifiers.Empty())
+			{
+				cpdV6Entry.PutList(MU8STR("Modifiers"), std::move(listV6Modifiers));
+			}
+		}
+
+		listV6.AddBackCompound(std::move(cpdV6Entry));
+	}
+
+	return;
+}
+
+
+
+
 
 //实际转换
 using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
