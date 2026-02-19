@@ -34,13 +34,13 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 }
 
 
-bool ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData)
+void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData)
 {
 
-	return true;
+	return;
 }
 
-bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData)
+void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData)
 {
 	FixTileEntityId(cpdV7TileEntityData);
 
@@ -91,7 +91,7 @@ bool ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		funcProcess(itV7TagKey, itV7TagVal, cpdV6TileEntityData);
 	}
 
-	return true;
+	return;
 }
 
 //V7到V6仅转换Entity与TileEntity，其余不变
@@ -141,17 +141,11 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 			break;
 		}
 
-		auto it = cpdV6RegionData.PutList(MU8STR("Entities"), {}).first;
-		auto &listV6EntityList = GetList(it->second);
-
+		auto &listV6EntityList = cpdV6RegionData.PutList(MU8STR("Entities"), {}).first->second.GetList();
 		for (auto &nodeEntity : *pEntities)
 		{
-			auto itNode = listV6EntityList.AddBackCompound({}).first;
-
-			if (!ProcessEntity(GetCompound(nodeEntity), GetCompound(*itNode)))
-			{
-				return false;
-			}
+			auto &cpdNode = listV6EntityList.AddBackCompound({}).first->GetCompound();
+			ProcessEntity(GetCompound(nodeEntity), cpdNode);
 		}
 	} while (false);
 	
@@ -164,17 +158,11 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 			break;
 		}
 
-		auto it = cpdV6RegionData.PutList(MU8STR("TileEntities"), {}).first;
-		auto &listV6EntityList = GetList(it->second);
-
+		auto &listV6TileEntityList = cpdV6RegionData.PutList(MU8STR("TileEntities"), {}).first->second.GetList();
 		for (auto &nodeTileEntity : *pTileEntities)
 		{
-			auto itNode = listV6EntityList.AddBackCompound({}).first;
-
-			if (!ProcessTileEntity(GetCompound(nodeTileEntity), GetCompound(*itNode)))
-			{
-				return false;
-			}
+			auto &cpdNode = listV6TileEntityList.AddBackCompound({}).first->GetCompound();
+			ProcessTileEntity(GetCompound(nodeTileEntity), cpdNode);
 		}
 	} while (false);
 
@@ -193,8 +181,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 
 	//获取根部，并插入根部，最后获取根部引用
 	auto &cpdV7DataRoot = *pRoot;
-	auto it = cpdV6Output.PutCompound(MU8STR(""), {}).first;
-	auto &cpdV6DataRoot = GetCompound(it->second);
+	auto &cpdV6DataRoot = cpdV6Output.PutCompound(MU8STR(""), {}).first->second.GetCompound();
 
 	//先处理版本信息
 	auto *pMinecraftDataVersion = cpdV7DataRoot.HasInt(MU8STR("MinecraftDataVersion"));
@@ -231,15 +218,12 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	}
 
 	//插入选区根
-	auto it2 = cpdV6DataRoot.PutCompound(MU8STR("Regions"), {}).first;
-	auto &cpdV6Regions = GetCompound(it2->second);
+	auto &cpdV6Regions = cpdV6DataRoot.PutCompound(MU8STR("Regions"), {}).first->second.GetCompound();
 
 	//遍历选区
 	for (auto &[sV7RegionName, nodeV7RegionData] : *pRegions)
 	{
-		auto itNew = cpdV6Regions.PutCompound(sV7RegionName, {}).first;
-		auto &cpdNewV6RegionData = GetCompound(itNew->second);
-
+		auto &cpdNewV6RegionData = cpdV6Regions.PutCompound(sV7RegionName, {}).first->second.GetCompound();
 		if (!ProcessRegion(GetCompound(nodeV7RegionData), cpdNewV6RegionData))
 		{
 			return false;

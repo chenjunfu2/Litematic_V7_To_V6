@@ -8,7 +8,8 @@
 #include <utility>
 
 //前向声明
-bool ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData);
+void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData);
+void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData);
 void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag);
 
 template<typename T, typename V>
@@ -595,6 +596,14 @@ void PotionContentsProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7
 	{
 		cpdV6TileEntityData.PutList(MU8STR("custom_potion_effects"), std::move(*pCustomEffects));
 	}
+
+	return;
+}
+
+void BlockEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+{
+	ProcessTileEntity();
+
 
 	return;
 }
