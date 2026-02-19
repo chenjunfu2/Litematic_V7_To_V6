@@ -10,7 +10,10 @@
 //前向声明
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData);
 void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData);
-void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag);
+void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag,
+	const NBT_Type::String &strX = MU8STR("X"),
+	const NBT_Type::String &strY = MU8STR("Y"),
+	const NBT_Type::String &strZ = MU8STR("Z"));
 
 template<typename T, typename V>
 requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructible_v<T, V>)
@@ -613,6 +616,19 @@ void BlockEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV
 	return;
 }
 
+void BucketEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+{
+	if (!nodeV7TagVal.IsCompound())
+	{
+		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
+
+	//直接转换到根
+	ProcessEntity(nodeV7TagVal.GetCompound(), cpdV6TileEntityData);
+	return;
+}
+
 
 //实际转换
 using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
@@ -910,7 +926,10 @@ void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
-void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag,
+	const NBT_Type::String &strX = MU8STR("X"),
+	const NBT_Type::String &strY = MU8STR("Y"),
+	const NBT_Type::String &strZ = MU8STR("Z"))
 {
 	//V7为IntArray顺序存储的xyz坐标
 	//V6为Compound打包的x、y、z的Int类型成员
@@ -928,9 +947,9 @@ void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	}
 
 	auto &cpdBlockPos = nodeV6Tag.SetCompound();
-	cpdBlockPos.PutInt(MU8STR("X"), iarrBlockPos[0]);
-	cpdBlockPos.PutInt(MU8STR("Y"), iarrBlockPos[1]);
-	cpdBlockPos.PutInt(MU8STR("Z"), iarrBlockPos[2]);
+	cpdBlockPos.PutInt(strX, iarrBlockPos[0]);
+	cpdBlockPos.PutInt(strY, iarrBlockPos[1]);
+	cpdBlockPos.PutInt(strZ, iarrBlockPos[2]);
 
 	return;
 }
@@ -970,10 +989,7 @@ void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 
 		//实体转换代理
 		NBT_Type::Compound cpdV6EntityData;
-		if (!ProcessEntity(*pFind, cpdV6EntityData))
-		{
-			continue;
-		}
+		ProcessEntity(*pFind, cpdV6EntityData);
 		cpdV6Entry.PutCompound(MU8STR("EntityData"), std::move(cpdV6EntityData));
 	}
 
