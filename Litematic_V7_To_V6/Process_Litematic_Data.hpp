@@ -602,9 +602,14 @@ void PotionContentsProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7
 
 void BlockEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
 {
-	ProcessTileEntity();
+	if (!nodeV7TagVal.IsCompound())
+	{
+		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
 
-
+	//直接转换到根
+	ProcessTileEntity(nodeV7TagVal.GetCompound(), cpdV6TileEntityData);
 	return;
 }
 
