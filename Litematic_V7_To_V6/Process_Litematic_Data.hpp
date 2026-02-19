@@ -427,6 +427,89 @@ void ProcessFireworks(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
+NBT_Type::Byte DecorationTypeMap(const NBT_Type::String &strType)
+{
+	const static std::unordered_map<NBT_Type::String, NBT_Type::Byte> mapDecorationType =
+	{
+		{ MU8STR("minecraft:player"),				 0 },
+		{ MU8STR("minecraft:frame"),				 1 },
+		{ MU8STR("minecraft:red_marker"),			 2 },
+		{ MU8STR("minecraft:blue_marker"),			 3 },
+		{ MU8STR("minecraft:target_x"),				 4 },
+		{ MU8STR("minecraft:target_point"),			 5 },
+		{ MU8STR("minecraft:player_off_map"),		 6 },
+		{ MU8STR("minecraft:player_off_limits"),	 7 },
+		{ MU8STR("minecraft:mansion"),				 8 },
+		{ MU8STR("minecraft:monument"),				 9 },
+		{ MU8STR("minecraft:banner_white"),			10 },
+		{ MU8STR("minecraft:banner_orange"),		11 },
+		{ MU8STR("minecraft:banner_magenta"),		12 },
+		{ MU8STR("minecraft:banner_light_blue"),	13 },
+		{ MU8STR("minecraft:banner_yellow"),		14 },
+		{ MU8STR("minecraft:banner_lime"),			15 },
+		{ MU8STR("minecraft:banner_pink"),			16 },
+		{ MU8STR("minecraft:banner_gray"),			17 },
+		{ MU8STR("minecraft:banner_light_gray"),	18 },
+		{ MU8STR("minecraft:banner_cyan"),			19 },
+		{ MU8STR("minecraft:banner_purple"),		20 },
+		{ MU8STR("minecraft:banner_blue"),			21 },
+		{ MU8STR("minecraft:banner_brown"),			22 },
+		{ MU8STR("minecraft:banner_green"),			23 },
+		{ MU8STR("minecraft:banner_red"),			24 },
+		{ MU8STR("minecraft:banner_black"),			25 },
+		{ MU8STR("minecraft:red_x"),				26 },
+		{ MU8STR("minecraft:village_desert"),		27 },
+		{ MU8STR("minecraft:village_plains"),		28 },
+		{ MU8STR("minecraft:village_savanna"),		29 },
+		{ MU8STR("minecraft:village_snowy"),		30 },
+		{ MU8STR("minecraft:village_taiga"),		31 },
+		{ MU8STR("minecraft:jungle_temple"),		32 },
+		{ MU8STR("minecraft:swamp_hut"),			33 },
+	};
+
+	auto itFind = mapDecorationType.find(strType);
+	return itFind != mapDecorationType.end() ? itFind->second : 0;
+}
+
+void ProcessMapDecorations(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &cpdV7 = nodeV7Tag.GetCompound();
+	auto &listV6 = nodeV6Tag.SetList();
+
+	for (auto &[strV7Key, nodeV7Val] : cpdV7)
+	{
+		if (!nodeV7Val.IsCompound())
+		{
+			continue;
+		}
+
+		auto &cpdV7Entry = nodeV7Val.GetCompound();
+		NBT_Type::Compound cpdV6Entry;
+
+		cpdV6Entry.PutString(MU8STR("id"), strV7Key);
+		cpdV6Entry.PutDouble(MU8STR("x"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("x")), 0.0));
+		cpdV6Entry.PutDouble(MU8STR("z"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("z")), 0.0));
+		cpdV6Entry.PutDouble(MU8STR("rot"), (NBT_Type::Double)CopyOrElse(cpdV7Entry.HasFloat(MU8STR("rotation")), 0.0f));
+
+		NBT_Type::Byte bType = 0;//default
+		if (auto *pType = cpdV7Entry.HasString(MU8STR("type")); pType != NULL)
+		{
+			bType = DecorationTypeMap(*pType);
+		}
+		cpdV6Entry.PutByte(MU8STR("type"), bType);
+
+		listV6.AddBackCompound(std::move(cpdV6Entry));
+	}
+
+	return;
+}
+
 //实际转换
 using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
 //用于Map值
@@ -467,6 +550,9 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId,
 	const static std::unordered_map<NBT_Type::String, MapVal_T > mapProccess =
 	{
 		{ MU8STR("minecraft:block_state"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("BlockStateTag"),		_1, _2, _3) } },
+		{ MU8STR("minecraft:instrument"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("instrument"),			_1, _2, _3) } },
+		{ MU8STR("minecraft:map_id"),					{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("map"),					_1, _2, _3) } },
+
 		{ MU8STR("minecraft:can_break"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CanDestroy"),			_1, _2, _3) } },
 		{ MU8STR("minecraft:can_place_on"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CanPlaceOn"),			_1, _2, _3) } },
 		{ MU8STR("minecraft:custom_model_data"),		{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CustomModelData"),		_1, _2, _3) } },
@@ -482,8 +568,7 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId,
 		{ MU8STR("minecraft:stored_enchantments"),		{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("StoredEnchantments"),	ProcessEnchantments,			_1, _2, _3) } },
 		{ MU8STR("minecraft:fireworks"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Fireworks"),			ProcessFireworks,				_1, _2, _3) } },
 		{ MU8STR("minecraft:firework_explosion"),		{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Explosion"),			ProcessFireworkExplosion,		_1, _2, _3) } },
-		{ MU8STR("minecraft:instrument"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("instrument"),			ProcessInstrument,				_1, _2, _3) } },
-		{ MU8STR("minecraft:map_id"),					{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("map"),					ProcessMapId,					_1, _2, _3) } },
+		
 		{ MU8STR("minecraft:map_decorations"),			{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Decorations"),			ProcessMapDecorations,			_1, _2, _3) } },
 		{ MU8STR("minecraft:profile"),					{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("SkullOwner"),			ProcessSkullProfile,			_1, _2, _3) } },
 		{ MU8STR("minecraft:recipes"),					{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Recipes"),				ProcessRecipes,					_1, _2, _3) } },
