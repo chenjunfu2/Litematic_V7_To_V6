@@ -59,20 +59,20 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
 	{
-		{ MU8STR("Items"),						std::bind(DefaultProcess,	MU8STR("Items"),		ProcessItems,		_1, _2, _3) },
-		{ MU8STR("patterns"),					std::bind(DefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,	_1, _2, _3) },
-		{ MU8STR("profile"),					std::bind(DefaultProcess,	MU8STR("SkullOwner"),	ProcessSkullProfile,_1, _2, _3) },
-		{ MU8STR("flower_pos"),					std::bind(DefaultProcess,	MU8STR("FlowerPos"),	ProcessBlockPos,	_1, _2, _3) },
-		{ MU8STR("exit_portal"),				std::bind(DefaultProcess,	MU8STR("ExitPortal"),	ProcessBlockPos,	_1, _2, _3) },
-		{ MU8STR("bees"),						std::bind(DefaultProcess,	MU8STR("Bees"),			ProcessBees,		_1, _2, _3) },
-		{ MU8STR("item"),						std::bind(DefaultProcess,	MU8STR("item"),			ProcessSingleItem,	_1, _2, _3) },
+		{ MU8STR("Items"),						std::bind(DefaultProcess,	MU8STR("Items"),		ProcessItems,			_1, _2, _3) },
+		{ MU8STR("patterns"),					std::bind(DefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,		_1, _2, _3) },
+		{ MU8STR("profile"),					std::bind(DefaultProcess,	MU8STR("SkullOwner"),	ProcessSkullProfile,	_1, _2, _3) },
+		{ MU8STR("flower_pos"),					std::bind(DefaultProcess,	MU8STR("FlowerPos"),	ProcessBlockPosDefault,	_1, _2, _3) },
+		{ MU8STR("exit_portal"),				std::bind(DefaultProcess,	MU8STR("ExitPortal"),	ProcessBlockPosDefault,	_1, _2, _3) },
+		{ MU8STR("bees"),						std::bind(DefaultProcess,	MU8STR("Bees"),			ProcessBees,			_1, _2, _3) },
+		{ MU8STR("item"),						std::bind(DefaultProcess,	MU8STR("item"),			ProcessSingleItem,		_1, _2, _3) },
 
 		{ MU8STR("ticks_since_song_started"),	funcJukeboxProcess }, //音符盒特殊处理
 
-		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessRecordItem,	_1, _2, _3) },
-		{ MU8STR("Book"),						std::bind(DefaultProcess,	MU8STR("Book"),			ProcessBook,		_1, _2, _3) },
-		{ MU8STR("CustomName"),					std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,	_1, _2, _3) },
-		{ MU8STR("custom_name"),				std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,	_1, _2, _3) },
+		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessRecordItem,		_1, _2, _3) },
+		{ MU8STR("Book"),						std::bind(DefaultProcess,	MU8STR("Book"),			ProcessBook,			_1, _2, _3) },
+		{ MU8STR("CustomName"),					std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,		_1, _2, _3) },
+		{ MU8STR("custom_name"),				std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,		_1, _2, _3) },
 	};
 
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)

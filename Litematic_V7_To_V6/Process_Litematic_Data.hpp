@@ -591,7 +591,7 @@ void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &node
 		if (auto *pPos = pTarget->Has(MU8STR("pos")); pPos != NULL)
 		{
 			NBT_Node nodeV6Pos;
-			ProcessBlockPos(*pPos, nodeV6Pos);
+			ProcessBlockPosDefault(*pPos, nodeV6Pos);
 			cpdV6TileEntityData.Put(MU8STR("LodestonePos"), std::move(nodeV6Pos));
 		}
 	}
@@ -741,7 +741,7 @@ void RenameProcess(const NBT_Type::String &strNewKey, const NBT_Type::String &st
 	cpdV6TileEntityData.Put(strNewKey, std::move(nodeV7TagVal));
 }
 
-void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag)
+void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag)
 {
 	using std::placeholders::_1;
 	using std::placeholders::_2;
@@ -808,25 +808,51 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strIte
 		{ MU8STR("minecraft:bucket_entity_data"),		{ false,	UseTagType::BlockEntityTag,	BucketEntityDataProcess } },
 
 
-		{ MU8STR("minecraft:banner_patterns"),			{ false,	UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+
+		{ MU8STR("minecraft:charged_projectiles"),		{ false,	UseTagType::V6Tag,
+			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
 			{
-				
+
+
+
+			}}
+		},
+		{ MU8STR("minecraft:writable_book_content"),	{ false,	UseTagType::V6Tag,
+			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			{
+
+
+
+			}}
+		},
+		{ MU8STR("minecraft:written_book_content"),		{ false,	UseTagType::V6Tag,
+			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			{
+
+
+
+			}}
+		},
+
+
+
+		{ MU8STR("minecraft:banner_patterns"),			{ false,	UseTagType::BlockEntityTag,
+			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			{
+				cpdV6TileEntityData.PutString(MU8STR("id"), MU8STR("minecraft:banner"));
 				
 				
 			}}
 		},
-
 		{ MU8STR("minecraft:bees"),						{ true,		UseTagType::BlockEntityTag,
 			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
 			{
-
+				cpdV6TileEntityData.PutString(MU8STR("id"), strItemId);
 
 
 			}}
 		},
-
-		{ MU8STR(""),									{ false,	UseTagType::V6Tag,
+		{ MU8STR("minecraft:container"),				{ true,		UseTagType::BlockEntityTag,
 			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
 			{
 
@@ -834,9 +860,29 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strIte
 
 			}}
 		},
+		{ MU8STR("minecraft:container_loot"),			{ true,		UseTagType::BlockEntityTag,
+			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			{
+				cpdV6TileEntityData.PutString(MU8STR("id"), strItemId);
 
 
+			}}
+		},
+		{ MU8STR("minecraft:lock"),						{ true,		UseTagType::BlockEntityTag,
+			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			{
+				cpdV6TileEntityData.PutString(MU8STR("id"), strItemId);
+				cpdV6TileEntityData.Put(MU8STR("Lock"), std::move(nodeV7TagVal));
+			}}
+		},
+		{ MU8STR("minecraft:pot_decorations"),			{ true,		UseTagType::BlockEntityTag,
+			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			{
+				cpdV6TileEntityData.PutString(MU8STR("id"), strItemId);
 
+
+			}}
+		},
 	};
 
 	NBT_Type::Compound cpdBlockEntityTag;
@@ -921,7 +967,7 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		if (pV7Tag != NULL)
 		{
 			NBT_Type::Compound cpdV6Tag;
-			ProcessItemTag(*pV7Tag, strId, cpdV6Tag);
+			ProcessComponentsTag(*pV7Tag, strId, cpdV6Tag);
 			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
 		}
 
@@ -1045,6 +1091,11 @@ void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
+void ProcessBlockPosDefault(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+	ProcessBlockPos(nodeV7Tag, nodeV6Tag);
+}
+
 void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag,
 	const NBT_Type::String &strX = MU8STR("X"),
 	const NBT_Type::String &strY = MU8STR("Y"),
@@ -1133,7 +1184,7 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	if (pTag != NULL)
 	{
 		NBT_Type::Compound cpdV6Tag;
-		ProcessItemTag(*pTag, strId, cpdV6Tag);
+		ProcessComponentsTag(*pTag, strId, cpdV6Tag);
 		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
 	}
 
