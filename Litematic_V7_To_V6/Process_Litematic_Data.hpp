@@ -532,10 +532,12 @@ void CustomDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagV
 	if (!nodeV7TagVal.IsCompound())
 	{
 		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
 	}
 
 	//事实上，CustomData内部存储的key val在低版本是直接放在外面的，所以，解包出来的值直接合并即可
 	cpdV6TileEntityData.Merge(std::move(nodeV7TagVal.GetCompound()));
+	return;
 }
 
 void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
@@ -543,6 +545,7 @@ void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &node
 	if (!nodeV7TagVal.IsCompound())
 	{
 		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
 	}
 
 	auto &cpdV7 = nodeV7TagVal.GetCompound();
@@ -550,23 +553,50 @@ void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &node
 	//与CustomData一致，数据存储在外面，但是名称有变化
 	if (auto *pTracked = cpdV7.HasByte(MU8STR("tracked")); pTracked != NULL)
 	{
-		cpdV6TileEntityData.PutByte(MU8STR("LodestoneTracked"), *pTracked);
+		cpdV6TileEntityData.PutByte(MU8STR("LodestoneTracked"), std::move(*pTracked));
 	}
 
 	if (auto *pTarget = cpdV7.HasCompound(MU8STR("target")); pTarget != NULL)
 	{
 		if (auto *pDimension = pTarget->HasString(MU8STR("dimension")); pDimension != NULL)
 		{
-			cpdV6TileEntityData.PutString(MU8STR("LodestoneDimension"), *pDimension);
+			cpdV6TileEntityData.PutString(MU8STR("LodestoneDimension"), std::move(*pDimension));
 		}
 
 		if (auto *pPos = pTarget->Has(MU8STR("pos")); pPos != NULL)
 		{
 			NBT_Node nodeV6Pos;
 			ProcessBlockPos(*pPos, nodeV6Pos);
-			cpdV6TileEntityData.Put(MU8STR("LodestonePos"), nodeV6Pos);
+			cpdV6TileEntityData.Put(MU8STR("LodestonePos"), std::move(nodeV6Pos));
 		}
 	}
+
+	return;
+}
+
+void PotionContentsProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+{
+	if (!nodeV7TagVal.IsCompound())
+	{
+		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
+
+	auto &cpdV7 = nodeV7TagVal.GetCompound();
+	if (auto *pPotion = cpdV7.HasString(MU8STR("potion")); pPotion != NULL)
+	{
+		cpdV6TileEntityData.PutString(MU8STR("Potion"), std::move(*pPotion));
+	}
+	if (auto *pCustomColor = cpdV7.HasInt(MU8STR("custom_color")); pCustomColor != NULL)
+	{
+		cpdV6TileEntityData.PutInt(MU8STR("CustomPotionColor"), std::move(*pCustomColor));
+	}
+	if (auto *pCustomEffects = cpdV7.HasList(MU8STR("custom_effects")); pCustomEffects != NULL)
+	{
+		cpdV6TileEntityData.PutList(MU8STR("custom_potion_effects"), std::move(*pCustomEffects));
+	}
+
+	return;
 }
 
 
