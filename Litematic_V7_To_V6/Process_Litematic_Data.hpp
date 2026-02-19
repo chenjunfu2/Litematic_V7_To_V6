@@ -9,6 +9,7 @@
 
 //前向声明
 bool ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData);
+void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag);
 
 template<typename T, typename V>
 requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructible_v<T, V>)
@@ -510,6 +511,65 @@ void ProcessMapDecorations(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
+void ProcessUnbreakable(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	//子组件在低版本不存在，直接忽略，注意高版本中，
+	//只要挂载了这个标签，也就是这个函数被调用则生效Unbreakable，
+	//所以直接设置nodeV6Tag为boolean=true（也就是byte=1）
+	nodeV6Tag.SetByte(1);
+
+	return;
+}
+
+void CustomDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+{
+	if (!nodeV7TagVal.IsCompound())
+	{
+		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+	}
+
+	//事实上，CustomData内部存储的key val在低版本是直接放在外面的，所以，解包出来的值直接合并即可
+	cpdV6TileEntityData.Merge(std::move(nodeV7TagVal.GetCompound()));
+}
+
+void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+{
+	if (!nodeV7TagVal.IsCompound())
+	{
+		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+	}
+
+	auto &cpdV7 = nodeV7TagVal.GetCompound();
+
+	//与CustomData一致，数据存储在外面，但是名称有变化
+	if (auto *pTracked = cpdV7.HasByte(MU8STR("tracked")); pTracked != NULL)
+	{
+		cpdV6TileEntityData.PutByte(MU8STR("LodestoneTracked"), *pTracked);
+	}
+
+	if (auto *pTarget = cpdV7.HasCompound(MU8STR("target")); pTarget != NULL)
+	{
+		if (auto *pDimension = pTarget->HasString(MU8STR("dimension")); pDimension != NULL)
+		{
+			cpdV6TileEntityData.PutString(MU8STR("LodestoneDimension"), *pDimension);
+		}
+
+		if (auto *pPos = pTarget->Has(MU8STR("pos")); pPos != NULL)
+		{
+			NBT_Node nodeV6Pos;
+			ProcessBlockPos(*pPos, nodeV6Pos);
+			cpdV6TileEntityData.Put(MU8STR("LodestonePos"), nodeV6Pos);
+		}
+	}
+}
+
+
 //实际转换
 using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
 //用于Map值
@@ -552,6 +612,9 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId,
 		{ MU8STR("minecraft:block_state"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("BlockStateTag"),		_1, _2, _3) } },
 		{ MU8STR("minecraft:instrument"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("instrument"),			_1, _2, _3) } },
 		{ MU8STR("minecraft:map_id"),					{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("map"),					_1, _2, _3) } },
+		{ MU8STR("minecraft:recipes"),					{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("Recipes"),				_1, _2, _3) } },
+		{ MU8STR("minecraft:suspicious_stew_effects"),	{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("effects"),				_1, _2, _3) } },
+		{ MU8STR("minecraft:trim"),						{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("Trim"),					_1, _2, _3) } },
 
 		{ MU8STR("minecraft:can_break"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CanDestroy"),			_1, _2, _3) } },
 		{ MU8STR("minecraft:can_place_on"),				{ UseTagType::V6Tag,	std::bind(RenameProcess,	MU8STR("CanPlaceOn"),			_1, _2, _3) } },
@@ -568,12 +631,8 @@ void ProcessItemTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strId,
 		{ MU8STR("minecraft:stored_enchantments"),		{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("StoredEnchantments"),	ProcessEnchantments,			_1, _2, _3) } },
 		{ MU8STR("minecraft:fireworks"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Fireworks"),			ProcessFireworks,				_1, _2, _3) } },
 		{ MU8STR("minecraft:firework_explosion"),		{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Explosion"),			ProcessFireworkExplosion,		_1, _2, _3) } },
-		
 		{ MU8STR("minecraft:map_decorations"),			{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Decorations"),			ProcessMapDecorations,			_1, _2, _3) } },
 		{ MU8STR("minecraft:profile"),					{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("SkullOwner"),			ProcessSkullProfile,			_1, _2, _3) } },
-		{ MU8STR("minecraft:recipes"),					{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Recipes"),				ProcessRecipes,					_1, _2, _3) } },
-		{ MU8STR("minecraft:suspicious_stew_effects"),	{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("effects"),				ProcessSuspiciousStewEffects,	_1, _2, _3) } },
-		{ MU8STR("minecraft:trim"),						{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Trim"),					ProcessTrim,					_1, _2, _3) } },
 		{ MU8STR("minecraft:unbreakable"),				{ UseTagType::V6Tag,	std::bind(DefaultProcess,	MU8STR("Unbreakable"),			ProcessUnbreakable,				_1, _2, _3) } },
 
 		{ MU8STR("minecraft:custom_data"),				{ UseTagType::V6Tag,	CustomDataProcess } },
