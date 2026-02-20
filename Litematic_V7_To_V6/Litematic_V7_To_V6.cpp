@@ -67,7 +67,7 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 	};
 
 
-	for (auto &[itV7TagKey, itV7TagVal] : cpdV6EntityData)
+	for (auto &[itV7TagKey, itV7TagVal] : cpdV7EntityData)
 	{
 		//查找是否有匹配的处理过程
 		auto itFind = mapProccess.find(itV7TagKey);
@@ -368,6 +368,7 @@ bool ConvertLitematicFile_V7_To_V6(const std::string &sV7FilePath)
 		}
 	}
 
+	printf("Convert Success!\n");
 	return true;
 }
 
