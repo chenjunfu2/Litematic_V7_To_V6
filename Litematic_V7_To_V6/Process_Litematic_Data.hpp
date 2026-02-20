@@ -791,12 +791,99 @@ void ProcessLootTable(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 
 void ProcessWritableBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
+	if (!nodeV7TagVal.IsCompound())
+	{
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
+
+	auto *pPages = GetCompound(nodeV7TagVal).HasList(MU8STR("pages"));
+	if (pPages == NULL)
+	{
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
+
+	NBT_Type::Compound cpdFilteredPages;
+	NBT_Type::List listPages;
+	NBT_Type::Int iPageNum = -1;
+	for (auto &itPage : *pPages)
+	{
+		++iPageNum;//每次递增
+
+		if (itPage.IsCompound())
+		{
+			//获取filtered与raw，filtered设置为页面号插入cpdFilteredPages，raw直接插入listPages尾部
+			auto &cpdPage = itPage.GetCompound();
+			auto *pRaw = cpdPage.HasString(MU8STR("raw"));
+			if (pRaw == NULL)//页面不可用
+			{
+				--iPageNum;//恢复
+				continue;//未知页面跳过
+			}
+			listPages.AddBackString(*pRaw);
+
+			auto *pFiltered = cpdPage.HasString(MU8STR("filtered"));
+			if (pFiltered != NULL)
+			{
+				auto strPageNum = MUTF8_Tool<uint8_t, char16_t, char>::U8ToMU8(std::to_string(iPageNum));
+				cpdFilteredPages.PutString(std::move(strPageNum), std::move(*pFiltered));//页面号作为Key
+			}
+		}
+		else if(itPage.IsString())
+		{
+			listPages.AddBack(std::move(itPage));//不解包为string然后再次封装成nbt_node，直接插入以减少开销
+		}
+		else
+		{
+			--iPageNum;//恢复
+			continue;//未知页面跳过
+		}
+	}
+
+
+	if (!cpdFilteredPages.Empty())
+	{
+		cpdV6TagData.PutCompound(MU8STR("filtered_pages"), std::move(cpdFilteredPages));
+	}
+	if (!listPages.Empty())
+	{
+		cpdV6TagData.PutList(MU8STR("pages"), std::move(listPages));
+	}
 
 	return;
 }
 
 void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
+	if (!nodeV7TagVal.IsCompound())
+	{
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
+
+	//处理书的信息
+	auto &cpdBook = nodeV7TagVal.GetCompound();
+	if (auto *pAuthor = cpdBook.HasString(MU8STR("author")); pAuthor != NULL)
+	{
+		cpdV6TagData.PutString(MU8STR("author"), std::move(*pAuthor));
+	}
+	if (auto *pTitle = cpdBook.HasCompound(MU8STR("title")); pTitle != NULL)
+	{
+		//低版本title没有过滤标签，丢弃，只保留raw
+		cpdV6TagData.PutString(MU8STR("title"), MoveOrElse(pTitle->HasString(MU8STR("raw")), MU8STR("")));
+	}
+	if (auto *pResolved = cpdBook.HasByte(MU8STR("resolved")); pResolved != NULL)
+	{
+		cpdV6TagData.PutByte(MU8STR("resolved"), *pResolved);
+	}
+	if (auto *pGeneration = cpdBook.HasInt(MU8STR("generation")); pGeneration != NULL)
+	{
+		cpdV6TagData.PutInt(MU8STR("generation"), *pGeneration);
+	}
+
+	//处理书的页面，使用书与笔处理过程的代理
+	ProcessWritableBookContent(strV7TagKey, nodeV7TagVal, cpdV6TagData);
 
 	return;
 }
