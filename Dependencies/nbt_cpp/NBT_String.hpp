@@ -160,7 +160,7 @@ public:
 
 	/// @brief 提供从父类移动构造此类的途径
 	/// @param _Move 需要移动构造的对象
-	NBT_String(String &_Move) :String(std::move(_Move))
+	NBT_String(String &&_Move) :String(std::move(_Move))
 	{}
 
 	/// @brief 通过c风格字符串或字符数组初始化
