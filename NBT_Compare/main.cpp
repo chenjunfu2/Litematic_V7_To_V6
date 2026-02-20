@@ -73,8 +73,11 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	cpdInput[0] = std::move(cpdInput[0].GetCompound(MU8STR("")));
-	cpdInput[1] = std::move(cpdInput[1].GetCompound(MU8STR("")));
+	auto tmp0 = std::move(cpdInput[0].GetCompound(MU8STR("")));
+	cpdInput[0] = std::move(tmp0);
+
+	auto tmp1 = std::move(cpdInput[1].GetCompound(MU8STR("")));
+	cpdInput[1] = std::move(tmp1);
 
 	if (cpdInput[0] == cpdInput[1])
 	{
@@ -130,6 +133,8 @@ int main(int argc, char *argv[])
 
 	fclose(pFile[0]);
 	fclose(pFile[1]);
+
+	printf("Cmp file gen!\n");
 	return 0;
 }
 
