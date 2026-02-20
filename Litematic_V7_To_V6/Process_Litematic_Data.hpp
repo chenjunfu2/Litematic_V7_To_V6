@@ -689,15 +689,15 @@ void ProcessDyedColor(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		auto fG = listRGB.GetFloat(1);
 		auto fB = listRGB.GetFloat(2);
 
-		NBT_Type::Byte bR = 255.0 * fR;
-		NBT_Type::Byte bG = 255.0 * fG;
-		NBT_Type::Byte bB = 255.0 * fB;
+		auto bR = (uint8_t)(255.0 * fR);
+		auto bG = (uint8_t)(255.0 * fG);
+		auto bB = (uint8_t)(255.0 * fB);
 
 		NBT_Type::Int iRGB =
-			(NBT_Type::Int)255 << 24 |
-			(NBT_Type::Int)bR  << 16 |
-			(NBT_Type::Int)bG  <<  8 |
-			(NBT_Type::Int)bR  <<  0;
+			(uint32_t)255 << 24 |
+			(uint32_t)bR  << 16 |
+			(uint32_t)bG  <<  8 |
+			(uint32_t)bR  <<  0;
 
 		nodeV6Tag.SetInt(iRGB);
 	}
@@ -1434,7 +1434,7 @@ void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	
 	if (!listTextures.Empty())
 	{
-		cpdV6.PutList(MU8STR("Properties"), NBT_Type::Compound{ MU8STR("textures"), std::move(listTextures) });
+		cpdV6.PutCompound(MU8STR("Properties"), NBT_Type::Compound{ MU8STR("textures"), std::move(listTextures) });
 	}
 
 	return;
