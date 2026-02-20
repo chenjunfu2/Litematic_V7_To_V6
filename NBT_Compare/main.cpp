@@ -91,11 +91,9 @@ int main(int argc, char *argv[])
 
 		//'.'前面的部分，不包含'.'
 		std::string sNewFileName = strOldFileName.substr(0, szPos).append("Cmp");
-		//'.'后面的部分，包含'.'
-		std::string sNewFileExten = strOldFileName.substr(szPos);
 
 		//唯一文件名
-		strNewFileName = GenerateUniqueFilename(sNewFileName, sNewFileExten);
+		strNewFileName = GenerateUniqueFilename(sNewFileName, ".txt");
 		if (strNewFileName.empty())
 		{
 			printf("Unable to find a valid file name or lack of permission!\n");
