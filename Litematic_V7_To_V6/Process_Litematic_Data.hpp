@@ -9,7 +9,7 @@
 
 //前向声明
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData);
-void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData);
+void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TagData);
 void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag,
 	const NBT_Type::String &strX = MU8STR("X"),
 	const NBT_Type::String &strY = MU8STR("Y"),
@@ -552,24 +552,24 @@ void ProcessUnbreakable(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
-void CustomDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+void CustomDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
-		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
 		return;
 	}
 
 	//事实上，CustomData内部存储的key val在低版本是直接放在外面的，所以，解包出来的值直接合并即可
-	cpdV6TileEntityData.Merge(std::move(nodeV7TagVal.GetCompound()));
+	cpdV6TagData.Merge(std::move(nodeV7TagVal.GetCompound()));
 	return;
 }
 
-void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
-		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
 		return;
 	}
 
@@ -578,75 +578,75 @@ void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &node
 	//与CustomData一致，数据存储在外面，但是名称有变化
 	if (auto *pTracked = cpdV7.HasByte(MU8STR("tracked")); pTracked != NULL)
 	{
-		cpdV6TileEntityData.PutByte(MU8STR("LodestoneTracked"), std::move(*pTracked));
+		cpdV6TagData.PutByte(MU8STR("LodestoneTracked"), std::move(*pTracked));
 	}
 
 	if (auto *pTarget = cpdV7.HasCompound(MU8STR("target")); pTarget != NULL)
 	{
 		if (auto *pDimension = pTarget->HasString(MU8STR("dimension")); pDimension != NULL)
 		{
-			cpdV6TileEntityData.PutString(MU8STR("LodestoneDimension"), std::move(*pDimension));
+			cpdV6TagData.PutString(MU8STR("LodestoneDimension"), std::move(*pDimension));
 		}
 
 		if (auto *pPos = pTarget->Has(MU8STR("pos")); pPos != NULL)
 		{
 			NBT_Node nodeV6Pos;
 			ProcessBlockPosDefault(*pPos, nodeV6Pos);
-			cpdV6TileEntityData.Put(MU8STR("LodestonePos"), std::move(nodeV6Pos));
+			cpdV6TagData.Put(MU8STR("LodestonePos"), std::move(nodeV6Pos));
 		}
 	}
 
 	return;
 }
 
-void PotionContentsProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+void PotionContentsProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
-		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
 		return;
 	}
 
 	auto &cpdV7 = nodeV7TagVal.GetCompound();
 	if (auto *pPotion = cpdV7.HasString(MU8STR("potion")); pPotion != NULL)
 	{
-		cpdV6TileEntityData.PutString(MU8STR("Potion"), std::move(*pPotion));
+		cpdV6TagData.PutString(MU8STR("Potion"), std::move(*pPotion));
 	}
 	if (auto *pCustomColor = cpdV7.HasInt(MU8STR("custom_color")); pCustomColor != NULL)
 	{
-		cpdV6TileEntityData.PutInt(MU8STR("CustomPotionColor"), std::move(*pCustomColor));
+		cpdV6TagData.PutInt(MU8STR("CustomPotionColor"), std::move(*pCustomColor));
 	}
 	if (auto *pCustomEffects = cpdV7.HasList(MU8STR("custom_effects")); pCustomEffects != NULL)
 	{
-		cpdV6TileEntityData.PutList(MU8STR("custom_potion_effects"), std::move(*pCustomEffects));
+		cpdV6TagData.PutList(MU8STR("custom_potion_effects"), std::move(*pCustomEffects));
 	}
 
 	return;
 }
 
-void BlockEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+void BlockEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
-		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
 		return;
 	}
 
 	//直接转换到根
-	ProcessTileEntity(nodeV7TagVal.GetCompound(), cpdV6TileEntityData);
+	ProcessTileEntity(nodeV7TagVal.GetCompound(), cpdV6TagData);
 	return;
 }
 
-void BucketEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+void BucketEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
-		cpdV6TileEntityData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
 		return;
 	}
 
 	//直接转换到根
-	ProcessEntity(nodeV7TagVal.GetCompound(), cpdV6TileEntityData);
+	ProcessEntity(nodeV7TagVal.GetCompound(), cpdV6TagData);
 	return;
 }
 
@@ -722,23 +722,145 @@ void ProcessItemName(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
+void ProcessChargedProjectile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+
+	return;
+}
+
+void ProcessBannerPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+
+	return;
+}
+
+void ProcessWritableBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
+{
+
+	return;
+}
+
+void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
+{
+
+	return;
+}
+
+void ProcessSingleItemNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &cpdV7Item = nodeV7Tag.GetCompound();
+	auto &cpdV6Item = nodeV6Tag.SetCompound();
+
+	//低版本不存在，无用
+	//auto iSlot = CopyOrElse(cpdV7Item.HasInt(MU8STR("slot")), 0);
+	auto *pItem = cpdV7Item.HasCompound(MU8STR("item"));
+	if (pItem == NULL)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	//没有id，无用
+	auto *pId = cpdV7Item.HasString(MU8STR("id"));
+	if (pId == NULL)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+	cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));
+
+	if (auto *pV7Tag = cpdV7Item.HasCompound(MU8STR("components")); pV7Tag != NULL)
+	{
+		NBT_Type::Compound cpdV6Tag;
+		ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag);
+		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
+	}
+
+	return;
+}
+
+void ProcessItemsNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+	if (!nodeV7Tag.IsList())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &listV7 = nodeV7Tag.GetList();
+	auto &listV6 = nodeV6Tag.SetList();
+
+	NBT_Type::Byte bSlot = -1;
+	for (auto &itV7Entry : listV7)
+	{
+		++bSlot;//槽位计数，用于默认值修复
+
+		if (!itV7Entry.IsCompound())
+		{
+			continue;
+		}
+
+		auto &cpdV7Entry = itV7Entry.GetCompound();
+		NBT_Type::Compound cpdV6Entry;
+
+		NBT_Type::Int iSlot = CopyOrElse(cpdV7Entry.HasInt(MU8STR("slot")), bSlot);
+		auto *pItem = cpdV7Entry.HasCompound(MU8STR("item"));
+		if (pItem == NULL)
+		{
+			--bSlot;//空物品，不要递增修复计数
+			continue;
+		}
+
+		//依旧空物品
+		auto *pId = pItem->HasString(MU8STR("id"));
+		if (pId == NULL)
+		{
+			--bSlot;//空物品，不要递增修复计数
+			continue;
+		}
+
+		const auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(pItem->HasInt(MU8STR("count")), 1));
+		cpdV6Entry.PutByte(MU8STR("Slot"), CopyOrElse(pItem->HasByte(MU8STR("Slot")), bSlot));
+
+		if (auto *pV7Tag = pItem->HasCompound(MU8STR("components")); pV7Tag != NULL)
+		{
+			NBT_Type::Compound cpdV6Tag;
+			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag);
+			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
+		}
+
+		listV6.AddBackCompound(std::move(cpdV6Entry));
+	}
+
+	return;
+}
+
 
 //实际转换
 using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)>;
 //用于Map值
-using MapValFunc_T = std::function<void(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)>;
+using MapValFunc_T = std::function<void(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)>;
 
 //通用处理
-void DefaultProcess(const NBT_Type::String &strNewKey, TagProcessFunc_T funcTagProcess, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+void DefaultProcess(const NBT_Type::String &strNewKey, TagProcessFunc_T funcTagProcess, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
 	NBT_Node nodeV6TagVal;
 	funcTagProcess(nodeV7TagVal, nodeV6TagVal);
-	cpdV6TileEntityData.Put(strNewKey, std::move(nodeV6TagVal));
+	cpdV6TagData.Put(strNewKey, std::move(nodeV6TagVal));
 };
 
-void RenameProcess(const NBT_Type::String &strNewKey, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData)
+void RenameProcess(const NBT_Type::String &strNewKey, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
-	cpdV6TileEntityData.Put(strNewKey, std::move(nodeV7TagVal));
+	cpdV6TagData.Put(strNewKey, std::move(nodeV7TagVal));
 }
 
 void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag)
@@ -792,7 +914,8 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:custom_data"),				{ false,	UseTagType::V6Tag,			CustomDataProcess } },
 		{ MU8STR("minecraft:lodestone_tracker"),		{ false,	UseTagType::V6Tag,			LodestoneTrackerProcess } },
 		{ MU8STR("minecraft:potion_contents"),			{ false,	UseTagType::V6Tag,			PotionContentsProcess } },
-
+		{ MU8STR("minecraft:writable_book_content"),	{ false,	UseTagType::V6Tag,			ProcessWritableBookContent } },
+		{ MU8STR("minecraft:written_book_content"),		{ false,	UseTagType::V6Tag,			ProcessWrittenBookContent } },
 
 
 		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		std::bind(RenameProcess,	MU8STR("Lore"),					_1, _2, _3) } },
@@ -810,77 +933,64 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 
 
 		{ MU8STR("minecraft:charged_projectiles"),		{ false,	UseTagType::V6Tag,
-			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData) -> void
 			{
-
-
-
-			}}
-		},
-		{ MU8STR("minecraft:writable_book_content"),	{ false,	UseTagType::V6Tag,
-			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
-			{
-
-
-
-			}}
-		},
-		{ MU8STR("minecraft:written_book_content"),		{ false,	UseTagType::V6Tag,
-			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
-			{
-
-
-
+				cpdV6TagData.PutByte(MU8STR("Charged"), 1);//boolean=true
+				DefaultProcess(MU8STR("ChargedProjectiles"), ProcessChargedProjectile, strV7TagKey, nodeV7TagVal, cpdV6TagData);
 			}}
 		},
 
 
 
 		{ MU8STR("minecraft:banner_patterns"),			{ false,	UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData) -> void
 			{
-				cpdV6TileEntityData.PutString(MU8STR("id"), MU8STR("minecraft:banner"));
-				
-				
+				cpdV6TagData.PutString(MU8STR("id"), MU8STR("minecraft:banner"));
+				DefaultProcess(MU8STR("Patterns"), ProcessBannerPatterns, strV7TagKey, nodeV7TagVal, cpdV6TagData);
 			}}
 		},
 		{ MU8STR("minecraft:bees"),						{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData) -> void
 			{
-				cpdV6TileEntityData.PutString(MU8STR("id"), strItemId);
-
-
+				cpdV6TagData.PutString(MU8STR("id"), strItemId);
+				DefaultProcess(MU8STR("Bees"), ProcessBees, MU8STR(""), nodeV7TagVal, cpdV6TagData);
 			}}
 		},
 		{ MU8STR("minecraft:container"),				{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData) -> void
 			{
+				if (strItemId.find(MU8STR("decorated_pot")) != strItemId.npos)
+				{
+					DefaultProcess(MU8STR("item"), ProcessSingleItemNested, MU8STR(""), nodeV7TagVal, cpdV6TagData);
+				}
+				else
+				{
+					DefaultProcess(MU8STR("Items"), ProcessItemsNested, MU8STR(""), nodeV7TagVal, cpdV6TagData);
+				}
 
-
-
+				bool bShulker = strItemId.find(MU8STR("shulker")) == strItemId.npos;
+				cpdV6TagData.PutString(MU8STR("id"), bShulker ? MU8STR("minecraft:shulker_box") : strItemId);
 			}}
 		},
 		{ MU8STR("minecraft:container_loot"),			{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData) -> void
 			{
-				cpdV6TileEntityData.PutString(MU8STR("id"), strItemId);
-
-
+				cpdV6TagData.PutString(MU8STR("id"), strItemId);
+				DefaultProcess(MU8STR("LootTable"), ProcessLootTable, MU8STR(""), nodeV7TagVal, cpdV6TagData);
 			}}
 		},
 		{ MU8STR("minecraft:lock"),						{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData) -> void
 			{
-				cpdV6TileEntityData.PutString(MU8STR("id"), strItemId);
-				cpdV6TileEntityData.Put(MU8STR("Lock"), std::move(nodeV7TagVal));
+				cpdV6TagData.PutString(MU8STR("id"), strItemId);
+				cpdV6TagData.Put(MU8STR("Lock"), std::move(nodeV7TagVal));
 			}}
 		},
 		{ MU8STR("minecraft:pot_decorations"),			{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData) -> void
 			{
-				cpdV6TileEntityData.PutString(MU8STR("id"), strItemId);
-
-
+				cpdV6TagData.PutString(MU8STR("id"), strItemId);
+				DefaultProcess(MU8STR("sherds"), ProcessSherds, MU8STR(""), nodeV7TagVal, cpdV6TagData);
 			}}
 		},
 	};
@@ -956,18 +1066,18 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		auto *pId = cpdV7Entry.HasString(MU8STR("id"));
 		if (pId == NULL)
 		{
+			--bSlot;//空物品不递增计数
 			continue;
 		}
 
-		const auto & strId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+		const auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
 		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
 		cpdV6Entry.PutByte(MU8STR("Slot"), CopyOrElse(cpdV7Entry.HasByte(MU8STR("Slot")), bSlot));
 
-		auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components"));
-		if (pV7Tag != NULL)
+		if (auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components")); pV7Tag != NULL)
 		{
 			NBT_Type::Compound cpdV6Tag;
-			ProcessComponentsTag(*pV7Tag, strId, cpdV6Tag);
+			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag);
 			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
 		}
 
@@ -1093,7 +1203,7 @@ void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 
 void ProcessBlockPosDefault(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
-	ProcessBlockPos(nodeV7Tag, nodeV6Tag);
+	return ProcessBlockPos(nodeV7Tag, nodeV6Tag);
 }
 
 void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag,
@@ -1177,14 +1287,20 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	auto &cpdV7Item = nodeV7Tag.GetCompound();
 	auto &cpdV6Item = nodeV6Tag.SetCompound();
 
-	auto &strId = cpdV6Item.PutString(MU8STR("id"), MoveOrElse(cpdV7Item.HasString(MU8STR("id")), MU8STR(""))).first->second.GetString();
-	cpdV6Item.PutByte(MU8STR("count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("Count")), 1));
+	auto *pId = cpdV7Item.HasString(MU8STR("id"));
+	if (pId == NULL)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
-	auto *pTag = cpdV7Item.HasCompound(MU8STR("components"));
-	if (pTag != NULL)
+	auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+	cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));
+
+	if (auto *pV7Tag = cpdV7Item.HasCompound(MU8STR("components")); pV7Tag != NULL)
 	{
 		NBT_Type::Compound cpdV6Tag;
-		ProcessComponentsTag(*pTag, strId, cpdV6Tag);
+		ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag);
 		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
 	}
 
