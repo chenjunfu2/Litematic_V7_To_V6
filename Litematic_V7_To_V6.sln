@@ -5,9 +5,11 @@ VisualStudioVersion = 16.0.36631.11
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Litematic_V7_To_V6", "Litematic_V7_To_V6\Litematic_V7_To_V6.vcxproj", "{D81BACB5-EBF4-4844-B85F-21E3E459005E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xxhash", "Litematic_V7_To_V6\xxhash\xxhash.vcxproj", "{DC504567-A6FA-4E8F-A354-E1ECFDDE5D81}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xxhash", "Dependencies\xxhash\xxhash.vcxproj", "{DC504567-A6FA-4E8F-A354-E1ECFDDE5D81}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "Litematic_V7_To_V6\zlib\zlib.vcxproj", "{E304062B-8190-4215-AFFE-D2BF30DE6600}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "Dependencies\zlib\zlib.vcxproj", "{E304062B-8190-4215-AFFE-D2BF30DE6600}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NBT_Compare", "NBT_Compare\NBT_Compare.vcxproj", "{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,14 @@ Global
 		{E304062B-8190-4215-AFFE-D2BF30DE6600}.Release|x64.Build.0 = Release|x64
 		{E304062B-8190-4215-AFFE-D2BF30DE6600}.Release|x86.ActiveCfg = Release|Win32
 		{E304062B-8190-4215-AFFE-D2BF30DE6600}.Release|x86.Build.0 = Release|Win32
+		{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}.Debug|x64.ActiveCfg = Debug|x64
+		{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}.Debug|x64.Build.0 = Debug|x64
+		{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}.Debug|x86.ActiveCfg = Debug|Win32
+		{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}.Debug|x86.Build.0 = Debug|Win32
+		{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}.Release|x64.ActiveCfg = Release|x64
+		{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}.Release|x64.Build.0 = Release|x64
+		{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}.Release|x86.ActiveCfg = Release|Win32
+		{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
