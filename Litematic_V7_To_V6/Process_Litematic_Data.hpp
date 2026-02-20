@@ -1240,8 +1240,8 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		return;
 	}
 
-	NBT_Type::List listV7 = nodeV7Tag.GetList();
-	NBT_Type::List listV6 = nodeV6Tag.SetList();
+	NBT_Type::List &listV7 = nodeV7Tag.GetList();
+	NBT_Type::List &listV6 = nodeV6Tag.SetList();
 
 	const static NBT_Type::Int iDefaultColor = 0;
 	const static std::unordered_map<NBT_Type::String, NBT_Type::Int> mapColor =

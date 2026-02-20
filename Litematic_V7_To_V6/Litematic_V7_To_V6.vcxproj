@@ -168,14 +168,6 @@
   <ItemGroup>
     <None Include="..\README.md" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="xxhash\xxhash.vcxproj">
-      <Project>{dc504567-a6fa-4e8f-a354-e1ecfdde5d81}</Project>
-    </ProjectReference>
-    <ProjectReference Include="zlib\zlib.vcxproj">
-      <Project>{e304062b-8190-4215-affe-d2bf30de6600}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
