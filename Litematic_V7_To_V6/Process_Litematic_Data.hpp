@@ -212,7 +212,7 @@ void ProcessAttributeModifiers(NBT_Type::List &listV7Tag, NBT_Type::List &listV6
 			cpdV6Entry.PutDouble(MU8STR("Amount"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("amount")), 0.0));
 		}
 
-		std::unordered_map<NBT_Type::String, NBT_Type::Int> mapOperation =
+		const static std::unordered_map<NBT_Type::String, NBT_Type::Int> mapOperation =
 		{
 			{ MU8STR("add_value"),				0 },
 			{ MU8STR("add_multiplied_base"),	1 },
