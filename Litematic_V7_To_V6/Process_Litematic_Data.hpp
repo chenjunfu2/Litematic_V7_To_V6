@@ -734,6 +734,17 @@ void ProcessBannerPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
+void ProcessLootTable(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+
+}
+
+
+void ProcessSherds(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+
+}
+
 void ProcessWritableBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
 
