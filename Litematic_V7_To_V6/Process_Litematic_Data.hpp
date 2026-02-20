@@ -830,8 +830,7 @@ void ProcessWritableBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &n
 			if (pFiltered != NULL)
 			{
 				auto strPageNum = MUTF8_Tool<uint8_t, char16_t, char>::U8ToMU8(std::to_string(iPageNum));
-				auto strPageNumView = NBT_Type::String::View(strPageNum);
-				cpdFilteredPages.PutString(strPageNumView, std::move(*pFiltered));//页面号作为Key
+				cpdFilteredPages.PutString(strPageNum, std::move(*pFiltered));//页面号作为Key
 			}
 		}
 		else if(itPage.IsString())

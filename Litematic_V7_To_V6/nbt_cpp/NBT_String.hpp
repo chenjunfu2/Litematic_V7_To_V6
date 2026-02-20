@@ -153,6 +153,16 @@ public:
 	/// @brief 使用基类下标
 	using String::operator[];
 
+	/// @brief 提供从父类拷贝构造此类的途径
+	/// @param _Copy 需要拷贝构造的对象
+	NBT_String(const String &_Copy) :String(_Copy)
+	{}
+
+	/// @brief 提供从父类移动构造此类的途径
+	/// @param _Move 需要移动构造的对象
+	NBT_String(String &_Move) :String(std::move(_Move))
+	{}
+
 	/// @brief 通过c风格字符串或字符数组初始化
 	/// @param ltrStr 数组的引用
 	/// @note 如果字符串或字符数组以c风格字符串的\0或mutf8的0x80 0xc0结尾，则裁切多余结尾，因为string数据中不应包含字符串结束符，
