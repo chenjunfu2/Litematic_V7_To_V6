@@ -36,6 +36,52 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData)
 {
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+	using std::placeholders::_3;
+
+	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
+	{
+		{ MU8STR("has_egg"),			std::bind(RenameProcess,			MU8STR("HasEgg"),			_1, _2, _3) },
+		{ MU8STR("life_ticks"),			std::bind(RenameProcess,			MU8STR("LifeTicks"),		_1, _2, _3) },
+		{ MU8STR("size"),				std::bind(RenameProcess,			MU8STR("Size"),				_1, _2, _3) },
+		{ MU8STR("fall_distance"),		std::bind(RenameProcess,			MU8STR("FallDistance"),		_1, _2, _3) },
+
+		{ MU8STR("anchor_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("A"),				_1, _2, _3) },
+		{ MU8STR("block_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("Tile"),				_1, _2, _3) },
+		{ MU8STR("bound_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("Bound"),			_1, _2, _3) },
+		{ MU8STR("home_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("HomePos"),			_1, _2, _3) },
+		{ MU8STR("sleeping_pos"),		std::bind(ProcessBlockPosExternal,	MU8STR("Sleeping"),			_1, _2, _3) },
+
+		{ MU8STR("attributes"),			std::bind(DefaultProcess,			MU8STR("Attributes"),	ProcessAttributes,	_1, _2, _3) },
+		{ MU8STR("flower_pos"),			std::bind(DefaultProcess,			MU8STR("FlowerPos"),	ProcessBlockPos,	_1, _2, _3) },
+		{ MU8STR("hive_pos"),			std::bind(DefaultProcess,			MU8STR("HivePos"),		ProcessBlockPos,	_1, _2, _3) },
+		{ MU8STR("Item"),				std::bind(DefaultProcess,			MU8STR("Item"),			ProcessSingleItem,	_1, _2, _3) },
+
+		{ MU8STR("ArmorItems"),			std::bind(DefaultProcess,			MU8STR("ArmorItems"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, 4),		_1, _2, _3) },
+		{ MU8STR("HandItems"),			std::bind(DefaultProcess,			MU8STR("HandItems"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, 2),		_1, _2, _3) },
+		{ MU8STR("Inventory"),			std::bind(DefaultProcess,			MU8STR("Inventory"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, 1),		_1, _2, _3) },
+
+		{ MU8STR("equipment"),			ProcessEntityEquipment },
+		{ MU8STR("drop_chances"),		ProcessEntityDropChances },
+	};
+
+
+	for (auto &[itV7TagKey, itV7TagVal] : cpdV6EntityData)
+	{
+		//查找是否有匹配的处理过程
+		auto itFind = mapProccess.find(itV7TagKey);
+		if (itFind == mapProccess.end())
+		{
+			//不匹配直接移动处理
+			cpdV6EntityData.Put(itV7TagKey, std::move(itV7TagVal));
+			continue;
+		}
+
+		//进行处理
+		auto &funcProcess = itFind->second;
+		funcProcess(itV7TagKey, itV7TagVal, cpdV6EntityData);
+	}
 
 	return;
 }
@@ -66,8 +112,8 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		{ MU8STR("Items"),						std::bind(DefaultProcess,	MU8STR("Items"),		ProcessItems,			_1, _2, _3) },
 		{ MU8STR("patterns"),					std::bind(DefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,		_1, _2, _3) },
 		{ MU8STR("profile"),					std::bind(DefaultProcess,	MU8STR("SkullOwner"),	ProcessSkullProfile,	_1, _2, _3) },
-		{ MU8STR("flower_pos"),					std::bind(DefaultProcess,	MU8STR("FlowerPos"),	ProcessBlockPosDefault,	_1, _2, _3) },
-		{ MU8STR("exit_portal"),				std::bind(DefaultProcess,	MU8STR("ExitPortal"),	ProcessBlockPosDefault,	_1, _2, _3) },
+		{ MU8STR("flower_pos"),					std::bind(DefaultProcess,	MU8STR("FlowerPos"),	ProcessBlockPos,	_1, _2, _3) },
+		{ MU8STR("exit_portal"),				std::bind(DefaultProcess,	MU8STR("ExitPortal"),	ProcessBlockPos,	_1, _2, _3) },
 		{ MU8STR("bees"),						std::bind(DefaultProcess,	MU8STR("Bees"),			ProcessBees,			_1, _2, _3) },
 		{ MU8STR("item"),						std::bind(DefaultProcess,	MU8STR("item"),			ProcessSingleItem,		_1, _2, _3) },
 		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessSingleItem,		_1, _2, _3) },

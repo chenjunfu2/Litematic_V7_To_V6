@@ -10,10 +10,7 @@
 //前向声明
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData);
 void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TagData);
-void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag,
-	const NBT_Type::String &strX = MU8STR("X"),
-	const NBT_Type::String &strY = MU8STR("Y"),
-	const NBT_Type::String &strZ = MU8STR("Z"));
+void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag);
 
 template<typename T, typename V>
 requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructible_v<T, V>)
@@ -36,10 +33,11 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 		return;
 	}
 
-	const auto *pId = cpdTileEntity.HasString(MU8STR("Id"));
+	auto *pId = cpdTileEntity.HasString(MU8STR("Id"));
 	if (pId != NULL)
 	{
-		cpdTileEntity.PutString(MU8STR("id"), *pId);//转化为小写id
+		cpdTileEntity.PutString(MU8STR("id"), std::move(*pId));//转化为小写id
+		cpdTileEntity.Remove(MU8STR("Id"));//删除
 		return;
 	}
 
@@ -591,7 +589,7 @@ void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &node
 		if (auto *pPos = pTarget->Has(MU8STR("pos")); pPos != NULL)
 		{
 			NBT_Node nodeV6Pos;
-			ProcessBlockPosDefault(*pPos, nodeV6Pos);
+			ProcessBlockPos(*pPos, nodeV6Pos);
 			cpdV6TagData.Put(MU8STR("LodestonePos"), std::move(nodeV6Pos));
 		}
 	}
@@ -1343,15 +1341,28 @@ void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
-void ProcessBlockPosDefault(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+void ProcessBlockPosExternal(const NBT_Type::String &strPosPerfix, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
-	return ProcessBlockPos(nodeV7Tag, nodeV6Tag);
+	if (!nodeV7TagVal.IsIntArray())
+	{
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
+
+	auto &iarrBlockPos = nodeV7TagVal.GetIntArray();
+	if (iarrBlockPos.size() != 3)
+	{
+		return;
+	}
+
+	cpdV6TagData.PutInt(strPosPerfix + MU8STR("X"), iarrBlockPos[0]);
+	cpdV6TagData.PutInt(strPosPerfix + MU8STR("Y"), iarrBlockPos[1]);
+	cpdV6TagData.PutInt(strPosPerfix + MU8STR("Z"), iarrBlockPos[2]);
+
+	return;
 }
 
-void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag,
-	const NBT_Type::String &strX = MU8STR("X"),
-	const NBT_Type::String &strY = MU8STR("Y"),
-	const NBT_Type::String &strZ = MU8STR("Z"))
+void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 	//V7为IntArray顺序存储的xyz坐标
 	//V6为Compound打包的x、y、z的Int类型成员
@@ -1369,9 +1380,9 @@ void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag,
 	}
 
 	auto &cpdBlockPos = nodeV6Tag.SetCompound();
-	cpdBlockPos.PutInt(strX, iarrBlockPos[0]);
-	cpdBlockPos.PutInt(strY, iarrBlockPos[1]);
-	cpdBlockPos.PutInt(strZ, iarrBlockPos[2]);
+	cpdBlockPos.PutInt(MU8STR("X"), iarrBlockPos[0]);
+	cpdBlockPos.PutInt(MU8STR("Y"), iarrBlockPos[1]);
+	cpdBlockPos.PutInt(MU8STR("Z"), iarrBlockPos[2]);
 
 	return;
 }
@@ -1427,8 +1438,6 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	}
 
 	auto &cpdV7Item = nodeV7Tag.GetCompound();
-	auto &cpdV6Item = nodeV6Tag.SetCompound();
-
 	auto *pId = cpdV7Item.HasString(MU8STR("id"));
 	if (pId == NULL)
 	{
@@ -1436,6 +1445,7 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		return;
 	}
 
+	auto &cpdV6Item = nodeV6Tag.SetCompound();
 	auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
 	cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));
 
@@ -1449,3 +1459,54 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
+void ProcessEntityItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, size_t szSlotSize)
+{
+	if (!nodeV7Tag.IsList())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &listV7 = nodeV7Tag.GetList();
+	auto &listV6 = nodeV6Tag.SetList();
+
+	for (auto &itV7Entry : listV7)
+	{
+		if (!itV7Entry.IsCompound())
+		{
+			continue;
+		}
+
+		NBT_Node nodeV6Entry;
+		ProcessSingleItem(itV7Entry, nodeV6Entry);
+		if (!nodeV6Entry.IsCompound())
+		{
+			continue;
+		}
+
+		listV6.AddBack(std::move(nodeV6Entry));
+	}
+
+	if (listV6.Size() < szSlotSize)
+	{
+		szSlotSize -= listV6.Size();
+		while (szSlotSize-- > 0)
+		{
+			listV6.AddBackCompound({});
+		}
+	}
+
+	return;
+}
+
+void ProcessEntityEquipment(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
+{
+
+	return;
+}
+
+void ProcessEntityDropChances(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
+{
+
+	return;
+}
