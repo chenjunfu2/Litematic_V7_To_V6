@@ -11,6 +11,11 @@
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData);
 void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TagData);
 void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag);
+void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag);
+void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag);
+void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag);
+void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag);
+void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag);
 
 template<typename T, typename V>
 requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructible_v<T, V>)
@@ -1595,12 +1600,103 @@ void ProcessEntityItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, size_t szSlotS
 
 void ProcessEntityEquipment(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
+	if (!nodeV7TagVal.IsCompound())
+	{
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
+
+	enum class HandArmorSlot
+	{
+		mainhand,
+		offhand,
+		feet,
+		legs,
+		chest,
+		head,
+		body,
+		saddle,
+	};
+
+	const static std::unordered_map<NBT_Type::String, HandArmorSlot> mapSlot =
+	{
+		{ MU8STR("mainhand"),	HandArmorSlot::mainhand },
+		{ MU8STR("offhand"),	HandArmorSlot::offhand },
+		{ MU8STR("feet"),		HandArmorSlot::feet },
+		{ MU8STR("legs"),		HandArmorSlot::legs },
+		{ MU8STR("chest"),		HandArmorSlot::chest },
+		{ MU8STR("head"),		HandArmorSlot::head },
+		{ MU8STR("body"),		HandArmorSlot::body },
+		{ MU8STR("saddle"),		HandArmorSlot::saddle },
+	};
+
+	auto &cpdV7Tag = nodeV7TagVal.GetCompound();
+
+	NBT_Type::List listHandItems{ NBT_Type::Compound{}, NBT_Type::Compound{} };
+	NBT_Type::List listArmorItems{ NBT_Type::Compound{}, NBT_Type::Compound{}, NBT_Type::Compound{}, NBT_Type::Compound{} };
+
+	for (auto &[strV7Key, nodeV7Val] : cpdV7Tag)
+	{
+		auto itFind = mapSlot.find(strV7Key);
+		if (itFind == mapSlot.end())
+		{
+			continue;
+		}
+
+		switch (itFind->second)
+		{
+		case HandArmorSlot::mainhand:
+			ProcessSingleItem(nodeV7Val, listHandItems[0]);
+			break;
+		case HandArmorSlot::offhand:
+			ProcessSingleItem(nodeV7Val, listHandItems[1]);
+			break;
+		case HandArmorSlot::feet:
+			ProcessSingleItem(nodeV7Val, listArmorItems[0]);
+			break;
+		case HandArmorSlot::legs:
+			ProcessSingleItem(nodeV7Val, listArmorItems[1]);
+			break;
+		case HandArmorSlot::chest:
+			ProcessSingleItem(nodeV7Val, listArmorItems[2]);
+			break;
+		case HandArmorSlot::head:
+			ProcessSingleItem(nodeV7Val, listArmorItems[3]);
+			break;
+		case HandArmorSlot::body:
+			{
+				//注释来自投影：Why is this duplicated in 1.20.4?  the world may never know...
+				NBT_Node nodeV6Body;
+				ProcessSingleItem(nodeV7Val, nodeV6Body);
+				listArmorItems[2] = nodeV6Body;//拷贝一份
+				cpdV6TagData.Put(MU8STR("ArmorItem"), std::move(nodeV6Body));
+			}
+			break;
+		case HandArmorSlot::saddle:
+			{
+				NBT_Node nodeV6Saddle;
+				ProcessSingleItem(nodeV7Val, nodeV6Saddle);
+				cpdV6TagData.Put(MU8STR("SaddleItem"), std::move(nodeV6Saddle));
+			}
+			break;
+		default:
+			continue;
+			break;
+		}
+	}
+	
+	cpdV6TagData.PutList(MU8STR("HandItems"), std::move(listHandItems));
+	cpdV6TagData.PutList(MU8STR("ArmorItems"), std::move(listArmorItems));
 
 	return;
 }
 
 void ProcessEntityDropChances(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
+
+
+
+
 
 	return;
 }
