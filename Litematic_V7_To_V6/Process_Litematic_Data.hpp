@@ -1693,10 +1693,81 @@ void ProcessEntityEquipment(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV
 
 void ProcessEntityDropChances(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
 {
+	if (!nodeV7TagVal.IsCompound())
+	{
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
 
+	enum class HandArmorSlot
+	{
+		mainhand,
+		offhand,
+		feet,
+		legs,
+		chest,
+		head,
+		//body,
+		//saddle,
+	};
 
+	const static std::unordered_map<NBT_Type::String, HandArmorSlot> mapSlot =
+	{
+		{ MU8STR("mainhand"),	HandArmorSlot::mainhand },
+		{ MU8STR("offhand"),	HandArmorSlot::offhand },
+		{ MU8STR("feet"),		HandArmorSlot::feet },
+		{ MU8STR("legs"),		HandArmorSlot::legs },
+		{ MU8STR("chest"),		HandArmorSlot::chest },
+		{ MU8STR("head"),		HandArmorSlot::head },
+		//{ MU8STR("body"),		HandArmorSlot::body },
+		//{ MU8STR("saddle"),		HandArmorSlot::saddle },
+	};
 
+	auto &cpdV7Tag = nodeV7TagVal.GetCompound();
 
+	NBT_Type::List listHandDrops{ NBT_Type::Compound{}, NBT_Type::Compound{} };
+	NBT_Type::List listArmorDrops{ NBT_Type::Compound{}, NBT_Type::Compound{}, NBT_Type::Compound{}, NBT_Type::Compound{} };
+
+	for (auto &[strV7Key, nodeV7Val] : cpdV7Tag)
+	{
+		auto itFind = mapSlot.find(strV7Key);
+		if (itFind == mapSlot.end())
+		{
+			continue;
+		}
+
+		switch (itFind->second)
+		{
+		case HandArmorSlot::mainhand:
+			listHandDrops[0] = nodeV7Val;
+			break;
+		case HandArmorSlot::offhand:
+			listHandDrops[1] = nodeV7Val;
+			break;
+		case HandArmorSlot::feet:
+			listArmorDrops[0] = nodeV7Val;
+			break;
+		case HandArmorSlot::legs:
+			listArmorDrops[1] = nodeV7Val;
+			break;
+		case HandArmorSlot::chest:
+			listArmorDrops[2] = nodeV7Val;
+			break;
+		case HandArmorSlot::head:
+			listArmorDrops[3] = nodeV7Val;
+			break;
+		//case HandArmorSlot::body:
+		//	break;
+		//case HandArmorSlot::saddle:
+		//	break;
+		default:
+			continue;
+			break;
+		}
+	}
+
+	cpdV6TagData.PutList(MU8STR("HandDropChances"), std::move(listHandDrops));
+	cpdV6TagData.PutList(MU8STR("ArmorDropChances"), std::move(listArmorDrops));
 
 	return;
 }
