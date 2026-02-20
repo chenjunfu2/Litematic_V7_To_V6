@@ -1739,22 +1739,22 @@ void ProcessEntityDropChances(const NBT_Type::String &strV7TagKey, NBT_Node &nod
 		switch (itFind->second)
 		{
 		case HandArmorSlot::mainhand:
-			listHandDrops[0] = nodeV7Val;
+			listHandDrops[0] = std::move(nodeV7Val);
 			break;
 		case HandArmorSlot::offhand:
-			listHandDrops[1] = nodeV7Val;
+			listHandDrops[1] = std::move(nodeV7Val);
 			break;
 		case HandArmorSlot::feet:
-			listArmorDrops[0] = nodeV7Val;
+			listArmorDrops[0] = std::move(nodeV7Val);
 			break;
 		case HandArmorSlot::legs:
-			listArmorDrops[1] = nodeV7Val;
+			listArmorDrops[1] = std::move(nodeV7Val);
 			break;
 		case HandArmorSlot::chest:
-			listArmorDrops[2] = nodeV7Val;
+			listArmorDrops[2] = std::move(nodeV7Val);
 			break;
 		case HandArmorSlot::head:
-			listArmorDrops[3] = nodeV7Val;
+			listArmorDrops[3] = std::move(nodeV7Val);
 			break;
 		//case HandArmorSlot::body:
 		//	break;
