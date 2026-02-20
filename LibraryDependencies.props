@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)Dependencies\zlib;$(SolutionDir)Dependencies\xxhash;$(SolutionDir)Dependencies;$(SolutionDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\zlib;$(SolutionDir)Dependencies\xxhash;$(SolutionDir)Dependencies;$(IncludePath)</IncludePath>
   </PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="$(SolutionDir)Dependencies\xxhash\xxhash.vcxproj">

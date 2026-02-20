@@ -11,6 +11,37 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "Dependencies\zlib\z
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NBT_Compare", "NBT_Compare\NBT_Compare.vcxproj", "{D4C9080F-F0BB-4173-8844-D6AB398E6F0E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{AE920E50-2DB1-4FC2-BAAD-473E09F2C63E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nbt_cpp", "nbt_cpp", "{0934EF2E-498D-4AA1-BAFF-9828ED5A9507}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\nbt_cpp\Compiler_Define.h = Dependencies\nbt_cpp\Compiler_Define.h
+		Dependencies\nbt_cpp\MUTF8_Tool.hpp = Dependencies\nbt_cpp\MUTF8_Tool.hpp
+		Dependencies\nbt_cpp\NBT_All.hpp = Dependencies\nbt_cpp\NBT_All.hpp
+		Dependencies\nbt_cpp\NBT_Array.hpp = Dependencies\nbt_cpp\NBT_Array.hpp
+		Dependencies\nbt_cpp\NBT_Compound.hpp = Dependencies\nbt_cpp\NBT_Compound.hpp
+		Dependencies\nbt_cpp\NBT_Endian.hpp = Dependencies\nbt_cpp\NBT_Endian.hpp
+		Dependencies\nbt_cpp\NBT_Hash.hpp = Dependencies\nbt_cpp\NBT_Hash.hpp
+		Dependencies\nbt_cpp\NBT_Helper.hpp = Dependencies\nbt_cpp\NBT_Helper.hpp
+		Dependencies\nbt_cpp\NBT_IO.hpp = Dependencies\nbt_cpp\NBT_IO.hpp
+		Dependencies\nbt_cpp\NBT_List.hpp = Dependencies\nbt_cpp\NBT_List.hpp
+		Dependencies\nbt_cpp\NBT_Node.hpp = Dependencies\nbt_cpp\NBT_Node.hpp
+		Dependencies\nbt_cpp\NBT_Node_View.hpp = Dependencies\nbt_cpp\NBT_Node_View.hpp
+		Dependencies\nbt_cpp\NBT_Print.hpp = Dependencies\nbt_cpp\NBT_Print.hpp
+		Dependencies\nbt_cpp\NBT_Reader.hpp = Dependencies\nbt_cpp\NBT_Reader.hpp
+		Dependencies\nbt_cpp\NBT_String.hpp = Dependencies\nbt_cpp\NBT_String.hpp
+		Dependencies\nbt_cpp\NBT_TAG.hpp = Dependencies\nbt_cpp\NBT_TAG.hpp
+		Dependencies\nbt_cpp\NBT_Type.hpp = Dependencies\nbt_cpp\NBT_Type.hpp
+		Dependencies\nbt_cpp\NBT_Writer.hpp = Dependencies\nbt_cpp\NBT_Writer.hpp
+		Dependencies\nbt_cpp\vcpkg_config.h = Dependencies\nbt_cpp\vcpkg_config.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "util", "util", "{B9BF7942-BDB2-4E8D-8654-0A3AA45CAC1F}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\util\CodeTimer.hpp = Dependencies\util\CodeTimer.hpp
+		Dependencies\util\MyAssert.hpp = Dependencies\util\MyAssert.hpp
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -54,6 +85,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DC504567-A6FA-4E8F-A354-E1ECFDDE5D81} = {AE920E50-2DB1-4FC2-BAAD-473E09F2C63E}
+		{E304062B-8190-4215-AFFE-D2BF30DE6600} = {AE920E50-2DB1-4FC2-BAAD-473E09F2C63E}
+		{0934EF2E-498D-4AA1-BAFF-9828ED5A9507} = {AE920E50-2DB1-4FC2-BAAD-473E09F2C63E}
+		{B9BF7942-BDB2-4E8D-8654-0A3AA45CAC1F} = {AE920E50-2DB1-4FC2-BAAD-473E09F2C63E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5E6D18B7-9DC5-47E8-B325-4513AE4EE006}
