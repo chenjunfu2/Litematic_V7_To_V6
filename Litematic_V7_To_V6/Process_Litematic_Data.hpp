@@ -227,9 +227,9 @@ void ProcessAttributeModifiers(NBT_Type::List &listV7Tag, NBT_Type::List &listV6
 		}
 		cpdV6Entry.PutInt(MU8STR("Operation"), iOperation);
 
-		if (auto *pUUID = cpdV7Entry.Has(MU8STR("UUID")); pUUID != NULL)
+		if (auto *pUUID = cpdV7Entry.HasIntArray(MU8STR("UUID")); pUUID != NULL)
 		{
-			cpdV6Entry.Put(MU8STR("UUID"), *pUUID);
+			cpdV6Entry.PutIntArray(MU8STR("UUID"), std::move(*pUUID));
 		}
 
 		listV6Tag.AddBack(std::move(cpdV6Entry));
@@ -1337,6 +1337,100 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 
 void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &cpdV7 = nodeV7Tag.GetCompound();
+	auto &cpdV6 = nodeV6Tag.SetCompound();
+
+	//UUID
+	if (auto *pId = cpdV7.HasIntArray(MU8STR("id")); pId != NULL)
+	{
+		cpdV6.PutIntArray(MU8STR("Id"), std::move(*pId));
+	}
+	//Name
+	if (auto *pName = cpdV7.HasString(MU8STR("name")); pName != NULL)
+	{
+		cpdV6.PutString(MU8STR("Name"), std::move(*pName));
+	}
+
+	auto *pProperties = cpdV7.Has(MU8STR("properties"));
+	if (pProperties == NULL)
+	{
+		return;
+	}
+
+	NBT_Type::List listTextures;
+	if (pProperties->IsList())
+	{
+		for (auto &itEntry : pProperties->GetList())
+		{
+			if (!itEntry.IsCompound())
+			{
+				continue;
+			}
+
+			auto &cpdV7Entry = itEntry.GetCompound();
+			NBT_Type::Compound cpdV6Entry;
+
+			//必须有名称且为纹理
+			auto *pName = cpdV7Entry.HasString(MU8STR("name"));
+			if (pName == NULL || *pName != MU8STRV("textures"))
+			{
+				continue;
+			}
+
+			//必须有纹理数据
+			auto *pValue = cpdV7Entry.HasString(MU8STR("value"));
+			if (pValue == NULL)
+			{
+				continue;
+			}
+			cpdV6Entry.PutString(MU8STR("Value"), *pValue);
+
+			//可选签名
+			if (auto *pSignature = cpdV7Entry.HasString(MU8STR("signature")); pSignature != NULL)
+			{
+				cpdV6Entry.PutString(MU8STR("Signature"), *pSignature);
+			}
+
+			listTextures.AddBackCompound(std::move(cpdV6Entry));
+		}
+	}
+	else if (pProperties->IsCompound())
+	{
+		auto *pTextures = GetCompound(*pProperties).HasList(MU8STR("textures"));
+		if (pTextures == NULL)
+		{
+			return;//不存在样式
+		}
+
+		for (auto &itTexture : *pTextures)
+		{
+			if (itTexture.IsString())
+			{
+				continue;
+			}
+
+			auto &strTexture = itTexture.GetString();
+			NBT_Type::Compound cpdV6Entry;
+
+			cpdV6Entry.PutString(MU8STR("Value"), std::move(strTexture));
+			listTextures.AddBackCompound(std::move(cpdV6Entry));
+		}
+	}
+	else//无法解析的类型
+	{
+		return;
+	}
+	
+	if (!listTextures.Empty())
+	{
+		cpdV6.PutList(MU8STR("Properties"), NBT_Type::Compound{ MU8STR("textures"), std::move(listTextures) });
+	}
 
 	return;
 }
