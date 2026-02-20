@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 			return false;
 		}
 
-		return true
+		return true;
 	};
 
 	std::string strCmpFileName[2];
