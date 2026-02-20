@@ -1449,15 +1449,3 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
-void ProcessRecordItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
-{
-
-	return;
-}
-
-void ProcessCustomName(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
-{
-
-	return;
-}
-
