@@ -724,25 +724,76 @@ void ProcessItemName(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 
 void ProcessChargedProjectile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
+	if (!nodeV7Tag.IsList())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
-	return;
-}
+	auto &listV7 = nodeV7Tag.GetList();
+	auto &listV6 = nodeV6Tag.SetList();
 
-void ProcessBannerPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
-{
+	for (auto &itV7Entry : listV7)
+	{
+		if (!itV7Entry.IsCompound())
+		{
+			continue;
+		}
+
+		auto &cpdV7Entry = itV7Entry.GetCompound();
+		NBT_Type::Compound cpdV6Entry;
+
+		auto *pId = cpdV7Entry.HasString(MU8STR("id"));
+		if (pId == NULL)
+		{
+			continue;
+		}
+
+		const auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
+
+		if (auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components")); pV7Tag != NULL)
+		{
+			NBT_Type::Compound cpdV6Tag;
+			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag);
+			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
+		}
+
+		listV6.AddBackCompound(std::move(cpdV6Entry));
+	}
 
 	return;
 }
 
 void ProcessLootTable(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
+	auto &cpdV7 = nodeV7Tag.GetCompound();
+	auto &cpdV6 = nodeV6Tag.SetCompound();
+
+	if (auto *pLootTable = cpdV7.HasCompound(MU8STR("loot_table")); pLootTable != NULL)
+	{
+		cpdV6.Merge(std::move(*pLootTable));
+	}
+
+	if (auto *pSeed = cpdV7.HasLong(MU8STR("seed")); pSeed != NULL)
+	{
+		cpdV6.PutLong(MU8STR("LootTableSeed"), *pSeed);
+	}
+
+	return;
 }
 
 
 void ProcessSherds(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
+	return;
 }
 
 void ProcessWritableBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData)
@@ -957,7 +1008,7 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData) -> void
 			{
 				cpdV6TagData.PutString(MU8STR("id"), MU8STR("minecraft:banner"));
-				DefaultProcess(MU8STR("Patterns"), ProcessBannerPatterns, strV7TagKey, nodeV7TagVal, cpdV6TagData);
+				DefaultProcess(MU8STR("Patterns"), ProcessPatterns, strV7TagKey, nodeV7TagVal, cpdV6TagData);
 			}}
 		},
 		{ MU8STR("minecraft:bees"),						{ true,		UseTagType::BlockEntityTag,
@@ -1001,7 +1052,7 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData) -> void
 			{
 				cpdV6TagData.PutString(MU8STR("id"), strItemId);
-				DefaultProcess(MU8STR("sherds"), ProcessSherds, MU8STR(""), nodeV7TagVal, cpdV6TagData);
+				RenameProcess(MU8STR("sherds"), MU8STR(""), nodeV7TagVal, cpdV6TagData);
 			}}
 		},
 	};
