@@ -162,11 +162,13 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 	//这两个必须有，否则失败
 	if (!TransferDirectOptionalField(MU8STR("Position"), NBT_TAG::Compound))
 	{
+		printf("Position not found!\n");
 		return false;
 	}
 
 	if (!TransferDirectOptionalField(MU8STR("Size"), NBT_TAG::Compound))
 	{
+		printf("Size not found!\n");
 		return false;
 	}
 
@@ -222,6 +224,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	auto *pRoot = cpdV7Input.HasCompound(MU8STR(""));
 	if (pRoot == NULL)
 	{
+		printf("Root Compound not found!\n");
 		return false;
 	}
 
@@ -236,8 +239,9 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 
 	//版本验证
 	if ((pMinecraftDataVersion != NULL && *pMinecraftDataVersion <= V6_MINECRAFT_DATA_VERSION) ||
-		(pVersion != NULL && *pVersion <= V6_MINECRAFT_DATA_VERSION))
+		(pVersion != NULL && *pVersion <= V6_LITEMATIC_VERSION))
 	{
+		printf("Version Error!\n");
 		return false;
 	}
 
@@ -245,6 +249,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	auto *pMetadata = cpdV7DataRoot.HasCompound(MU8STR("Metadata"));
 	if (pMetadata == NULL)
 	{
+		printf("Metadata not found!\n");
 		return false;
 	}
 
@@ -260,6 +265,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	auto *pRegions = cpdV7DataRoot.HasCompound(MU8STR("Regions"));
 	if (pRegions == NULL)
 	{
+		printf("Regions not found!\n");
 		return false;
 	}
 
@@ -272,6 +278,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 		auto &cpdNewV6RegionData = cpdV6Regions.PutCompound(sV7RegionName, {}).first->second.GetCompound();
 		if (!ProcessRegion(GetCompound(nodeV7RegionData), cpdNewV6RegionData))
 		{
+			printf("ProcessRegion fail!\n");
 			return false;
 		}
 	}
