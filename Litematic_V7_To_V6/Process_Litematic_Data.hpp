@@ -830,7 +830,8 @@ void ProcessWritableBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &n
 			if (pFiltered != NULL)
 			{
 				auto strPageNum = MUTF8_Tool<uint8_t, char16_t, char>::U8ToMU8(std::to_string(iPageNum));
-				cpdFilteredPages.PutString(std::move(strPageNum), std::move(*pFiltered));//页面号作为Key
+				auto strPageNumView = NBT_Type::String::View(strPageNum);
+				cpdFilteredPages.PutString(strPageNumView, std::move(*pFiltered));//页面号作为Key
 			}
 		}
 		else if(itPage.IsString())
@@ -1434,7 +1435,7 @@ void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	
 	if (!listTextures.Empty())
 	{
-		cpdV6.PutCompound(MU8STR("Properties"), NBT_Type::Compound{ MU8STR("textures"), std::move(listTextures) });
+		cpdV6.PutCompound(MU8STR("Properties"), NBT_Type::Compound{ {MU8STR("textures"), NBT_Node{ std::move(listTextures) }} });
 	}
 
 	return;
