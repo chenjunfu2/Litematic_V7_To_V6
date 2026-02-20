@@ -870,8 +870,8 @@ void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &no
 	}
 	if (auto *pTitle = cpdBook.HasCompound(MU8STR("title")); pTitle != NULL)
 	{
-		//低版本title没有过滤标签，丢弃，只保留raw
 		cpdV6TagData.PutString(MU8STR("title"), MoveOrElse(pTitle->HasString(MU8STR("raw")), MU8STR("")));
+		cpdV6TagData.PutString(MU8STR("filtered_title"), MoveOrElse(pTitle->HasString(MU8STR("filtered")), MU8STR("")));
 	}
 	if (auto *pResolved = cpdBook.HasByte(MU8STR("resolved")); pResolved != NULL)
 	{
@@ -1450,12 +1450,6 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 }
 
 void ProcessRecordItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
-{
-
-	return;
-}
-
-void ProcessBook(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 {
 
 	return;

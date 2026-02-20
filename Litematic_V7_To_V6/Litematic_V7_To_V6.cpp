@@ -69,8 +69,8 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 		{ MU8STR("ticks_since_song_started"),	funcJukeboxProcess }, //音符盒特殊处理
 
-		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessRecordItem,		_1, _2, _3) },
-		{ MU8STR("Book"),						std::bind(DefaultProcess,	MU8STR("Book"),			ProcessBook,			_1, _2, _3) },
+		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessSingleItem,		_1, _2, _3) },
+		{ MU8STR("Book"),						std::bind(DefaultProcess,	MU8STR("Book"),			ProcessSingleItem,			_1, _2, _3) },
 		{ MU8STR("CustomName"),					std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,		_1, _2, _3) },
 		{ MU8STR("custom_name"),				std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomName,		_1, _2, _3) },
 	};
