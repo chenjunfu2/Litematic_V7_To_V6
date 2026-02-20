@@ -101,6 +101,8 @@ int main(int argc, char *argv[])
 			printf("Unable to find a valid file name or lack of permission!\n");
 			return false;
 		}
+
+		return true
 	};
 
 	std::string strCmpFileName[2];
