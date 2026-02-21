@@ -53,18 +53,18 @@ public:
 private:
 	const static inline char *const pDiffInfoStr[] =
 	{
-		"NoDifferent"
-		"DifferentTag",
-		"DifferentValue",
-		"DifferentLength",
-		"DifferentCompoundKey",
+		"No Different"
+		"Different Tag",
+		"Different Value",
+		"Different Length",
+		"Different CompoundKey",
 	};
 
 public:
 	static const char *GetDiffTypeInfo(DiffInfo di)
 	{
 		auto index = std::underlying_type_t<DiffInfo>(di);
-		if (index > std::underlying_type_t<DiffInfo>(DiffInfo::Enum_End))
+		if (index >= std::underlying_type_t<DiffInfo>(DiffInfo::Enum_End))
 		{
 			return "Unknown";
 		}
