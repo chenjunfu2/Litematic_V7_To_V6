@@ -242,7 +242,7 @@ private:
 		for (auto i : std::views::iota((size_t)0, szMin))
 		{
 			PushPath(listNbtPath, i);
-			CompareDetailsImpl(listLeft[i], listRight[i], listReports, listNbtPath);
+			bRet = (uint8_t)bRet & (uint8_t)CompareDetailsImpl(listLeft[i], listRight[i], listReports, listNbtPath);
 			PopPath(listNbtPath);
 		}
 
@@ -251,15 +251,6 @@ private:
 
 	static bool CompareStringType(const NBT_Type::String &strLeft, const NBT_Type::String &strRight, std::vector<Report> &listReports, std::vector<std::string> &listNbtPath)
 	{
-		if (strLeft.size() != strRight.size())
-		{
-			listReports.emplace_back(
-				ConnectionPath(listNbtPath),
-				DiffInfo::DiffLen,
-				GenInfo(strLeft.size(), strRight.size()));
-			return false;
-		}
-
 		if (strLeft != strRight)
 		{
 			listReports.emplace_back(
@@ -275,13 +266,14 @@ private:
 	template<typename T>
 	static bool CompareArrayType(const T &arrayLeft, const T &arrayRight, std::vector<Report> &listReports, std::vector<std::string> &listNbtPath)
 	{
+		bool bRet = true;
 		if (arrayLeft.size() != arrayRight.size())
 		{
 			listReports.emplace_back(
 				ConnectionPath(listNbtPath),
 				DiffInfo::DiffLen,
 				GenInfo(arrayLeft.size(), arrayRight.size()));
-			return false;
+			bRet = false;
 		}
 
 		if (arrayLeft != arrayRight)
@@ -293,7 +285,7 @@ private:
 			return false;
 		}
 
-		return true;
+		return bRet;
 	}
 
 	template<typename T>
