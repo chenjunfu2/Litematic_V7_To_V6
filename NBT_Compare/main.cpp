@@ -6,6 +6,17 @@
 #include <unordered_set>
 #include <ranges>
 
+bool EnableVirtualTerminalProcessing(void) noexcept;
+
+// 颜色宏定义
+#define COLOR_RED		"\033[91m"
+#define COLOR_GREEN		"\033[92m"
+#define COLOR_YELLOW	"\033[93m"
+#define COLOR_BLUE		"\033[94m"
+#define COLOR_CYAN		"\033[96m"
+#define COLOR_RESET		"\033[0m"
+#define COLOR_BOLD		"\033[1m"
+
 //找到一个唯一文件名
 std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &sEnd, uint32_t u32TryCount = 10)//默认最多重试10次
 {
@@ -116,31 +127,18 @@ private:
 	template<typename T>
 	static std::string GenInfo(const T &tL, const T &tR)
 	{
-		std::string strInfo;
 		if constexpr (std::is_same_v<T, NBT_Type::String>)
 		{
-			strInfo += "\"";
-			strInfo += tL.ToCharTypeUTF8();
-			strInfo += "\" != \"";
-			strInfo += tR.ToCharTypeUTF8();
-			strInfo += "\"";
+			return std::format(COLOR_GREEN "L: \"{}\"\n" COLOR_YELLOW "R: \"{}\"" COLOR_RESET, tL.ToCharTypeUTF8(), tR.ToCharTypeUTF8());
 		}
 		else if constexpr (std::is_same_v<T, std::string> || std::is_same_v<std::decay_t<T>, const char *>)
 		{
-			strInfo += tL;
-			strInfo += " != ";
-			strInfo += tR;
+			return std::format(COLOR_GREEN "L: {}\n" COLOR_YELLOW "R: {}" COLOR_RESET, tL, tR);
 		}
 		else
 		{
-			strInfo += "[";
-			strInfo += std::to_string(tL);
-			strInfo += "] != [";
-			strInfo += std::to_string(tR);
-			strInfo += "]";
+			return std::format(COLOR_GREEN "L: [{}]\n" COLOR_YELLOW "R: [{}]" COLOR_RESET, tL, tR);
 		}
-		
-		return strInfo;
 	}
 
 private:
@@ -179,28 +177,22 @@ private:
 			auto rHas = cpdRight.Has(it);
 			if (lHas && !rHas)
 			{
-				std::string strInfo;
-				strInfo += "Key [";
-				strInfo += it.ToCharTypeUTF8();
-				strInfo += "] is in Left not in Right";
+				std::string strKey = it.ToCharTypeUTF8();
 
 				listReports.emplace_back(
 					ConnectionPath(listNbtPath),
 					DiffInfo::DiffKey,
-					std::move(strInfo));
+					GenInfo(std::format("Has Key \"{}\"", strKey), std::format("Mis Key \"{}\"", strKey)));
 				bRet = false;
 			}
 			else if (!lHas && rHas)
 			{
-				std::string strInfo;
-				strInfo += "Key [";
-				strInfo += it.ToCharTypeUTF8();
-				strInfo += "] is in Right not in Left";
+				std::string strKey = it.ToCharTypeUTF8();
 
 				listReports.emplace_back(
 					ConnectionPath(listNbtPath),
 					DiffInfo::DiffKey,
-					std::move(strInfo));
+					GenInfo(std::format("Mis Key \"{}\"", strKey), std::format("Has Key \"{}\"", strKey)));
 				bRet = false;
 			}
 			else
@@ -233,7 +225,7 @@ private:
 			listReports.emplace_back(
 				ConnectionPath(listNbtPath),
 				DiffInfo::DiffTag,
-				GenInfo(NBT_Type::GetTypeName(listLeft.GetTag()), NBT_Type::GetTypeName(listRight.GetTag())));
+				GenInfo(std::format("[{}]", NBT_Type::GetTypeName(listLeft.GetTag())), std::format("[{}]", NBT_Type::GetTypeName(listRight.GetTag()))));
 			return false;//成员类型不同直接不用比较
 		}
 
@@ -314,7 +306,7 @@ private:
 			listReports.emplace_back(
 				ConnectionPath(listNbtPath),
 				DiffInfo::DiffTag,
-				GenInfo(NBT_Type::GetTypeName(nodeLeft.GetTag()), NBT_Type::GetTypeName(nodeRight.GetTag())));
+				GenInfo(std::format("[{}]", NBT_Type::GetTypeName(nodeLeft.GetTag())), std::format("[{}]", NBT_Type::GetTypeName(nodeRight.GetTag()))));
 			return false;
 		}
 
@@ -417,18 +409,46 @@ public:
 
 int main(int argc, char *argv[])
 {
+	(void)EnableVirtualTerminalProcessing();
+
 	if (argc != 3)
 	{
-		printf("Use:\n>[%s] [File1] [File2]\nTo Compare\n", argv[0]);
+		printf(COLOR_BLUE "Use:\n>[%s] [File1] [File2]\nTo Compare\n" COLOR_RESET, argv[0]);
 		return 0;
 	}
 
-	auto ReadNBT = [](const char *pFileName, NBT_Type::Compound &cpdInput) -> bool
+	auto GetFileRawName = [](const std::string &strFileName) -> std::string
+	{
+		//必须挨个查找，要么是最后一个左要么最后一个右
+		auto szLastPathSeparator1 = strFileName.find_last_of('\\');
+		auto szLastPathSeparator2 = strFileName.find_last_of('/');
+
+		//如果找不到设置为0
+		szLastPathSeparator1 = szLastPathSeparator1 != strFileName.npos ? szLastPathSeparator1 : 0;
+		szLastPathSeparator2 = szLastPathSeparator2 != strFileName.npos ? szLastPathSeparator2 : 0;
+
+		//选择最大的那个
+		auto szLastPathSeparator = std::max(szLastPathSeparator1, szLastPathSeparator2);
+
+		//没有，那么原始路径即为名称
+		if (szLastPathSeparator == 0)
+		{
+			return strFileName;
+		}
+
+		//返回裁切视图
+		return strFileName.substr(szLastPathSeparator + 1);//+1去掉最后一个分隔符
+	};
+
+	printf(COLOR_GREEN "File1: [%s]" COLOR_RESET, GetFileRawName(argv[1]).c_str());
+	printf(COLOR_YELLOW "File2: [%s]" COLOR_RESET, GetFileRawName(argv[2]).c_str());
+
+	auto ReadNBT = [](const std::string &strFileName, NBT_Type::Compound &cpdInput) -> bool
 	{
 		std::vector<uint8_t> vFileStream1{};
-		if (!NBT_IO::ReadFile(pFileName, vFileStream1))
+		if (!NBT_IO::ReadFile(strFileName, vFileStream1))
 		{
-			printf("Unable to read stream from file!\n");
+			printf(COLOR_RED "Unable to read stream from file!\n" COLOR_RESET);
 			return false;
 		}
 
@@ -436,13 +456,13 @@ int main(int argc, char *argv[])
 		std::vector<uint8_t> vDataV7Stream{};
 		if (!NBT_IO::DecompressDataNoThrow(vDataV7Stream, vFileStream1))
 		{
-			printf("Data may not be compressed, attempt to parse directly.\n");
+			printf(COLOR_RED "Data may not be compressed, attempt to parse directly.\n" COLOR_RESET);
 			vDataV7Stream = std::move(vFileStream1);//尝试以未压缩流处理，而不是失败
 		}
 
 		if (!NBT_Reader::ReadNBT(vDataV7Stream, 0, cpdInput))
 		{
-			printf("Unable to parse data from stream!\n");
+			printf(COLOR_RED "Unable to parse data from stream!\n" COLOR_RESET);
 			return false;
 		}
 
@@ -455,14 +475,14 @@ int main(int argc, char *argv[])
 
 	if (!b0 || !b1)
 	{
-		printf("ReadNBT fail!\n");
+		printf(COLOR_RED "ReadNBT fail!\n" COLOR_RESET);
 		return 0;
 	}
 
 	if (!cpdInput[0].HasCompound(MU8STR("")) ||
 		!cpdInput[1].HasCompound(MU8STR("")))
 	{
-		printf("Root Compound not found!\n");
+		printf(COLOR_RED "Root Compound not found!\n" COLOR_RESET);
 		return 0;
 	}
 
@@ -479,21 +499,21 @@ int main(int argc, char *argv[])
 
 	if (bEqual)
 	{
-		printf("Equal!\n");
+		printf(COLOR_BLUE "Equal!\n" COLOR_RESET);
 		return 0;
 	}
 
-	printf("No equal!\nInfo:\n\n");
+	printf(COLOR_BLUE "No equal!\n" COLOR_RESET "Info:\n\n");
 	//详细信息输出
 	
 	setlocale(LC_ALL, ".UTF-8");
 	for (auto &it : listReports)
 	{
-		printf("[%s]: %s\n%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
+		printf(COLOR_BOLD "[%s]: %s\n" COLOR_RESET "%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
 	}
 	setlocale(LC_ALL, "");
 
-	printf("\nGen cmp file...\n");
+	printf(COLOR_BLUE "\nGen cmp file...\n" COLOR_RESET);
 
 	//生成格式化文件方便文本查看
 	//查找合法文件
@@ -509,7 +529,7 @@ int main(int argc, char *argv[])
 		strNewFileName = GenerateUniqueFilename(sNewFileName, ".txt");
 		if (strNewFileName.empty())
 		{
-			printf("Unable to find a valid file name or lack of permission!\n");
+			printf(COLOR_RED "Unable to find a valid file name or lack of permission!\n" COLOR_RESET);
 			return false;
 		}
 
@@ -522,7 +542,7 @@ int main(int argc, char *argv[])
 
 	if (!b0 || !b1)
 	{
-		printf("FindFileName fail!\n");
+		printf(COLOR_RED "FindFileName fail!\n" COLOR_RESET);
 		return 0;
 	}
 
@@ -544,7 +564,7 @@ int main(int argc, char *argv[])
 	fclose(pFile[0]);
 	fclose(pFile[1]);
 
-	printf("Cmp file gen!\n");
+	printf(COLOR_BLUE "Cmp file gen!\n" COLOR_RESET);
 	return 0;
 }
 
