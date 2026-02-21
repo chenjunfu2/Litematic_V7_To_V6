@@ -440,8 +440,8 @@ int main(int argc, char *argv[])
 		return strFileName.substr(szLastPathSeparator + 1);//+1去掉最后一个分隔符
 	};
 
-	printf(COLOR_GREEN "File1: [%s]" COLOR_RESET, GetFileRawName(argv[1]).c_str());
-	printf(COLOR_YELLOW "File2: [%s]" COLOR_RESET, GetFileRawName(argv[2]).c_str());
+	printf(COLOR_GREEN "File1: [%s]\n" COLOR_RESET, GetFileRawName(argv[1]).c_str());
+	printf(COLOR_YELLOW "File2: [%s]\n" COLOR_RESET, GetFileRawName(argv[2]).c_str());
 
 	auto ReadNBT = [](const std::string &strFileName, NBT_Type::Compound &cpdInput) -> bool
 	{
@@ -503,13 +503,13 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	printf(COLOR_BLUE "No equal!\n" COLOR_RESET "Info:\n\n");
+	printf(COLOR_BLUE "No equal!\n" COLOR_RESET COLOR_BOLD "Diff Info:\n\n" COLOR_RESET);
 	//详细信息输出
 	
 	setlocale(LC_ALL, ".UTF-8");
 	for (auto &it : listReports)
 	{
-		printf(COLOR_BOLD "[%s]: %s\n" COLOR_RESET "%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
+		printf(COLOR_CYAN "[%s]: " COLOR_RESET COLOR_BOLD "%s\n" COLOR_RESET "%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
 	}
 	setlocale(LC_ALL, "");
 
