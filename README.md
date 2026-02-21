@@ -1,7 +1,9 @@
 # Litematic_V7_To_V6
 转换投影数据版本，从V7(1.20.5+)到V6(1.20.4-)，  
 并尽可能保留方块、方块实体、实体等其它信息  
-本项目代码参考了[投影](https://github.com/sakura-ryoko/litematica)的部分代码
+本项目代码参考了[投影](https://github.com/sakura-ryoko/litematica)的部分代码  
+使用的NBT库为：[NBT_CPP](https://github.com/chenjunfu2/NBT_CPP/)  
+其它库依赖：[zlib](https://github.com/madler/zlib)和[xxhash](https://github.com/Cyan4973/xxHash)  
 
 ## 使用方法
 将一个或多个需要降低数据版本的投影文件
