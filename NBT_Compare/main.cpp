@@ -53,7 +53,7 @@ public:
 private:
 	const static inline char *const pDiffInfoStr[] =
 	{
-		"No Different"
+		"No Different",
 		"Different Tag",
 		"Different Value",
 		"Different Length",
@@ -180,7 +180,7 @@ private:
 			if (lHas && !rHas)
 			{
 				std::string strInfo;
-				strInfo += "Key[";
+				strInfo += "Key [";
 				strInfo += it.ToCharTypeUTF8();
 				strInfo += "] is in Left not in Right";
 
@@ -193,7 +193,7 @@ private:
 			else if (!lHas && rHas)
 			{
 				std::string strInfo;
-				strInfo += "Key[";
+				strInfo += "Key [";
 				strInfo += it.ToCharTypeUTF8();
 				strInfo += "] is in Right not in Left";
 
@@ -415,7 +415,7 @@ private:
 public:
 	static bool CompareDetails(const NBT_Node_View<true> nodeLeft, const NBT_Node_View<true> nodeRight, std::vector<Report> &listReports)
 	{
-		std::vector<std::string> listNbtPath{ {"root"}};
+		std::vector<std::string> listNbtPath{ {"[Root]"}};
 		return CompareDetailsImpl<true>(nodeLeft, nodeRight, listReports, listNbtPath);
 	}
 
