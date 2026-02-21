@@ -14,6 +14,7 @@ bool EnableVirtualTerminalProcessing(void) noexcept;
 #define COLOR_YELLOW	"\033[93m"
 #define COLOR_BLUE		"\033[94m"
 #define COLOR_CYAN		"\033[96m"
+
 #define COLOR_RESET		"\033[0m"
 #define COLOR_BOLD		"\033[1m"
 
@@ -503,13 +504,13 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	printf(COLOR_BLUE "No equal!\n" COLOR_RESET COLOR_BOLD "Diff Info:\n\n" COLOR_RESET);
+	printf(COLOR_BLUE "No equal!\n" COLOR_RESET "Diff Info:\n\n" COLOR_RESET);
 	//详细信息输出
 	
 	setlocale(LC_ALL, ".UTF-8");
 	for (auto &it : listReports)
 	{
-		printf(COLOR_CYAN "[%s]: " COLOR_RESET COLOR_BOLD "%s\n" COLOR_RESET "%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
+		printf(COLOR_CYAN "[%s]: " COLOR_RESET "%s\n" COLOR_RESET "%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
 	}
 	setlocale(LC_ALL, "");
 
