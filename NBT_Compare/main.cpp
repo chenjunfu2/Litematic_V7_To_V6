@@ -6,6 +6,8 @@
 #include <unordered_set>
 #include <ranges>
 
+#include <stdlib.h>
+
 bool EnableVirtualTerminalProcessing(void) noexcept;
 
 // 颜色宏定义
@@ -504,13 +506,13 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	printf(COLOR_BLUE "No equal!\n" COLOR_RESET "Diff Info:\n\n" COLOR_RESET);
+	printf(COLOR_BLUE "No equal!\n" COLOR_RESET COLOR_BOLD "Diff Info:\n\n" COLOR_RESET);
 	//详细信息输出
 	
 	setlocale(LC_ALL, ".UTF-8");
 	for (auto &it : listReports)
 	{
-		printf(COLOR_CYAN "[%s]: " COLOR_RESET "%s\n" COLOR_RESET "%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
+		printf(COLOR_CYAN "[%s]: " COLOR_RESET COLOR_BOLD "%s\n" COLOR_RESET "%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
 	}
 	setlocale(LC_ALL, "");
 
@@ -566,6 +568,8 @@ int main(int argc, char *argv[])
 	fclose(pFile[1]);
 
 	printf(COLOR_BLUE "Cmp file gen!\n" COLOR_RESET);
+
+	system("pause");
 	return 0;
 }
 
