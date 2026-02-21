@@ -82,14 +82,14 @@ private:
 		{
 			std::string strNew;
 			strNew += '[';
-			strNew += std::to_string(newSeg);
+			strNew += std::to_string(tNewSeg);
 			strNew += ']';
 
 			listNbtPath.emplace_back(std::move(strNew));
 		}
 		else if constexpr(std::is_same_v<T, std::string>)
 		{
-			listNbtPath.emplace_back('.' + newSeg);
+			listNbtPath.emplace_back('.' + tNewSeg);
 		}
 		else
 		{
@@ -125,7 +125,7 @@ private:
 			strInfo += tR.ToCharTypeUTF8();
 			strInfo += "\"";
 		}
-		else if constexpr (std::is_same_v<T, std::string>)
+		else if constexpr (std::is_same_v<T, std::string> || std::is_same_v<std::decay_t<T>, const char *>)
 		{
 			strInfo += tL;
 			strInfo += " != ";
@@ -494,10 +494,12 @@ int main(int argc, char *argv[])
 	printf("No equal!\nInfo:\n\n");
 	//详细信息输出
 	
+	setlocale(LC_ALL, ".UTF-8");
 	for (auto &it : listReports)
 	{
-		printf("[%s]: %s\n%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath, it.strDiffInfo);
+		printf("[%s]: %s\n%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
 	}
+	setlocale(LC_ALL, "");
 
 	printf("\nGen cmp file...\n");
 
