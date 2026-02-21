@@ -1,5 +1,6 @@
 ﻿#include <nbt_cpp/NBT_All.hpp>
 #include <util/CodeTimer.hpp>
+#include <util/CPP_Helper.h>
 
 //找到一个唯一文件名
 std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &sEnd, uint32_t u32TryCount = 10)//默认最多重试10次
@@ -21,6 +22,285 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 	//次数到上限直接返回空
 	return std::string{};
 }
+
+class NBT_Compare
+{
+	DELETE_CSTC(NBT_Compare);
+	DELETE_DSTC(NBT_Compare);
+
+public:
+	enum class DiffInfo
+	{
+		NoDiff,
+		DiffTag,
+		DiffVal,
+		DiffLen,
+		DiffKey,
+	};
+
+	struct Report
+	{
+		NBT_Type::String strPath;
+		DiffInfo enDiffInfo;
+		std::string strDiffInfo;
+	};
+
+
+private:
+	NBT_Type::String ConnectionPath(std::vector<NBT_Type::String> &listNbtPath)
+	{
+		NBT_Type::String tmp;
+		for (auto &it : listNbtPath)
+		{
+			tmp.append(it);
+		}
+
+		return tmp;
+	}
+
+	template<typename T>
+	std::string GenInfo(const T &tL, const T &tR)
+	{
+		std::string strInfo;
+		if constexpr (std::is_same_v<T, NBT_Type::String>)
+		{
+			strInfo += "\"";
+			strInfo += tL.ToCharTypeUTF8();
+			strInfo += "\" != \"";
+			strInfo += tR.ToCharTypeUTF8();
+			strInfo += "\"";
+		}
+		else if constexpr (std::is_same_v<T, std::string>)
+		{
+			strInfo += tL;
+			strInfo += " != ";
+			strInfo += tR;
+		}
+		else
+		{
+			strInfo += "[";
+			strInfo += std::to_string(tL);
+			strInfo += "] != [";
+			strInfo += std::to_string(tR);
+			strInfo += "]";
+		}
+		
+		return strInfo;
+	}
+
+private:
+
+	bool CompareCompoundType(const NBT_Node &nodeLeft, const NBT_Node &nodeRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	{
+
+
+
+
+
+
+	}
+
+	bool CompareListType(const NBT_Type::List &listLeft, const NBT_Type::List &listRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	{
+		bool bRet = true;
+		if (listLeft.Size() != listRight.Size())//大小不同，先继续尝试
+		{
+			listReports.emplace_back(
+				ConnectionPath(listNbtPath),
+				DiffInfo::DiffLen,
+				GenInfo(listLeft.Size(), listRight.Size()));
+			bRet = false;
+		}
+
+		if (listLeft.GetTag() != listRight.GetTag())
+		{
+			listReports.emplace_back(
+				ConnectionPath(listNbtPath),
+				DiffInfo::DiffTag,
+				GenInfo(NBT_Type::GetTypeName(listLeft.GetTag()), NBT_Type::GetTypeName(listRight.GetTag())));
+			return false;//成员类型不同直接不用比较
+		}
+
+		//收集列表所有成员，然后选出相同部分
+
+
+
+		return bRet;
+	}
+
+	bool CompareStringType(const NBT_Type::String &strLeft, const NBT_Type::String &strRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	{
+		if (strLeft.size() != strRight.size())
+		{
+			listReports.emplace_back(
+				ConnectionPath(listNbtPath),
+				DiffInfo::DiffLen,
+				GenInfo(strLeft.size(), strRight.size()));
+			return false;
+		}
+
+		if (strLeft != strRight)
+		{
+			listReports.emplace_back(
+				ConnectionPath(listNbtPath),
+				DiffInfo::DiffVal,
+				GenInfo(strLeft, strRight));
+			return false;
+		}
+
+		return true;
+	}
+
+	template<typename T>
+	bool CompareArrayType(const T &arrayLeft, const T &arrayRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	{
+		if (arrayLeft.size() != arrayRight.size())
+		{
+			listReports.emplace_back(
+				ConnectionPath(listNbtPath),
+				DiffInfo::DiffLen,
+				GenInfo(arrayLeft.size(), arrayRight.size()));
+			return false;
+		}
+
+		if (arrayLeft != arrayRight)
+		{
+			listReports.emplace_back(
+				ConnectionPath(listNbtPath),
+				DiffInfo::DiffVal,
+				GenInfo(NBT_Helper::Serialize(arrayLeft), NBT_Helper::Serialize(arrayRight)));
+			return false;
+		}
+
+		return true;
+	}
+
+	template<typename T>
+	bool CompareBuiltinType(const T &builtinLeft, const T &builtinRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	{
+		using Raw_T = NBT_Type::BuiltinRawType_T<T>;
+
+		if (std::bit_cast<Raw_T>(builtinLeft) != std::bit_cast<Raw_T>(builtinRight))
+		{
+			listReports.emplace_back(
+				ConnectionPath(listNbtPath),
+				DiffInfo::DiffVal,
+				GenInfo(std::bit_cast<Raw_T>(builtinLeft), std::bit_cast<Raw_T>(builtinRight)));
+			return false;
+		}
+
+		return true;
+	}
+
+	template<bool bRoot = false>
+	bool CompareDetailsImpl(std::conditional_t<bRoot, const NBT_Node_View<true> &, const NBT_Node &> nodeLeft, std::conditional_t<bRoot, const NBT_Node_View<true> &, const NBT_Node &> nodeRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	{
+		NBT_TAG tagType = nodeLeft.GetTag();
+		if (tagType != nodeRight.GetTag())
+		{
+			listReports.emplace_back(
+				ConnectionPath(listNbtPath),
+				DiffInfo::DiffTag,
+				GenInfo(NBT_Type::GetTypeName(nodeLeft.GetTag()), NBT_Type::GetTypeName(nodeRight.GetTag())));
+			return false;
+		}
+
+		switch (tagType)
+		{
+		case NBT_TAG::End:
+			return true;
+			break;
+		case NBT_TAG::Byte:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::Byte>;
+				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::Short:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::Short>;
+				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::Int:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::Int>;
+				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::Long:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::Long>;
+				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::Float:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::Float>;
+				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::Double:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::Double>;
+				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::ByteArray:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::ByteArray>;
+				return CompareArrayType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::String:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::String>;
+				return CompareStringType(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::List:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::List>;
+				return CompareListType(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::Compound:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::Compound>;
+				return CompareCompoundType(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::IntArray:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::IntArray>;
+				return CompareArrayType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::LongArray:
+			{
+				using Type = NBT_Type::TagToType_T<NBT_TAG::LongArray>;
+				return CompareArrayType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+			}
+			break;
+		case NBT_TAG::ENUM_END:
+		default:
+			return false;
+			break;
+		}
+
+		return false;
+	}
+
+public:
+	bool CompareDetails(const NBT_Node_View<true> nodeLeft, const NBT_Node_View<true> nodeRight, std::vector<Report> &listReports)
+	{
+		std::vector<NBT_Type::String> listNbtPath{};
+		return CompareDetailsImpl<true>(nodeLeft, nodeRight, listReports, listNbtPath);
+	}
+
+};
+
+
 
 int main(int argc, char *argv[])
 {
@@ -86,6 +366,11 @@ int main(int argc, char *argv[])
 	}
 
 	printf("No equal!\n");
+	//详细比较
+	//CompareDetails(cpdInput[0], cpdInput[1]);
+
+
+	//生成格式化文件方便文本查看
 	//查找合法文件
 	auto FindFileName = [](const std::string &strOldFileName, std::string &strNewFileName) -> bool
 	{
