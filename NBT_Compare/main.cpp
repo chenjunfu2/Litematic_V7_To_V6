@@ -1,6 +1,10 @@
 ﻿#include <nbt_cpp/NBT_All.hpp>
 #include <util/CodeTimer.hpp>
 #include <util/CPP_Helper.h>
+#include <util/MyAssert.hpp>
+
+#include <unordered_set>
+#include <ranges>
 
 //找到一个唯一文件名
 std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &sEnd, uint32_t u32TryCount = 10)//默认最多重试10次
@@ -29,27 +33,78 @@ class NBT_Compare
 	DELETE_DSTC(NBT_Compare);
 
 public:
-	enum class DiffInfo
+	enum class DiffInfo : uint8_t
 	{
-		NoDiff,
+		NoDiff = 0,
 		DiffTag,
 		DiffVal,
 		DiffLen,
 		DiffKey,
+		Enum_End,
 	};
 
 	struct Report
 	{
-		NBT_Type::String strPath;
+		std::string strPath;
 		DiffInfo enDiffInfo;
 		std::string strDiffInfo;
 	};
 
+private:
+	const static inline char *const pDiffInfoStr[] =
+	{
+		"NoDifferent"
+		"DifferentTag",
+		"DifferentValue",
+		"DifferentLength",
+		"DifferentCompoundKey",
+	};
+
+public:
+	static const char *GetDiffTypeInfo(DiffInfo di)
+	{
+		auto index = std::underlying_type_t<DiffInfo>(di);
+		if (index > std::underlying_type_t<DiffInfo>(DiffInfo::Enum_End))
+		{
+			return "Unknown";
+		}
+
+		return pDiffInfoStr[index];
+	}
+
 
 private:
-	NBT_Type::String ConnectionPath(std::vector<NBT_Type::String> &listNbtPath)
+	template<typename T>
+	requires(std::is_same_v<T, size_t> || std::is_same_v<T, std::string>)
+	static void PushPath(std::vector<std::string> &listNbtPath, T tNewSeg)
 	{
-		NBT_Type::String tmp;
+		if constexpr (std::is_same_v<T, size_t>)
+		{
+			std::string strNew;
+			strNew += '[';
+			strNew += std::to_string(newSeg);
+			strNew += ']';
+
+			listNbtPath.emplace_back(std::move(strNew));
+		}
+		else if constexpr(std::is_same_v<T, std::string>)
+		{
+			listNbtPath.emplace_back('.' + newSeg);
+		}
+		else
+		{
+			static_assert(false, "?");
+		}
+	}
+
+	static void PopPath(std::vector<std::string> &listNbtPath)
+	{
+		listNbtPath.pop_back();
+	}
+
+	static std::string ConnectionPath(const std::vector<std::string> &listNbtPath)
+	{
+		std::string tmp;
 		for (auto &it : listNbtPath)
 		{
 			tmp.append(it);
@@ -59,7 +114,7 @@ private:
 	}
 
 	template<typename T>
-	std::string GenInfo(const T &tL, const T &tR)
+	static std::string GenInfo(const T &tL, const T &tR)
 	{
 		std::string strInfo;
 		if constexpr (std::is_same_v<T, NBT_Type::String>)
@@ -90,17 +145,78 @@ private:
 
 private:
 
-	bool CompareCompoundType(const NBT_Node &nodeLeft, const NBT_Node &nodeRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	static bool CompareCompoundType(const NBT_Type::Compound &cpdLeft, const NBT_Type::Compound &cpdRight, std::vector<Report> &listReports, std::vector<std::string> &listNbtPath)
 	{
+		bool bRet = true;
 
+		std::unordered_set<NBT_Type::String> strSet;
+		for (auto &[key, _] : cpdLeft)
+		{
+			strSet.insert(key);
+		}
+		for (auto &[key, _] : cpdRight)
+		{
+			strSet.insert(key);
+		}
 
+		std::vector<NBT_Type::String> vSort;
+		vSort.reserve(strSet.size());
+		for (auto &it : strSet)
+		{
+			vSort.push_back(it);
+		}
 
+		std::sort(vSort.begin(), vSort.end(),
+			[](const auto &l, const auto &r) -> bool
+			{
+				return l < r;
+			}
+		);
 
+		for (auto &it : vSort)
+		{
+			auto lHas = cpdLeft.Has(it);
+			auto rHas = cpdRight.Has(it);
+			if (lHas && !rHas)
+			{
+				std::string strInfo;
+				strInfo += "Key[";
+				strInfo += it.ToCharTypeUTF8();
+				strInfo += "] is in Left not in Right";
 
+				listReports.emplace_back(
+					ConnectionPath(listNbtPath),
+					DiffInfo::DiffKey,
+					std::move(strInfo));
+				bRet = false;
+			}
+			else if (!lHas && rHas)
+			{
+				std::string strInfo;
+				strInfo += "Key[";
+				strInfo += it.ToCharTypeUTF8();
+				strInfo += "] is in Right not in Left";
 
+				listReports.emplace_back(
+					ConnectionPath(listNbtPath),
+					DiffInfo::DiffKey,
+					std::move(strInfo));
+				bRet = false;
+			}
+			else
+			{
+				MyAssert(lHas && rHas, "What the fu*k?");
+
+				PushPath(listNbtPath, it.ToCharTypeUTF8());
+				bRet = (uint8_t)bRet & (uint8_t)CompareDetailsImpl(*lHas, *rHas, listReports, listNbtPath);
+				PopPath(listNbtPath);
+			}
+		}
+
+		return bRet;
 	}
 
-	bool CompareListType(const NBT_Type::List &listLeft, const NBT_Type::List &listRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	static bool CompareListType(const NBT_Type::List &listLeft, const NBT_Type::List &listRight, std::vector<Report> &listReports, std::vector<std::string> &listNbtPath)
 	{
 		bool bRet = true;
 		if (listLeft.Size() != listRight.Size())//大小不同，先继续尝试
@@ -121,14 +237,19 @@ private:
 			return false;//成员类型不同直接不用比较
 		}
 
-		//收集列表所有成员，然后选出相同部分
-
-
+		//比较最少的部分
+		size_t szMin = std::min(listLeft.Size(), listRight.Size());
+		for (auto i : std::views::iota((size_t)0, szMin))
+		{
+			PushPath(listNbtPath, i);
+			CompareDetailsImpl(listLeft[i], listRight[i], listReports, listNbtPath);
+			PopPath(listNbtPath);
+		}
 
 		return bRet;
 	}
 
-	bool CompareStringType(const NBT_Type::String &strLeft, const NBT_Type::String &strRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	static bool CompareStringType(const NBT_Type::String &strLeft, const NBT_Type::String &strRight, std::vector<Report> &listReports, std::vector<std::string> &listNbtPath)
 	{
 		if (strLeft.size() != strRight.size())
 		{
@@ -152,7 +273,7 @@ private:
 	}
 
 	template<typename T>
-	bool CompareArrayType(const T &arrayLeft, const T &arrayRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	static bool CompareArrayType(const T &arrayLeft, const T &arrayRight, std::vector<Report> &listReports, std::vector<std::string> &listNbtPath)
 	{
 		if (arrayLeft.size() != arrayRight.size())
 		{
@@ -176,7 +297,7 @@ private:
 	}
 
 	template<typename T>
-	bool CompareBuiltinType(const T &builtinLeft, const T &builtinRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	static bool CompareBuiltinType(const T &builtinLeft, const T &builtinRight, std::vector<Report> &listReports, std::vector<std::string> &listNbtPath)
 	{
 		using Raw_T = NBT_Type::BuiltinRawType_T<T>;
 
@@ -193,7 +314,7 @@ private:
 	}
 
 	template<bool bRoot = false>
-	bool CompareDetailsImpl(std::conditional_t<bRoot, const NBT_Node_View<true> &, const NBT_Node &> nodeLeft, std::conditional_t<bRoot, const NBT_Node_View<true> &, const NBT_Node &> nodeRight, std::vector<Report> &listReports, std::vector<NBT_Type::String> &listNbtPath)
+	static bool CompareDetailsImpl(std::conditional_t<bRoot, const NBT_Node_View<true> &, const NBT_Node &> nodeLeft, std::conditional_t<bRoot, const NBT_Node_View<true> &, const NBT_Node &> nodeRight, std::vector<Report> &listReports, std::vector<std::string> &listNbtPath)
 	{
 		NBT_TAG tagType = nodeLeft.GetTag();
 		if (tagType != nodeRight.GetTag())
@@ -292,9 +413,9 @@ private:
 	}
 
 public:
-	bool CompareDetails(const NBT_Node_View<true> nodeLeft, const NBT_Node_View<true> nodeRight, std::vector<Report> &listReports)
+	static bool CompareDetails(const NBT_Node_View<true> nodeLeft, const NBT_Node_View<true> nodeRight, std::vector<Report> &listReports)
 	{
-		std::vector<NBT_Type::String> listNbtPath{};
+		std::vector<std::string> listNbtPath{ {"root"}};
 		return CompareDetailsImpl<true>(nodeLeft, nodeRight, listReports, listNbtPath);
 	}
 
@@ -359,16 +480,26 @@ int main(int argc, char *argv[])
 	auto tmp1 = std::move(cpdInput[1].GetCompound(MU8STR("")));
 	cpdInput[1] = std::move(tmp1);
 
-	if (cpdInput[0] == cpdInput[1])
+
+	std::vector<NBT_Compare::Report> listReports;
+	bool bEqual = NBT_Compare::CompareDetails(cpdInput[0], cpdInput[1], listReports);
+	MyAssert(bEqual == (cpdInput[0] == cpdInput[1]), "?");
+
+	if (bEqual)
 	{
 		printf("Equal!\n");
 		return 0;
 	}
 
-	printf("No equal!\n");
-	//详细比较
-	//CompareDetails(cpdInput[0], cpdInput[1]);
+	printf("No equal!\nInfo:\n\n");
+	//详细信息输出
+	
+	for (auto &it : listReports)
+	{
+		printf("[%s]: %s\n%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath, it.strDiffInfo);
+	}
 
+	printf("\nGen cmp file...\n");
 
 	//生成格式化文件方便文本查看
 	//查找合法文件
