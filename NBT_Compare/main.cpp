@@ -402,7 +402,7 @@ private:
 public:
 	static bool CompareDetails(const NBT_Node_View<true> nodeLeft, const NBT_Node_View<true> nodeRight, std::vector<Report> &listReports)
 	{
-		std::vector<std::string> listNbtPath{ {"[Root]"}};
+		std::vector<std::string> listNbtPath{ {"[Root]"} };
 		return CompareDetailsImpl<true>(nodeLeft, nodeRight, listReports, listNbtPath);
 	}
 
@@ -509,12 +509,13 @@ int main(int argc, char *argv[])
 	printf(COLOR_BLUE "No equal!\n" COLOR_RESET COLOR_BOLD "Diff Info:\n\n" COLOR_RESET);
 	//详细信息输出
 	
+	//指定字符集为utf8
 	setlocale(LC_ALL, ".UTF-8");
 	for (auto &it : listReports)
 	{
 		printf(COLOR_CYAN "[%s]: " COLOR_RESET COLOR_BOLD "%s\n" COLOR_RESET "%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
 	}
-	setlocale(LC_ALL, "");
+	setlocale(LC_ALL, "");//恢复为默认
 
 	printf(COLOR_BLUE "\nGen cmp file...\n" COLOR_RESET);
 
@@ -558,6 +559,7 @@ int main(int argc, char *argv[])
 	{
 		fclose(pFile[0]);
 		fclose(pFile[1]);
+		printf(COLOR_RED "Cmp file open fail!\n" COLOR_RESET);
 		return 0;
 	}
 
