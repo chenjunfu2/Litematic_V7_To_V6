@@ -38,7 +38,7 @@
 #define PRINTF_FORMAT_ATTR
 #elif COMPILER_GCC || COMPILER_CLANG
 #define PRINTF_FORMAT_ARGS
-#define PRINTF_FORMAT_ATTR __attribute__((__format__ (__printf__, 5, 6)))
+#define PRINTF_FORMAT_ATTR __attribute__((__format__ (__printf__, 4, 5)))
 #else
 #define PRINTF_FORMAT_ARGS
 #define PRINTF_FORMAT_ATTR
