@@ -192,7 +192,7 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 		auto &listV6EntityList = cpdV6RegionData.PutList(MU8STR("Entities"), {}).first->second.GetList();
 		for (auto &nodeEntity : *pEntities)
 		{
-			auto &cpdNode = listV6EntityList.AddBackCompound({}).first->GetCompound();
+			auto &cpdNode = listV6EntityList.AddBackCompound({}).GetCompound();
 			ProcessEntity(GetCompound(nodeEntity), cpdNode);
 		}
 	} while (false);
@@ -209,7 +209,7 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 		auto &listV6TileEntityList = cpdV6RegionData.PutList(MU8STR("TileEntities"), {}).first->second.GetList();
 		for (auto &nodeTileEntity : *pTileEntities)
 		{
-			auto &cpdNode = listV6TileEntityList.AddBackCompound({}).first->GetCompound();
+			auto &cpdNode = listV6TileEntityList.AddBackCompound({}).GetCompound();
 			ProcessTileEntity(GetCompound(nodeTileEntity), cpdNode);
 		}
 	} while (false);

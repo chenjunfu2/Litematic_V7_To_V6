@@ -679,7 +679,10 @@ void ProcessDyedColor(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	else if (bIsListRGB)
 	{
 		auto &listRGB = pRGB->GetList();
-		if (listRGB.GetTag() != NBT_TAG::Float || listRGB.Size() != 3)
+		if (listRGB.Size() != 3 || 
+			listRGB.HasFloat(0) == NULL||
+			listRGB.HasFloat(1) == NULL || 
+			listRGB.HasFloat(2) == NULL)
 		{
 			nodeV6Tag.SetInt(0xFF'FF'FF'FF);//default
 			return;
@@ -1309,7 +1312,7 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 		}
 
 		auto &cpdV7Entry = itEntry.GetCompound();
-		auto &cpdV6Entry = listV6.AddBackCompound({}).first->GetCompound();
+		auto &cpdV6Entry = listV6.AddBackCompound({}).GetCompound();
 
 		//查找并映射颜色
 		NBT_Type::Int iColor = iDefaultColor;
@@ -1509,7 +1512,7 @@ void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 
 		//获取类型，并新建类型
 		auto &cpdV7Entry = itV7Entry.GetCompound();
-		auto &cpdV6Entry = listV6.AddBackCompound({}).first->GetCompound();
+		auto &cpdV6Entry = listV6.AddBackCompound({}).GetCompound();
 
 		cpdV6Entry.PutInt(MU8STR("TicksInHive"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("ticks_in_hive")), 0));
 		cpdV6Entry.PutInt(MU8STR("MinOccupationTicks"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("min_ticks_in_hive")), 0));

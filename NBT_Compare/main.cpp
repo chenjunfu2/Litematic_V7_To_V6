@@ -223,15 +223,6 @@ private:
 			bRet = false;
 		}
 
-		if (listLeft.GetTag() != listRight.GetTag())
-		{
-			listReports.emplace_back(
-				ConnectionPath(listNbtPath),
-				DiffInfo::DiffTag,
-				GenInfo(std::format("[{}]", NBT_Type::GetTypeName(listLeft.GetTag())), std::format("[{}]", NBT_Type::GetTypeName(listRight.GetTag()))));
-			return false;//成员类型不同直接不用比较
-		}
-
 		//比较最少的部分
 		size_t szMin = std::min(listLeft.Size(), listRight.Size());
 		for (auto i : std::views::iota((size_t)0, szMin))
@@ -408,7 +399,11 @@ public:
 
 };
 
-
+#define PAUSE_RETURN(ret)\
+{\
+	system("pause");\
+	return ret;\
+}
 
 int main(int argc, char *argv[])
 {
@@ -417,7 +412,7 @@ int main(int argc, char *argv[])
 	if (argc != 3)
 	{
 		printf(COLOR_BLUE "Use:\n>[%s] [File1] [File2]\nTo Compare\n" COLOR_RESET, argv[0]);
-		return 0;
+		PAUSE_RETURN(0);
 	}
 
 	auto GetFileRawName = [](const std::string &strFileName) -> std::string
@@ -479,14 +474,14 @@ int main(int argc, char *argv[])
 	if (!b0 || !b1)
 	{
 		printf(COLOR_RED "ReadNBT fail!\n" COLOR_RESET);
-		return 0;
+		PAUSE_RETURN(0);
 	}
 
 	if (!cpdInput[0].HasCompound(MU8STR("")) ||
 		!cpdInput[1].HasCompound(MU8STR("")))
 	{
 		printf(COLOR_RED "Root Compound not found!\n" COLOR_RESET);
-		return 0;
+		PAUSE_RETURN(0);
 	}
 
 	auto tmp0 = std::move(cpdInput[0].GetCompound(MU8STR("")));
@@ -503,7 +498,7 @@ int main(int argc, char *argv[])
 	if (bEqual)
 	{
 		printf(COLOR_BLUE "Equal!\n" COLOR_RESET);
-		return 0;
+		PAUSE_RETURN(0);
 	}
 
 	printf(COLOR_BLUE "No equal!\n" COLOR_RESET COLOR_BOLD "Diff Info:\n\n" COLOR_RESET);
@@ -547,7 +542,7 @@ int main(int argc, char *argv[])
 	if (!b0 || !b1)
 	{
 		printf(COLOR_RED "FindFileName fail!\n" COLOR_RESET);
-		return 0;
+		PAUSE_RETURN(0);
 	}
 
 
@@ -560,7 +555,7 @@ int main(int argc, char *argv[])
 		fclose(pFile[0]);
 		fclose(pFile[1]);
 		printf(COLOR_RED "Cmp file open fail!\n" COLOR_RESET);
-		return 0;
+		PAUSE_RETURN(0);
 	}
 
 	NBT_Helper::Print(cpdInput[0], NBT_Print{ pFile[0] });
@@ -571,8 +566,7 @@ int main(int argc, char *argv[])
 
 	printf(COLOR_BLUE "Cmp file gen!\n" COLOR_RESET);
 
-	system("pause");
-	return 0;
+	PAUSE_RETURN(0);
 }
 
 
