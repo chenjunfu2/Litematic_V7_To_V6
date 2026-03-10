@@ -1,0 +1,71 @@
+name: C/C++ CI
+
+on:
+  workflow_dispatch:
+  #push:
+  #  branches: [ "master" ]
+  #pull_request:
+  #  branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+      fail-fast: false
+      
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup GCC
+      if: matrix.compiler == 'gcc'
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: latest
+        
+    - name: Setup Clang
+      if: matrix.compiler == 'clang'
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: latest
+    
+    - name: List Dir
+      run: find . -type f | sort
+      
+    - name: Configure with CMake
+      run: cmake -B build -S .
+      
+    - name: Build
+      run: cmake --build build
+      
+    - name: List Dir
+      run: find . -type f | sort
+      
+    - name: Run all tests
+      run: |
+        cd build/tests
+        EXIT_CODE=0
+        RED='\033[0;31m'
+        GREEN='\033[0;32m'
+        NC='\033[0m' # No Color
+
+        for dir in */ ; do
+          test_exec=$(find "$dir" -maxdepth 1 -type f -executable | head -n 1)
+          if [ -n "$test_exec" ]; then
+            echo -e "${GREEN}Running test: $test_exec${NC}"
+            #执行测试并打印输出
+            if "$test_exec"; then
+              echo -e "${GREEN}Test passed: $test_exec${NC}"
+            else
+              echo -e "${RED}Test failed: $test_exec${NC}"
+              EXIT_CODE=-1
+            fi
+            echo "----------------------------------------"
+          else
+            echo "No executable found in $dir, skipping..."
+          fi
+        done
+
+        exit $EXIT_CODE
