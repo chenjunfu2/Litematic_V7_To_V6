@@ -33,7 +33,7 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 		}
 
 		//等几ms在继续
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		CodeTimer::Sleep(std::chrono::milliseconds(10));
 		--u32TryCount;
 	}
 

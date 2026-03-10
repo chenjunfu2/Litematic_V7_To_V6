@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <chrono>
+#include <thread>
 
 class CodeTimer
 {
@@ -121,4 +122,11 @@ public:
 	{
 		return std::chrono::duration_cast<T>(std::chrono::system_clock::now().time_since_epoch()).count();
 	}
+
+	template<typename T = std::chrono::milliseconds>
+	static void Sleep(const T &t)
+	{
+		return std::this_thread::sleep_for(t);
+	}
+
 };
