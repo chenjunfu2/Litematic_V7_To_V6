@@ -16,6 +16,6 @@
 **Release仅提供Windows x64构建版本，Linux用户请自行构建**  
 **其他平台暂时不考虑兼容，如有需求请自行尝试**  
   
-`Linux`请使用`Clang`或`GCC通过`CMakeLists.txt`构建  
+`Linux`请使用`Clang`或`GCC`通过`CMakeLists.txt`构建  
 `Windows`可使用`MSVC`通过`*.sln`构建，或使用与`Linux`相同的构建方式  
   
