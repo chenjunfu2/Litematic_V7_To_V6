@@ -13,7 +13,7 @@
 即可完成
 
 ## 跨平台
-**Release仅提供Windows构建版本，Linux用户请自行构建**  
+**Release仅提供Windows x64构建版本，Linux用户请自行构建**  
 **其他平台暂时不考虑兼容，如有需求请自行尝试**  
   
 `Linux`请使用`Clang或`GCC通过`CMakeLists.txt`构建  
