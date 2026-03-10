@@ -79,8 +79,7 @@ set(COMMON_LIBS xxhash zlib)
 include_directories(
     ${CMAKE_SOURCE_DIR}/Dependencies/zlib
     ${CMAKE_SOURCE_DIR}/Dependencies/xxhash
-    ${CMAKE_SOURCE_DIR}/Dependencies/nbt_cpp
-    ${CMAKE_SOURCE_DIR}/util
+    ${CMAKE_SOURCE_DIR}/Dependencies/
 )
 
 #添加项目
