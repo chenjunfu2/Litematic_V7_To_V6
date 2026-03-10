@@ -89,8 +89,8 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 		{MU8STR("normal_config"),			{},														MU8STR("minecraft:trial_spawner")},
 		{MU8STR("shared_data"),				{},														MU8STR("minecraft:vault")},
 
-		{MU8STR("pool"),					{MU8STR("final_state"), MU8STR("placement_priority")},	MU8STR("minecraft:jigsaw")},
-		{MU8STR("author"),					{MU8STR("metadata"), MU8STR("showboundingbox")},		MU8STR("minecraft:structure_block")},
+		{MU8STR("pool"),					{MU8STR("final_state"),	MU8STR("placement_priority")},	MU8STR("minecraft:jigsaw")},
+		{MU8STR("author"),					{MU8STR("metadata"),	MU8STR("showboundingbox")},		MU8STR("minecraft:structure_block")},
 		{MU8STR("ExactTeleport"),			{MU8STR("Age")},										MU8STR("minecraft:end_gateway")},
 		{MU8STR("Items"),					{},														MU8STR("minecraft:chest")},
 
@@ -101,7 +101,7 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 
 		{MU8STR("facing"),					{},														MU8STR("minecraft:piston")},
 		{MU8STR("extending"),				{},														MU8STR("minecraft:piston")},
-		{MU8STR("x"),						{MU8STR("y"), MU8STR("z")},								MU8STR("minecraft:piston")},
+		{MU8STR("x"),						{MU8STR("y"),	MU8STR("z")},							MU8STR("minecraft:piston")},
 	};
 
 	//遍历猜测表，挨个匹配

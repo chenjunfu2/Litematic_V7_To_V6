@@ -312,73 +312,73 @@ private:
 		case NBT_TAG::Byte:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::Byte>;
-				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareBuiltinType<Type>(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::Short:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::Short>;
-				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareBuiltinType<Type>(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::Int:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::Int>;
-				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareBuiltinType<Type>(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::Long:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::Long>;
-				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareBuiltinType<Type>(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::Float:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::Float>;
-				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareBuiltinType<Type>(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::Double:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::Double>;
-				return CompareBuiltinType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareBuiltinType<Type>(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::ByteArray:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::ByteArray>;
-				return CompareArrayType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareArrayType<Type>(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::String:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::String>;
-				return CompareStringType(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareStringType(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::List:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::List>;
-				return CompareListType(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareListType(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::Compound:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::Compound>;
-				return CompareCompoundType(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareCompoundType(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::IntArray:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::IntArray>;
-				return CompareArrayType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareArrayType<Type>(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::LongArray:
 			{
 				using Type = NBT_Type::TagToType_T<NBT_TAG::LongArray>;
-				return CompareArrayType<Type>(nodeLeft.Get<Type>(), nodeRight.Get<Type>(), listReports, listNbtPath);
+				return CompareArrayType<Type>(nodeLeft.template Get<Type>(), nodeRight.template Get<Type>(), listReports, listNbtPath);
 			}
 			break;
 		case NBT_TAG::ENUM_END:
