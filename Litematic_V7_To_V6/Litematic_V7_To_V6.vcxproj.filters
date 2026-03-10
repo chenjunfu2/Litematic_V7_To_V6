@@ -31,8 +31,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\README.md">
+    <Text Include="CMakeLists.txt">
       <Filter>资源文件</Filter>
-    </None>
+    </Text>
   </ItemGroup>
 </Project>

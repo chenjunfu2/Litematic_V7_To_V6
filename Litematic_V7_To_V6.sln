@@ -42,6 +42,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "util", "util", "{B9BF7942-B
 		Dependencies\util\MyAssert.hpp = Dependencies\util\MyAssert.hpp
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Resources", "Resources", "{4F739BC6-FA3F-4134-B913-ADC24F261855}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		BasicConfiguration.props = BasicConfiguration.props
+		CMakeLists.txt = CMakeLists.txt
+		LibraryDependencies.props = LibraryDependencies.props
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

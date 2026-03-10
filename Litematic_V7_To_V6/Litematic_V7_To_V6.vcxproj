@@ -166,7 +166,7 @@
     <ClInclude Include="Process_Litematic_Data.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\README.md" />
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
