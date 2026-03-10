@@ -6,7 +6,7 @@ add_executable(NBT_Compare
     Terminal.cpp
 )
 
-target_link_libraries(nbt_test
+target_link_libraries(NBT_Compare
     PUBLIC
         ${COMMON_LIBS}
 )
