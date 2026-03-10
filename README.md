@@ -16,4 +16,4 @@
 **Release仅提供Windows构建版本，Linux用户请自行构建**  
   
 `Linux`请使用`Clang或`GCC通过`CMakeLists.txt`构建  
-`Windows`可使用`Visual Studio`通过`sln`构建，或与`Linux`相同构建方案  
+`Windows`可使用`Visual Studio`通过`sln`构建，或使用与`Linux`相同的构建方式  
