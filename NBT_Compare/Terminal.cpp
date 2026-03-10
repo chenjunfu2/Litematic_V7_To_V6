@@ -1,6 +1,7 @@
+ï»¿#ifdef _WIN32
 #include <Windows.h>
 
-//ÆôÓÃĞéÄâÖÕ¶ËĞòÁĞ
+//å¯ç”¨è™šæ‹Ÿç»ˆç«¯åºåˆ—
 bool EnableVirtualTerminalProcessing(void) noexcept
 {
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -15,8 +16,14 @@ bool EnableVirtualTerminalProcessing(void) noexcept
 		return false;
 	}
 
-	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;//ÆôÓÃĞéÄâÖÕ¶ËĞòÁĞ
-	//dwMode |= DISABLE_NEWLINE_AUTO_RETURN;//¹Ø±Õ×Ô¶¯»»ĞĞ
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;//å¯ç”¨è™šæ‹Ÿç»ˆç«¯åºåˆ—
+	//dwMode |= DISABLE_NEWLINE_AUTO_RETURN;//å…³é—­è‡ªåŠ¨æ¢è¡Œ
 
 	return SetConsoleMode(hOut, dwMode);
 }
+#else
+bool EnableVirtualTerminalProcessing(void) noexcept
+{
+	return true;//Linuxæ€»æ˜¯æ”¯æŒ
+}
+#endif
