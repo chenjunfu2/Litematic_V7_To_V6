@@ -399,11 +399,18 @@ public:
 
 };
 
+#ifdef _WIN32
 #define PAUSE_RETURN(ret)\
 {\
 	system("pause");\
 	return ret;\
 }
+#else
+#define PAUSE_RETURN(ret)\
+{\
+	return ret;\
+}
+#endif
 
 int main(int argc, char *argv[])
 {

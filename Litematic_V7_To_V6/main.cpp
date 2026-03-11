@@ -43,9 +43,9 @@ int main(int argc, char *argv[])
 
 	printf("\nTotal: [%d], Success: [%d], Fail: [%d]\n", argc - 1, iSuccess, argc - 1 - iSuccess);
 
-#ifndef _DEBUG
+#ifndef _WIN32
 	system("pause");
-#endif // !_DEBUG
+#endif
 
 	return 0;
 }
