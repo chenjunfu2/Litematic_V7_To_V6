@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 		t.PrintElapsed("Use Time: [", "]\n");
 	}
 
-	printf("\nTotal: [%d], Success: [%d], Fail: [%d]\n", argc - 1, iSuccess, argc - 1 - iSuccess);
+	printf("\nTotal: [%d], Success: [%d], Fail: [%d]\n\n", argc - 1, iSuccess, argc - 1 - iSuccess);
 
 #ifdef _WIN32
 	system("pause");
