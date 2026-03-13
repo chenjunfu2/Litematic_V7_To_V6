@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 
 	printf("\nTotal: [%d], Success: [%d], Fail: [%d]\n", argc - 1, iSuccess, argc - 1 - iSuccess);
 
-#ifndef _WIN32
+#ifdef _WIN32
 	system("pause");
 #endif
 
