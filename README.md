@@ -2,7 +2,7 @@
 在尽可能保留方块、方块实体、实体等其它信息的情况下，  
 降低投影数据版本，从 V7(MC1.20.5+) 转换到 V6(MC1.20.4-)   
 
-本项目代码参考了[投影](https://github.com/sakura-ryoko/litematica)的部分代码  
+本项目代码参考了[投影Mod](https://github.com/sakura-ryoko/litematica)的部分代码  
 使用的NBT库为：[NBT_CPP](https://github.com/chenjunfu2/NBT_CPP/)  
 其它库依赖：[zlib](https://github.com/madler/zlib)和[xxhash](https://github.com/Cyan4973/xxHash)  
 
