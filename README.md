@@ -20,3 +20,11 @@
 `Linux`请使用`Clang`或`GCC`通过`CMakeLists.txt`构建  
 `Windows`可使用`MSVC`通过`*.sln`构建，或使用与`Linux`相同的构建方式  
   
+## Star History
+<a href="https://www.star-history.com/?repos=chenjunfu2%2FLitematic_V7_To_V6&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=chenjunfu2/Litematic_V7_To_V6&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=chenjunfu2/Litematic_V7_To_V6&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=chenjunfu2/Litematic_V7_To_V6&type=date&legend=top-left" />
+ </picture>
+</a>
