@@ -1,7 +1,8 @@
 # Litematic_V7_To_V6
-转换投影数据版本，从V7(1.20.5+)到V6(1.20.4-)，  
-并尽可能保留方块、方块实体、实体等其它信息  
-本项目代码参考了[投影](https://github.com/sakura-ryoko/litematica)的部分代码  
+在尽可能保留方块、方块实体、实体等其它信息的情况下，  
+降低投影数据版本，从 V7(MC1.20.5+) 转换到 V6(MC1.20.4-)   
+
+本项目代码参考了[投影Mod](https://github.com/sakura-ryoko/litematica)的部分代码  
 使用的NBT库为：[NBT_CPP](https://github.com/chenjunfu2/NBT_CPP/)  
 其它库依赖：[zlib](https://github.com/madler/zlib)和[xxhash](https://github.com/Cyan4973/xxHash)  
 
@@ -19,3 +20,5 @@
 `Linux`请使用`Clang`或`GCC`通过`CMakeLists.txt`构建  
 `Windows`可使用`MSVC`通过`*.sln`构建，或使用与`Linux`相同的构建方式  
   
+## Star History
+[![Star History Chart](https://api.star-history.com/image?repos=chenjunfu2/Litematic_V7_To_V6&type=date&legend=top-left)](https://www.star-history.com/?repos=chenjunfu2%2FLitematic_V7_To_V6&type=date&legend=top-left)
