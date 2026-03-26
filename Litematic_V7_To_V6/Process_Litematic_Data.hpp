@@ -76,6 +76,7 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 		{MU8STR("book"),					{},														MU8STR("minecraft:lectern")},
 
 		{MU8STR("front_text"),				{},														MU8STR("minecraft:sign")},
+		{MU8STR("back_text"),				{},														MU8STR("minecraft:sign")},
 
 		{MU8STR("BrewTime"),				{},														MU8STR("minecraft:brewing_stand")},
 		{MU8STR("Fuel"),					{},														MU8STR("minecraft:brewing_stand")},
@@ -113,7 +114,7 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity)
 			continue;
 		}
 
-		//主条件匹配，如果附条件为空，则跳过
+		//附条件匹配，如果附条件为空，则跳过
 		if (listAdditional.empty())
 		{
 			continue;
