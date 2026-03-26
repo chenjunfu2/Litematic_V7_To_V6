@@ -1634,33 +1634,7 @@ void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 		else if (itV6.IsCompound())//nbt格式转化为json数据组件
 		{
 			auto &cpdText = GetCompound(itV6);
-
-			NBT_Type::String strNewText{};
-			
-			strNewText.push_back('{');
-			for (auto &[itKey, itVal] : cpdText)
-			{
-				if (!itVal.IsString())
-				{
-					continue;
-				}
-
-				strNewText += '\"';
-				strNewText += itKey;
-				strNewText += MU8STR("\":\"");
-				strNewText += GetString(itVal);
-				strNewText += MU8STR("\",");
-			}
-			if (strNewText.back() == ',')
-			{
-				strNewText.back() = '}';
-			}
-			else
-			{
-				strNewText.push_back('}');
-			}
-
-			itV6.SetString(std::move(strNewText));
+			itV6.SetString((NBT_Type::String)NBT_Helper::Serialize(cpdText));
 		}
 		else
 		{
