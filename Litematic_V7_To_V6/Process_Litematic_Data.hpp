@@ -1565,6 +1565,61 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
 	return;
 }
 
+void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag)
+{
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	//所有数据直接插入并保留，仅修改需要的部分
+	nodeV6Tag = std::move(nodeV7Tag);//转移所有权
+	auto &cpdV6Text = nodeV6Tag.GetCompound();
+	auto *pMessages = cpdV6Text.HasList(MU8STR("messages"));//编辑V6中的数据
+
+	if (pMessages == NULL)
+	{
+		return;
+	}
+
+	//解析消息，如果不是被引号包围的字符串，那么是1.21.10+，修改为引号包围，同时遍历转义字符串
+	for (auto &itV6 : *pMessages)
+	{
+		if (!itV6.IsString())
+		{
+			continue;
+		}
+
+		auto &strText = GetString(itV6);
+		//为空改为引号包围的空字符串
+		if (strText.empty())
+		{
+			strText = MU8STR("\"\"");
+			continue;
+		}
+
+		//不为空则添加双引号并转义内容
+		NBT_Type::String strNewText{};
+		strNewText.reserve(strText.size() + 2);//预分配
+
+		//转义拷贝
+		strNewText.push_back('\"');
+		for (const auto &it : strText)
+		{
+			if (it == '\\' || it == '\"')
+			{
+				strNewText.push_back('\\');
+			}
+			strNewText.push_back(it);
+		}
+		strNewText.push_back('\"');
+
+		//移动替换
+		strText = std::move(strNewText);
+	}
+}
+
 void ProcessEntityItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, size_t szSlotSize)
 {
 	if (!nodeV7Tag.IsList())

@@ -119,7 +119,9 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		{ MU8STR("item"),						std::bind(DefaultProcess,	MU8STR("item"),			ProcessSingleItem,		_1, _2, _3) },
 		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessSingleItem,		_1, _2, _3) },
 		{ MU8STR("Book"),						std::bind(DefaultProcess,	MU8STR("Book"),			ProcessSingleItem,		_1, _2, _3) },
-		
+
+		{ MU8STR("front_text"),					std::bind(DefaultProcess,	MU8STR("front_text"),	ProcessSignText,		_1, _2, _3) },
+		{ MU8STR("back_text"),					std::bind(DefaultProcess,	MU8STR("back_text"),	ProcessSignText,		_1, _2, _3) },
 	};
 
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)
