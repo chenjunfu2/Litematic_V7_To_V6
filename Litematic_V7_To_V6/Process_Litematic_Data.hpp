@@ -7,6 +7,9 @@
 #include <functional>
 #include <utility>
 
+//定义
+#define MC_1_21_4_MINECRAFT_DATA_VERSION 4189
+
 //前向声明
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData, const NBT_Type::Int iV7McDataVersion);
 void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion);
@@ -1604,6 +1607,14 @@ void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 
 	//所有数据直接插入并保留，仅修改需要的部分
 	nodeV6Tag = std::move(nodeV7Tag);//转移所有权
+
+	//1.21.4及以前无需修改
+	if (iV7McDataVersion <= MC_1_21_4_MINECRAFT_DATA_VERSION)
+	{
+		return;
+	}
+
+	//1.21.4后修改
 	auto &cpdV6 = nodeV6Tag.GetCompound();
 	auto *pMessages = cpdV6.HasList(MU8STR("messages"));//编辑V6中的数据
 
