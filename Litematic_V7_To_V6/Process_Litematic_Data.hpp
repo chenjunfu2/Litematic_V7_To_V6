@@ -1566,6 +1566,34 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 	return;
 }
 
+NBT_Type::String EscapeString(const NBT_Type::String &strRawText)
+{
+	//为空改为引号包围的空字符串
+	if (strRawText.empty())
+	{
+		return MU8STR("\"\"");
+	}
+
+	//不为空则添加双引号并转义内容
+	NBT_Type::String strNewText{};
+	strNewText.reserve(strRawText.size() + 2);//预分配
+
+	//转义拷贝
+	strNewText.push_back('\"');
+	for (const auto &it : strRawText)
+	{
+		if (it == '\\' || it == '\"')
+		{
+			strNewText.push_back('\\');
+		}
+		strNewText.push_back(it);
+	}
+	strNewText.push_back('\"');
+
+	//返回转义完成的字符串
+	return strNewText;
+}
+
 void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsCompound())
@@ -1576,8 +1604,8 @@ void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 
 	//所有数据直接插入并保留，仅修改需要的部分
 	nodeV6Tag = std::move(nodeV7Tag);//转移所有权
-	auto &cpdV6Text = nodeV6Tag.GetCompound();
-	auto *pMessages = cpdV6Text.HasList(MU8STR("messages"));//编辑V6中的数据
+	auto &cpdV6 = nodeV6Tag.GetCompound();
+	auto *pMessages = cpdV6.HasList(MU8STR("messages"));//编辑V6中的数据
 
 	if (pMessages == NULL)
 	{
@@ -1587,37 +1615,46 @@ void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 	//解析消息，如果不是被引号包围的字符串，那么是1.21.10+，修改为引号包围，同时遍历转义字符串
 	for (auto &itV6 : *pMessages)
 	{
-		if (!itV6.IsString())
+		if (itV6.IsString())
 		{
-			continue;
+			auto &strText = GetString(itV6);
+			strText = EscapeString(strText);
 		}
-
-		auto &strText = GetString(itV6);
-		//为空改为引号包围的空字符串
-		if (strText.empty())
+		else if (itV6.IsCompound())//nbt格式转化为json数据组件
 		{
-			strText = MU8STR("\"\"");
-			continue;
-		}
+			auto &cpdText = GetCompound(itV6);
 
-		//不为空则添加双引号并转义内容
-		NBT_Type::String strNewText{};
-		strNewText.reserve(strText.size() + 2);//预分配
-
-		//转义拷贝
-		strNewText.push_back('\"');
-		for (const auto &it : strText)
-		{
-			if (it == '\\' || it == '\"')
+			NBT_Type::String strNewText{};
+			
+			strNewText.push_back('{');
+			for (auto &[itKey, itVal] : cpdText)
 			{
-				strNewText.push_back('\\');
-			}
-			strNewText.push_back(it);
-		}
-		strNewText.push_back('\"');
+				if (!itVal.IsString())
+				{
+					continue;
+				}
 
-		//移动替换
-		strText = std::move(strNewText);
+				strNewText += '\"';
+				strNewText += itKey;
+				strNewText += MU8STR("\":\"");
+				strNewText += GetString(itVal);
+				strNewText += MU8STR("\",");
+			}
+			if (strNewText.back() == ',')
+			{
+				strNewText.back() = '}';
+			}
+			else
+			{
+				strNewText.push_back('}');
+			}
+
+			itV6.SetString(std::move(strNewText));
+		}
+		else
+		{
+			continue;
+		}
 	}
 }
 
