@@ -34,34 +34,35 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 }
 
 
-void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData)
+void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData, const NBT_Type::Int iV7McDataVersion)
 {
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 	using std::placeholders::_3;
+	using std::placeholders::_4;
 
 	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
 	{
-		{ MU8STR("has_egg"),			std::bind(RenameProcess,			MU8STR("HasEgg"),			_1, _2, _3) },
-		{ MU8STR("life_ticks"),			std::bind(RenameProcess,			MU8STR("LifeTicks"),		_1, _2, _3) },
-		{ MU8STR("size"),				std::bind(RenameProcess,			MU8STR("Size"),				_1, _2, _3) },
-		{ MU8STR("fall_distance"),		std::bind(RenameProcess,			MU8STR("FallDistance"),		_1, _2, _3) },
+		{ MU8STR("has_egg"),			std::bind(RenameProcess,			MU8STR("HasEgg"),			_1, _2, _3, _4) },
+		{ MU8STR("life_ticks"),			std::bind(RenameProcess,			MU8STR("LifeTicks"),		_1, _2, _3, _4) },
+		{ MU8STR("size"),				std::bind(RenameProcess,			MU8STR("Size"),				_1, _2, _3, _4) },
+		{ MU8STR("fall_distance"),		std::bind(RenameProcess,			MU8STR("FallDistance"),		_1, _2, _3, _4) },
 
-		{ MU8STR("anchor_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("A"),				_1, _2, _3) },
-		{ MU8STR("block_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("Tile"),				_1, _2, _3) },
-		{ MU8STR("bound_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("Bound"),			_1, _2, _3) },
-		{ MU8STR("home_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("HomePos"),			_1, _2, _3) },
-		{ MU8STR("sleeping_pos"),		std::bind(ProcessBlockPosExternal,	MU8STR("Sleeping"),			_1, _2, _3) },
+		{ MU8STR("anchor_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("A"),				_1, _2, _3, _4) },
+		{ MU8STR("block_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("Tile"),				_1, _2, _3, _4) },
+		{ MU8STR("bound_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("Bound"),			_1, _2, _3, _4) },
+		{ MU8STR("home_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("HomePos"),			_1, _2, _3, _4) },
+		{ MU8STR("sleeping_pos"),		std::bind(ProcessBlockPosExternal,	MU8STR("Sleeping"),			_1, _2, _3, _4) },
 
-		{ MU8STR("attributes"),			std::bind(DefaultProcess,			MU8STR("Attributes"),	ProcessAttributes,	_1, _2, _3) },
-		{ MU8STR("flower_pos"),			std::bind(DefaultProcess,			MU8STR("FlowerPos"),	ProcessBlockPos,	_1, _2, _3) },
-		{ MU8STR("hive_pos"),			std::bind(DefaultProcess,			MU8STR("HivePos"),		ProcessBlockPos,	_1, _2, _3) },
-		{ MU8STR("Item"),				std::bind(DefaultProcess,			MU8STR("Item"),			ProcessSingleItem,	_1, _2, _3) },
-		{ MU8STR("Items"),				std::bind(DefaultProcess,			MU8STR("Items"),		ProcessItems,		_1, _2, _3) },
+		{ MU8STR("attributes"),			std::bind(DefaultProcess,			MU8STR("Attributes"),	ProcessAttributes,	_1, _2, _3, _4) },
+		{ MU8STR("flower_pos"),			std::bind(DefaultProcess,			MU8STR("FlowerPos"),	ProcessBlockPos,	_1, _2, _3, _4) },
+		{ MU8STR("hive_pos"),			std::bind(DefaultProcess,			MU8STR("HivePos"),		ProcessBlockPos,	_1, _2, _3, _4) },
+		{ MU8STR("Item"),				std::bind(DefaultProcess,			MU8STR("Item"),			ProcessSingleItem,	_1, _2, _3, _4) },
+		{ MU8STR("Items"),				std::bind(DefaultProcess,			MU8STR("Items"),		ProcessItems,		_1, _2, _3, _4) },
 
-		{ MU8STR("ArmorItems"),			std::bind(DefaultProcess,			MU8STR("ArmorItems"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, 4),		_1, _2, _3) },
-		{ MU8STR("HandItems"),			std::bind(DefaultProcess,			MU8STR("HandItems"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, 2),		_1, _2, _3) },
-		{ MU8STR("Inventory"),			std::bind(DefaultProcess,			MU8STR("Inventory"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, 1),		_1, _2, _3) },
+		{ MU8STR("ArmorItems"),			std::bind(DefaultProcess,			MU8STR("ArmorItems"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 4),		_1, _2, _3, _4) },
+		{ MU8STR("HandItems"),			std::bind(DefaultProcess,			MU8STR("HandItems"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 2),		_1, _2, _3, _4) },
+		{ MU8STR("Inventory"),			std::bind(DefaultProcess,			MU8STR("Inventory"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 1),		_1, _2, _3, _4) },
 
 		{ MU8STR("equipment"),			ProcessEntityEquipment },
 		{ MU8STR("drop_chances"),		ProcessEntityDropChances },
@@ -81,19 +82,19 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 
 		//进行处理
 		auto &funcProcess = itFind->second;
-		funcProcess(itV7TagKey, itV7TagVal, cpdV6EntityData);
+		funcProcess(itV7TagKey, itV7TagVal, cpdV6EntityData, iV7McDataVersion);
 	}
 
 	return;
 }
 
-void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData)
+void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::Int iV7McDataVersion)
 {
-	FixTileEntityId(cpdV7TileEntityData);
+	FixTileEntityId(cpdV7TileEntityData, iV7McDataVersion);
 
 	//特殊处理
 	const static auto funcJukeboxProcess =
-	[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData) -> void
+	[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::Int iV7McDataVersion) -> void
 	{
 		cpdV6TileEntityData.PutLong(MU8STR("RecordStartTick"), 0);
 		cpdV6TileEntityData.PutLong(MU8STR("TickCount"), nodeV7TagVal.IsLong() ? nodeV7TagVal.GetLong() : 0);
@@ -103,25 +104,26 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 	using std::placeholders::_3;
+	using std::placeholders::_4;
 
 	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
 	{
-		{ MU8STR("custom_name"),				std::bind(RenameProcess,	MU8STR("CustomName"),	_1, _2, _3) },//重命名处理
+		{ MU8STR("custom_name"),				std::bind(RenameProcess,	MU8STR("CustomName"),	_1, _2, _3, _4) },//重命名处理
 
 		{ MU8STR("ticks_since_song_started"),	funcJukeboxProcess }, //音符盒特殊处理
 
-		{ MU8STR("Items"),						std::bind(DefaultProcess,	MU8STR("Items"),		ProcessItems,			_1, _2, _3) },
-		{ MU8STR("patterns"),					std::bind(DefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,		_1, _2, _3) },
-		{ MU8STR("profile"),					std::bind(DefaultProcess,	MU8STR("SkullOwner"),	ProcessSkullProfile,	_1, _2, _3) },
-		{ MU8STR("flower_pos"),					std::bind(DefaultProcess,	MU8STR("FlowerPos"),	ProcessBlockPos,		_1, _2, _3) },
-		{ MU8STR("exit_portal"),				std::bind(DefaultProcess,	MU8STR("ExitPortal"),	ProcessBlockPos,		_1, _2, _3) },
-		{ MU8STR("bees"),						std::bind(DefaultProcess,	MU8STR("Bees"),			ProcessBees,			_1, _2, _3) },
-		{ MU8STR("item"),						std::bind(DefaultProcess,	MU8STR("item"),			ProcessSingleItem,		_1, _2, _3) },
-		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessSingleItem,		_1, _2, _3) },
-		{ MU8STR("Book"),						std::bind(DefaultProcess,	MU8STR("Book"),			ProcessSingleItem,		_1, _2, _3) },
+		{ MU8STR("Items"),						std::bind(DefaultProcess,	MU8STR("Items"),		ProcessItems,			_1, _2, _3, _4) },
+		{ MU8STR("patterns"),					std::bind(DefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,		_1, _2, _3, _4) },
+		{ MU8STR("profile"),					std::bind(DefaultProcess,	MU8STR("SkullOwner"),	ProcessSkullProfile,	_1, _2, _3, _4) },
+		{ MU8STR("flower_pos"),					std::bind(DefaultProcess,	MU8STR("FlowerPos"),	ProcessBlockPos,		_1, _2, _3, _4) },
+		{ MU8STR("exit_portal"),				std::bind(DefaultProcess,	MU8STR("ExitPortal"),	ProcessBlockPos,		_1, _2, _3, _4) },
+		{ MU8STR("bees"),						std::bind(DefaultProcess,	MU8STR("Bees"),			ProcessBees,			_1, _2, _3, _4) },
+		{ MU8STR("item"),						std::bind(DefaultProcess,	MU8STR("item"),			ProcessSingleItem,		_1, _2, _3, _4) },
+		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessSingleItem,		_1, _2, _3, _4) },
+		{ MU8STR("Book"),						std::bind(DefaultProcess,	MU8STR("Book"),			ProcessSingleItem,		_1, _2, _3, _4) },
 
-		{ MU8STR("front_text"),					std::bind(DefaultProcess,	MU8STR("front_text"),	ProcessSignText,		_1, _2, _3) },
-		{ MU8STR("back_text"),					std::bind(DefaultProcess,	MU8STR("back_text"),	ProcessSignText,		_1, _2, _3) },
+		{ MU8STR("front_text"),					std::bind(DefaultProcess,	MU8STR("front_text"),	ProcessSignText,		_1, _2, _3, _4) },
+		{ MU8STR("back_text"),					std::bind(DefaultProcess,	MU8STR("back_text"),	ProcessSignText,		_1, _2, _3, _4) },
 	};
 
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)
@@ -137,14 +139,14 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 		//进行处理
 		auto &funcProcess = itFind->second;
-		funcProcess(itV7TagKey, itV7TagVal, cpdV6TileEntityData);
+		funcProcess(itV7TagKey, itV7TagVal, cpdV6TileEntityData, iV7McDataVersion);
 	}
 
 	return;
 }
 
 //V7到V6仅转换Entity与TileEntity，其余不变
-bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV6RegionData)
+bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV6RegionData, const NBT_Type::Int iV7McDataVersion)
 {
 	//先转移不变数据，然后处理实体与方块实体
 
@@ -196,7 +198,7 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 		for (auto &nodeEntity : *pEntities)
 		{
 			auto &cpdNode = listV6EntityList.AddBackCompound({}).GetCompound();
-			ProcessEntity(GetCompound(nodeEntity), cpdNode);
+			ProcessEntity(GetCompound(nodeEntity), cpdNode, iV7McDataVersion);
 		}
 	} while (false);
 	
@@ -213,7 +215,7 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 		for (auto &nodeTileEntity : *pTileEntities)
 		{
 			auto &cpdNode = listV6TileEntityList.AddBackCompound({}).GetCompound();
-			ProcessTileEntity(GetCompound(nodeTileEntity), cpdNode);
+			ProcessTileEntity(GetCompound(nodeTileEntity), cpdNode, iV7McDataVersion);
 		}
 	} while (false);
 
@@ -279,7 +281,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	for (auto &[sV7RegionName, nodeV7RegionData] : *pRegions)
 	{
 		auto &cpdNewV6RegionData = cpdV6Regions.PutCompound(sV7RegionName, {}).first->second.GetCompound();
-		if (!ProcessRegion(GetCompound(nodeV7RegionData), cpdNewV6RegionData))
+		if (!ProcessRegion(GetCompound(nodeV7RegionData), cpdNewV6RegionData, *pMinecraftDataVersion))
 		{
 			printf("ProcessRegion fail!\n");
 			return false;
