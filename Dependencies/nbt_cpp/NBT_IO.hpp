@@ -249,7 +249,7 @@ public:
 		/// @note 这个接口一般用于逐个向流中写入数据
 		template<typename V>
 		requires(std::is_constructible_v<ValueType, V &&>)
-			void PutOnce(V &&c)
+		void PutOnce(V &&c)
 		{
 			tData.push_back(std::forward<V>(c));
 		}
