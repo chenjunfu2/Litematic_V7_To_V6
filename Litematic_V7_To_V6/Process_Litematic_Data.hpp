@@ -1634,7 +1634,7 @@ void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 		else if (itV6.IsCompound())//nbt格式转化为json数据组件
 		{
 			auto &cpdText = GetCompound(itV6);
-			itV6.SetString((NBT_Type::String)NBT_Helper::Serialize(cpdText));
+			itV6.SetString(NBT_Helper::Serialize<true, false, true>(cpdText));
 		}
 		else
 		{
