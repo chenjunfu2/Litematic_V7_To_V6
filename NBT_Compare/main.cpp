@@ -565,8 +565,8 @@ int main(int argc, char *argv[])
 		PAUSE_RETURN(0);
 	}
 
-	NBT_Helper::Print(cpdInput[0], NBT_Print{ pFile[0] });
-	NBT_Helper::Print(cpdInput[1], NBT_Print{ pFile[1] });
+	NBT_Helper::Print(cpdInput[0], 0, "    ", NBT_Print{ pFile[0] });
+	NBT_Helper::Print(cpdInput[1], 0, "    ", NBT_Print{ pFile[1] });
 
 	fclose(pFile[0]);
 	fclose(pFile[1]);
