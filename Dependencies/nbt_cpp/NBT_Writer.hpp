@@ -775,7 +775,7 @@ public:
 	/// @return 写入成功返回true，失败返回false
 	/// @note 错误与警告信息都输出到funcInfo，错误会导致函数结束剩下的写出任务，并进行栈回溯输出，最终返回false。警告则只会输出一次信息，然后继续执行，如果没有任何错误但是存在警告，函数仍将返回true。
 	template<bool bSortCompound = true, typename OutputStream, typename InfoFunc = NBT_Print>
-	static bool WriteNBT(OutputStream OptStream, const NBT_Type::Compound &tCompound, size_t szStackDepth = 512, InfoFunc funcInfo = NBT_Print{}) noexcept
+	static bool WriteNBT(OutputStream &OptStream, const NBT_Type::Compound &tCompound, size_t szStackDepth = 512, InfoFunc funcInfo = NBT_Print{}) noexcept
 	{
 		return PutCompoundType<true, bSortCompound>(OptStream, tCompound, szStackDepth, funcInfo) == AllOk;
 	}

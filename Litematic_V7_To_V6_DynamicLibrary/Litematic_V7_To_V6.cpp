@@ -291,106 +291,87 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	return true;
 }
 
-template<typename ISTREAM, typename OSTREAM>
-bool ConvertLitematicFile_V7_To_V6(ISTREAM ipt, OSTREAM opt)
-{
-	NBT_Type::Compound cpdV7Input{};
-	NBT_Type::Compound cpdV6Output{};
-
-	if (!NBT_IO::ReadFile(sV7FilePath, vFileV7Stream))
-	{
-		printf("Unable to read stream from file!\n");
-		return false;
-	}
-
-
-
-
-}
-
-bool ConvertLitematicFile_V7_To_V6(const std::string &sV7FilePath)
-{
-	NBT_Type::Compound cpdV7Input{};
-	NBT_Type::Compound cpdV6Output{};
-
-	//从sV7FilePath读取到cpdV7Input
-	{
-		std::vector<uint8_t> vFileV7Stream{};
-		if (!NBT_IO::ReadFile(sV7FilePath, vFileV7Stream))
-		{
-			printf("Unable to read stream from file!\n");
-			return false;
-		}
-
-		//如果解压失败那么可能原先文件未压缩
-		std::vector<uint8_t> vDataV7Stream{};
-		if (!NBT_IO::DecompressDataNoThrow(vDataV7Stream, vFileV7Stream))
-		{
-			printf("Data may not be compressed, attempt to parse directly.\n");
-			vDataV7Stream = std::move(vFileV7Stream);//尝试以未压缩流处理，而不是失败
-		}
-
-		if (!NBT_Reader::ReadNBT(vDataV7Stream, 0, cpdV7Input))
-		{
-			printf("Unable to parse data from stream!\n");
-			return false;
-		}
-	}
-
-	//从cpdV7Input转换到cpdV6Output
-	if (!ConvertLitematicData_V7_To_V6(cpdV7Input, cpdV6Output))
-	{
-		printf("Unable to convert v7_data to v6_data!\n");
-		return false;
-	}
-
-	//写出cpdV6Output到文件sV6FilePath
-	{
-		std::vector<uint8_t> vDataV6Stream{};
-		if (!NBT_Writer::WriteNBT(vDataV6Stream, 0, cpdV6Output))
-		{
-			printf("Unable to write data into stream!\n");
-			return false;
-		}
-
-		//查找合法文件
-		std::string sV6FilePath{};
-		{
-			//找到后缀名
-			size_t szPos = sV7FilePath.find_last_of('.');
-
-			//'.'前面的部分，不包含'.'
-			std::string sV7FileName = sV7FilePath.substr(0, szPos).append("_V6_");
-			//'.'后面的部分，包含'.'
-			std::string sV7FileExten = sV7FilePath.substr(szPos);
-
-			//唯一文件名
-			sV6FilePath = GenerateUniqueFilename(sV7FileName, sV7FileExten);
-			if (sV6FilePath.empty())
-			{
-				printf("Unable to find a valid file name or lack of permission!\n");
-				return false;
-			}
-		}
-
-		//压缩数据
-		std::vector<uint8_t> vFileV6Stream{};
-		if (!NBT_IO::CompressDataNoThrow(vFileV6Stream, vDataV6Stream))
-		{
-			printf("Unable to compress data stream!\n");
-			return false;
-		}
-
-		//写入数据
-		if (!NBT_IO::WriteFile(sV6FilePath, vFileV6Stream))
-		{
-			printf("Unable to write stream into file!\n");
-			return false;
-		}
-	}
-
-	printf("Convert Success!\n");
-	return true;
-}
-
-
+//bool ConvertLitematicFile_V7_To_V6(const std::string &sV7FilePath)
+//{
+//	NBT_Type::Compound cpdV7Input{};
+//	NBT_Type::Compound cpdV6Output{};
+//
+//	//从sV7FilePath读取到cpdV7Input
+//	{
+//		std::vector<uint8_t> vFileV7Stream{};
+//		if (!NBT_IO::ReadFile(sV7FilePath, vFileV7Stream))
+//		{
+//			printf("Unable to read stream from file!\n");
+//			return false;
+//		}
+//
+//		//如果解压失败那么可能原先文件未压缩
+//		std::vector<uint8_t> vDataV7Stream{};
+//		if (!NBT_IO::DecompressDataNoThrow(vDataV7Stream, vFileV7Stream))
+//		{
+//			printf("Data may not be compressed, attempt to parse directly.\n");
+//			vDataV7Stream = std::move(vFileV7Stream);//尝试以未压缩流处理，而不是失败
+//		}
+//
+//		if (!NBT_Reader::ReadNBT(vDataV7Stream, 0, cpdV7Input))
+//		{
+//			printf("Unable to parse data from stream!\n");
+//			return false;
+//		}
+//	}
+//
+//	//从cpdV7Input转换到cpdV6Output
+//	if (!ConvertLitematicData_V7_To_V6(cpdV7Input, cpdV6Output))
+//	{
+//		printf("Unable to convert v7_data to v6_data!\n");
+//		return false;
+//	}
+//
+//	//写出cpdV6Output到文件sV6FilePath
+//	{
+//		std::vector<uint8_t> vDataV6Stream{};
+//		if (!NBT_Writer::WriteNBT(vDataV6Stream, 0, cpdV6Output))
+//		{
+//			printf("Unable to write data into stream!\n");
+//			return false;
+//		}
+//
+//		//查找合法文件
+//		std::string sV6FilePath{};
+//		{
+//			//找到后缀名
+//			size_t szPos = sV7FilePath.find_last_of('.');
+//
+//			//'.'前面的部分，不包含'.'
+//			std::string sV7FileName = sV7FilePath.substr(0, szPos).append("_V6_");
+//			//'.'后面的部分，包含'.'
+//			std::string sV7FileExten = sV7FilePath.substr(szPos);
+//
+//			//唯一文件名
+//			sV6FilePath = GenerateUniqueFilename(sV7FileName, sV7FileExten);
+//			if (sV6FilePath.empty())
+//			{
+//				printf("Unable to find a valid file name or lack of permission!\n");
+//				return false;
+//			}
+//		}
+//
+//		//压缩数据
+//		std::vector<uint8_t> vFileV6Stream{};
+//		if (!NBT_IO::CompressDataNoThrow(vFileV6Stream, vDataV6Stream))
+//		{
+//			printf("Unable to compress data stream!\n");
+//			return false;
+//		}
+//
+//		//写入数据
+//		if (!NBT_IO::WriteFile(sV6FilePath, vFileV6Stream))
+//		{
+//			printf("Unable to write stream into file!\n");
+//			return false;
+//		}
+//	}
+//
+//	printf("Convert Success!\n");
+//	return true;
+//}

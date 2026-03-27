@@ -89,7 +89,7 @@ public:
 
 	template<typename InputStream, typename Visitor, typename InfoFunc = NBT_Print>
 	requires(IsLookLike_NBT_Visitor<Visitor>)
-	static bool Scan(InputStream IptStream, Visitor &tVisitor, size_t szStackDepth = 512, InfoFunc funcInfo = NBT_Print{})
+	static bool Scan(InputStream &IptStream, Visitor &tVisitor, size_t szStackDepth = 512, InfoFunc funcInfo = NBT_Print{})
 	{
 		tVisitor.VisitBegin();
 		//TODO
