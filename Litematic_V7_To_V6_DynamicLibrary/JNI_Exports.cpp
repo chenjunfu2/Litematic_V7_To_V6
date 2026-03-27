@@ -253,12 +253,12 @@ public:
 
 extern "C"
 {
-	JNIEXPORT void JNICALL Java_getVersion(JNIEnv *env, jobject obj)
+	JNIEXPORT jint JNICALL Java_getVersion(JNIEnv *env, jclass clazz)//jobject obj
 	{
-		jint version = env->GetVersion();
+		return env->GetVersion();
 	}
 
-	JNIEXPORT jbyteArray JNICALL Java_litematic_Convert_V7_To_V6(JNIEnv * env, jclass clazz, jbyteArray input)
+	JNIEXPORT jbyteArray JNICALL Java_litematic_Convert_V7_To_V6(JNIEnv * env, jclass clazz, jbyteArray input)//jobject obj
 	{
 		if (input == nullptr)
 		{
