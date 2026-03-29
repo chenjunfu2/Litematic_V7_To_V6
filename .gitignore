@@ -362,11 +362,11 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# CMakeLists
-!CMakeLists.txt
-!**/CMakeLists.txt
-
 # My
 *.litematic
 *.txt
 **/other/
+
+# CMakeLists
+!CMakeLists.txt
+!**/CMakeLists.txt
