@@ -66,7 +66,7 @@ public:
 		const T &code,
 		const InputStream &tData,
 		InfoFunc &funcInfo,
-		const std::FMT_STR<Args...> fmt,
+		const std::format_string<Args...> fmt,
 		Args&&... args
 	) noexcept
 	{
