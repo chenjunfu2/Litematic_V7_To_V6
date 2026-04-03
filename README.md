@@ -10,9 +10,12 @@
 将一个或多个需要降低数据版本的投影文件
 - 拖拽到程序上，然后松开
 - 作为启动命令参数输入，回车
-
-即可完成
-
+  
+即可完成  
+  
+## 1.20.x-Mod版本
+详情请见：[litematica-extra](https://github.com/shuangshun/litematica-extra)  
+  
 ## 跨平台
 **Release仅提供Windows x64构建版本，Linux用户请自行构建**  
 **其他平台暂时不考虑兼容，如有需求请自行尝试**  
