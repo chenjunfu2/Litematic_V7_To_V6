@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <vector>
-#include <thread>
 #include <unordered_map>
 
 #define V6_MINECRAFT_DATA_VERSION 3700
@@ -25,7 +24,7 @@ std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &s
 		}
 
 		//等几ms在继续
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		CodeTimer::Sleep(std::chrono::milliseconds(10));
 		--u32TryCount;
 	}
 
@@ -239,14 +238,13 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 
 	//先处理版本信息
 	auto *pMinecraftDataVersion = cpdV7DataRoot.HasInt(MU8STR("MinecraftDataVersion"));
-	auto *pVersion = cpdV7DataRoot.HasInt(MU8STR("Version"));
+	//auto *pVersion = cpdV7DataRoot.HasInt(MU8STR("Version"));
 	//auto *pSubVersion = cpdV7DataRoot.HasInt(MU8STR("SubVersion"));
 
 	//版本验证
-	if ((pMinecraftDataVersion != NULL && *pMinecraftDataVersion <= V6_MINECRAFT_DATA_VERSION) ||
-		(pVersion != NULL && *pVersion <= V6_LITEMATIC_VERSION))
+	if (pMinecraftDataVersion == NULL || *pMinecraftDataVersion <= V6_MINECRAFT_DATA_VERSION)// || (pVersion == NULL || *pVersion <= V6_LITEMATIC_VERSION)//投影版本检测去除，仅关注MC版本
 	{
-		printf("Version Error!\n");
+		printf("MinecraftDataVersion Error!\n");
 		return false;
 	}
 
