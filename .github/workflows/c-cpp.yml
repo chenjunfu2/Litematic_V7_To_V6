@@ -9,74 +9,36 @@ on:
 
 jobs:
   build:
+
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         compiler: [gcc, clang]
       fail-fast: false
-
-    runs-on: ${{ matrix.os }}
       
     steps:
     - uses: actions/checkout@v6
 
-    - name: Setup GCC (Linux)
-      if: runner.os == 'Linux' && matrix.compiler == 'gcc'
+    - name: Setup GCC
+      if: matrix.compiler == 'gcc'
       uses: egor-tensin/setup-gcc@v1
       with:
         version: latest
-
-    - name: Setup Clang (Linux)
-      if: runner.os == 'Linux' && matrix.compiler == 'clang'
+        
+    - name: Setup Clang
+      if: matrix.compiler == 'clang'
       uses: egor-tensin/setup-clang@v1
       with:
         version: latest
-
-    - name: Setup GCC (Windows)
-      if: runner.os == 'Windows' && matrix.compiler == 'gcc'
-      uses: egor-tensin/setup-mingw@v1
-      with:
-        version: latest
-
-    - name: Setup Clang (Windows)
-      if: runner.os == 'Windows' && matrix.compiler == 'clang'
-      uses: egor-tensin/setup-clang@v1
-      with:
-        version: latest
-
-
-    - name: Setup Clang (macOS)
-      if: runner.os == 'macOS' && matrix.compiler == 'clang'
-      run: |
-        echo "CC=clang" >> $GITHUB_ENV
-        echo "CXX=clang++" >> $GITHUB_ENV
-
-    - name: Setup GCC (macOS)
-      if: runner.os == 'macOS' && matrix.compiler == 'gcc'
-      run: |
-        brew install gcc
-        brew link --overwrite gcc
-        echo "CC=gcc" >> $GITHUB_ENV
-        echo "CXX=g++" >> $GITHUB_ENV
-
-    - name: Build (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        chmod +x cmake-build.sh
-        ./cmake-build.sh
-      shell: bash
-
-    - name: Build (Windows)
-      if: runner.os == 'Windows'
-      run: cmake-build.bat
-      shell: cmd
     
-    - name: List Dir (Unix)
-      if: runner.os != 'Windows'
+    - name: List Dir
       run: find . -type f | sort
-      shell: bash
-
-    - name: List Dir (Windows)
-      if: runner.os == 'Windows'
-      run: Get-ChildItem -Recurse | Select-Object FullName | Sort-Object FullName
-      shell: pwsh
+      
+    - name: Configure with CMake
+      run: cmake -B build -S .
+      
+    - name: Build
+      run: cmake --build build
+      
+    - name: List Dir
+      run: find . -type f | sort
