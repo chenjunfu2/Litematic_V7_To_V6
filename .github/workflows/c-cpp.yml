@@ -20,17 +20,44 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: Setup GCC
-      if: matrix.compiler == 'gcc'
+    - name: Setup GCC (Linux)
+      if: runner.os == 'Linux' && matrix.compiler == 'gcc'
       uses: egor-tensin/setup-gcc@v1
       with:
         version: latest
 
-    - name: Setup Clang
-      if: matrix.compiler == 'clang'
+    - name: Setup Clang (Linux)
+      if: runner.os == 'Linux' && matrix.compiler == 'clang'
       uses: egor-tensin/setup-clang@v1
       with:
         version: latest
+
+    - name: Setup GCC (Windows)
+      if: runner.os == 'Windows' && matrix.compiler == 'gcc'
+      uses: egor-tensin/setup-mingw@v1
+      with:
+        version: latest
+
+    - name: Setup Clang (Windows)
+      if: runner.os == 'Windows' && matrix.compiler == 'clang'
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: latest
+
+
+    - name: Setup Clang (macOS)
+      if: runner.os == 'macOS' && matrix.compiler == 'clang'
+      run: |
+        echo "CC=clang" >> $GITHUB_ENV
+        echo "CXX=clang++" >> $GITHUB_ENV
+
+    - name: Setup GCC (macOS)
+      if: runner.os == 'macOS' && matrix.compiler == 'gcc'
+      run: |
+        brew install gcc
+        brew link --overwrite gcc
+        echo "CC=gcc" >> $GITHUB_ENV
+        echo "CXX=g++" >> $GITHUB_ENV
 
     - name: Build (Unix)
       if: runner.os != 'Windows'
