@@ -117,12 +117,7 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity, const NBT_Type::Int iV7M
 			continue;
 		}
 
-		//附条件匹配，如果附条件为空，则跳过
-		if (listAdditional.empty())
-		{
-			continue;
-		}
-
+		//附条件匹配，如果附条件为空，则默认匹配成功
 		for (const auto &itAdd : listAdditional)
 		{
 			if (!cpdTileEntity.Contains(itAdd))
@@ -1039,7 +1034,7 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		MapValFunc_T funcProcess;
 	};
 
-	const static std::unordered_map<NBT_Type::String, MapVal_T> mapProccess =
+	const static std::unordered_map<NBT_Type::String, MapVal_T> mapProcess =
 	{
 		{ MU8STR("minecraft:block_state"),				{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("BlockStateTag"),		_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:instrument"),				{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("instrument"),			_1, _2, _3, _4) } },
@@ -1157,8 +1152,8 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 	for (auto &[strV7Key, strV7Val] : cpdV7Tag)
 	{
 		//查找是否有匹配的处理过程
-		auto itFind = mapProccess.find(strV7Key);
-		if (itFind == mapProccess.end())
+		auto itFind = mapProcess.find(strV7Key);
+		if (itFind == mapProcess.end())
 		{
 			//不匹配直接移动处理
 			cpdV6Tag.Put(strV7Key, std::move(strV7Val));

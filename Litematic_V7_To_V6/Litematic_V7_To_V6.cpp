@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <vector>
 #include <unordered_map>
+#include <format>
 
 #define V6_MINECRAFT_DATA_VERSION 3700
 #define V6_LITEMATIC_VERSION 6
