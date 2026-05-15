@@ -704,7 +704,7 @@ void ProcessDyedColor(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::
 			(uint32_t)255 << 24 |
 			(uint32_t)bR  << 16 |
 			(uint32_t)bG  <<  8 |
-			(uint32_t)bR  <<  0;
+			(uint32_t)bB  <<  0;
 
 		nodeV6Tag.SetInt(iRGB);
 	}
@@ -1124,7 +1124,7 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 					DefaultProcess(MU8STR("Items"), ProcessItemsNested, MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
 				}
 
-				bool bShulker = strItemId.find(MU8STR("shulker")) == strItemId.npos;
+				bool bShulker = strItemId.find(MU8STR("shulker")) != strItemId.npos;
 				cpdV6TagData.PutString(MU8STR("id"), bShulker ? MU8STR("minecraft:shulker_box") : strItemId);
 			}}
 		},
