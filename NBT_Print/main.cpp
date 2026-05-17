@@ -261,24 +261,6 @@ public:
 
 int main(int argc, char *argv[])
 {
-	NBT_Type::Compound test
-	{
-		{MU8STR("0"), NBT_Type::Compound{}},
-		{MU8STR("1"), NBT_Type::Compound
-		{
-			{MU8STR(""),NBT_Type::Byte{0}}
-		}},
-		{MU8STR("2"), NBT_Type::List{}},
-		{MU8STR("3"), NBT_Type::List
-		{
-			MU8STR("")
-		}},
-	};
-
-	NBT_Helper::Print(test);
-	return 0;
-
-
 	if (argc < 2)
 	{
 		printf("Usage: %s <NBT file path>\n", argv[0]);
