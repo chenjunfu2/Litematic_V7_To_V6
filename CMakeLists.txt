@@ -104,3 +104,4 @@ include_directories(
 #添加项目
 add_subdirectory(Litematic_V7_To_V6)
 add_subdirectory(NBT_Compare)
+add_subdirectory(NBT_Print)
