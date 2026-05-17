@@ -20,6 +20,7 @@ private:
 		enum Type : uint8_t { Compound, List };
 		Type type;
 		bool firstEntry = true;
+		bool bracketOpened = false;	// 开括号是否已打印（空容器推迟到结束时打印 {} 或 []）
 	};
 
 	std::vector<Frame> frames;
@@ -50,17 +51,44 @@ private:
 		}
 	}
 
+	// 确保非空容器的开括号已打印（延迟到首个条目出现时才打印，以实现空容器 {}[] 同行）
+	void ensureBracketOpen()
+	{
+		if (frames.empty()) return;
+		auto &top = frames.back();
+		if (top.bracketOpened) return;
+		top.bracketOpened = true;
+
+		fputs("\n", out);
+		for (size_t i = 0; i + 1 < frames.size(); ++i)
+			fputs(indentStr.c_str(), out);
+
+		if (top.type == Frame::Compound)
+			fputc('{', out);
+		else
+			fputc('[', out);
+	}
+
 	// 关闭容器，负责换行和缩进到闭合括号层级
 	void closeContainer(const char *closeBracket)
 	{
 		if (frames.empty()) return;
-		if (!frames.back().firstEntry)
+		auto &top = frames.back();
+		if (!top.bracketOpened)
 		{
-			fputs("\n", out);
-			for (size_t i = 0; i + 1 < frames.size(); ++i)
-				fputs(indentStr.c_str(), out);
+			// 空容器，直接打印 {} 或 []
+			fputs(top.type == Frame::Compound ? "{}" : "[]", out);
 		}
-		fputs(closeBracket, out);
+		else
+		{
+			if (!top.firstEntry)
+			{
+				fputs("\n", out);
+				for (size_t i = 0; i + 1 < frames.size(); ++i)
+					fputs(indentStr.c_str(), out);
+			}
+			fputs(closeBracket, out);
+		}
 		frames.pop_back();
 	}
 
@@ -136,14 +164,14 @@ public:
 	// === Compound ===
 	ResultControl VisitCompoundBegin()
 	{
-		fputc('{', out);
-		frames.push_back({Frame::Compound, true});
+		frames.push_back({Frame::Compound, true, false});
 		return ResultControl::Continue;
 	}
 
 	NestingControl VisitCompoundNextEntryType(NBT_TAG tag)
 	{
 		(void)tag;
+		ensureBracketOpen();
 		beginEntry();
 		return NestingControl::Enter;
 	}
@@ -175,8 +203,7 @@ public:
 	{
 		(void)tag;
 		(void)len;
-		fputc('[', out);
-		frames.push_back({Frame::List, true});
+		frames.push_back({Frame::List, true, false});
 		return ResultControl::Continue;
 	}
 
@@ -184,6 +211,7 @@ public:
 	{
 		(void)tag;
 		(void)idx;
+		ensureBracketOpen();
 		beginEntry();
 		return NestingControl::Enter;
 	}
@@ -205,7 +233,7 @@ public:
 	void VisitBegin()
 	{
 		fputc('{', out);
-		frames.push_back({Frame::Compound, true});
+		frames.push_back({Frame::Compound, true, true});
 	}
 
 	void VisitEnd()
@@ -233,6 +261,24 @@ public:
 
 int main(int argc, char *argv[])
 {
+	NBT_Type::Compound test
+	{
+		{MU8STR("0"), NBT_Type::Compound{}},
+		{MU8STR("1"), NBT_Type::Compound
+		{
+			{MU8STR(""),NBT_Type::Byte{0}}
+		}},
+		{MU8STR("2"), NBT_Type::List{}},
+		{MU8STR("3"), NBT_Type::List
+		{
+			MU8STR("")
+		}},
+	};
+
+	NBT_Helper::Print(test);
+	return 0;
+
+
 	if (argc < 2)
 	{
 		printf("Usage: %s <NBT file path>\n", argv[0]);
