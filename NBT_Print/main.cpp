@@ -1,4 +1,4 @@
-﻿#include <nbt_cpp/NBT_All.hpp>
+#include <nbt_cpp/NBT_All.hpp>
 
 #include <vector>
 #include <string>
@@ -33,20 +33,29 @@ private:
 	}
 
 	// 在容器条目开始时调用，负责逗号和缩进
-	void beginEntry()
+	// bSkipNewline: 当元素是 Compound/List 时跳过换行（它们自己的开括号会换行）
+	void beginEntry(bool bSkipNewline = false)
 	{
 		if (frames.empty()) return;
 		auto &top = frames.back();
 		if (!top.firstEntry)
 		{
-			fputs(",\n", out);
-			printIndent();
+			if (bSkipNewline)
+				fputc(',', out);
+			else
+			{
+				fputs(",\n", out);
+				printIndent();
+			}
 		}
 		else
 		{
 			top.firstEntry = false;
-			fputs("\n", out);
-			printIndent();
+			if (!bSkipNewline)
+			{
+				fputs("\n", out);
+				printIndent();
+			}
 		}
 	}
 
@@ -190,7 +199,7 @@ public:
 	{
 		(void)tag;
 		(void)idx;
-		beginEntry();
+		beginEntry(tag == NBT_TAG::Compound || tag == NBT_TAG::List);
 		return NestingControl::Enter;
 	}
 
