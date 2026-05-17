@@ -961,7 +961,7 @@ void ProcessItemsNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type
 		auto &cpdV7Entry = itV7Entry.GetCompound();
 		NBT_Type::Compound cpdV6Entry;
 
-		NBT_Type::Int iSlot = CopyOrElse(cpdV7Entry.HasInt(MU8STR("slot")), bSlot);
+		//查找物品组件
 		auto *pItem = cpdV7Entry.HasCompound(MU8STR("item"));
 		if (pItem == NULL)
 		{
@@ -969,7 +969,7 @@ void ProcessItemsNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type
 			continue;
 		}
 
-		//依旧空物品
+		//无id视为空物品
 		auto *pId = pItem->HasString(MU8STR("id"));
 		if (pId == NULL)
 		{
@@ -977,10 +977,12 @@ void ProcessItemsNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type
 			continue;
 		}
 
+		//依次插入Id，Count和Slot
 		const auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(pItem->HasInt(MU8STR("count")), 1));
-		cpdV6Entry.PutByte(MU8STR("Slot"), CopyOrElse(pItem->HasByte(MU8STR("Slot")), bSlot));
+		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(pItem->HasInt(MU8STR("count")), 1));//至少要有1个
+		cpdV6Entry.PutByte(MU8STR("Slot"), (NBT_Type::Byte)CopyOrElse(cpdV7Entry.HasInt(MU8STR("slot")), bSlot));//获取外层槽位，如果不存在则使用修复值
 
+		//递归转换tag
 		if (auto *pV7Tag = pItem->HasCompound(MU8STR("components")); pV7Tag != NULL)
 		{
 			NBT_Type::Compound cpdV6Tag;
@@ -1629,7 +1631,7 @@ void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 		else if (itV6.IsCompound())//nbt格式转化为json数据组件
 		{
 			auto &cpdText = GetCompound(itV6);
-			itV6.SetString(NBT_Helper::Serialize<true, false, true>(cpdText));
+			itV6.SetString(NBT_Helper::Serialize<NBT_Helper::DefaultCompoundSort<true>, false, true>(cpdText));
 		}
 		else
 		{
