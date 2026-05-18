@@ -34,10 +34,10 @@ cmake -B build \
 cmake --build build
 
 $STRIP --strip-all ./build/Litematic_V7_To_V6/Litematic_V7_To_V6
-$STRIP --strip-all ./build/Litematic_V7_To_V6/NBT_Compare
-$STRIP --strip-all ./build/Litematic_V7_To_V6/NBT_Print
+$STRIP --strip-all ./build/NBT_Compare/NBT_Compare
+$STRIP --strip-all ./build/NBT_Print/NBT_Print
 
 mkdir -p "$OUTPUT_DIR"
 cp -f ./build/Litematic_V7_To_V6/Litematic_V7_To_V6 "$OUTPUT_DIR/"
-cp -f ./build/Litematic_V7_To_V6/NBT_Compare "$OUTPUT_DIR/"
-cp -f ./build/Litematic_V7_To_V6/NBT_Print "$OUTPUT_DIR/"
+cp -f ./build/NBT_Compare/NBT_Compare "$OUTPUT_DIR/"
+cp -f ./build/NBT_Print/NBT_Print "$OUTPUT_DIR/"
