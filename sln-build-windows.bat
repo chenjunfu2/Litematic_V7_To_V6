@@ -57,3 +57,5 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 
 mkdir "%OUTPUT_DIR%"
 copy /Y ".\%PLATFORM%\Release\Litematic_V7_To_V6.exe" "%OUTPUT_DIR%\"
+copy /Y ".\%PLATFORM%\Release\NBT_Compare.exe" "%OUTPUT_DIR%\"
+copy /Y ".\%PLATFORM%\Release\NBT_Print.exe" "%OUTPUT_DIR%\"
