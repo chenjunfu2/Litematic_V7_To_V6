@@ -20,11 +20,8 @@
 详情请见：[litematica-extra](https://github.com/shuangshun/litematica-extra)  
   
 ## 跨平台
-**Release仅提供Windows x64构建版本，Linux用户请自行构建**  
-**其他平台暂时不考虑兼容，如有需求请自行尝试**  
-  
-`Linux`请使用`Clang`或`GCC`通过`CMakeLists.txt`构建  
-`Windows`可使用`MSVC`通过`*.sln`构建，或使用与`Linux`相同的构建方式  
+本项目使用Github CI自动完成跨平台构建  
+请在Release页面中下载所需平台的编译产物  
   
 ## Star History
 [![Star History Chart](https://api.star-history.com/image?repos=chenjunfu2/Litematic_V7_To_V6&type=date&legend=top-left)](https://www.star-history.com/?repos=chenjunfu2%2FLitematic_V7_To_V6&type=date&legend=top-left)
