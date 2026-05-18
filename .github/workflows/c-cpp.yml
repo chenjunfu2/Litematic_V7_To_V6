@@ -2,43 +2,134 @@ name: C/C++ CI
 
 on:
   workflow_dispatch:
-  #push:
-  #  branches: [ "master" ]
-  #pull_request:
-  #  branches: [ "master" ]
+  # push:
+  #   branches: [ "master" ]
+  # pull_request:
+  #   branches: [ "master" ]
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
-      matrix:
-        compiler: [gcc, clang]
       fail-fast: false
-      
-    steps:
-    - uses: actions/checkout@v6
+      matrix:
+        include:
+          - os: windows
+            target: native
+            arch: x64
+            runner: windows-latest
+          - os: windows
+            target: native
+            arch: arm64
+            runner: windows-latest
+          - os: linux
+            target: native
+            arch: x64
+            runner: ubuntu-latest
+          - os: linux
+            target: native
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - os: linux
+            target: android
+            arch: x64
+            runner: ubuntu-latest
+          - os: linux
+            target: android
+            arch: arm64
+            runner: ubuntu-latest
+          - os: macos
+            target: native
+            arch: arm64
+            runner: macos-latest
+          - os: macos
+            target: native
+            arch: x64
+            runner: macos-latest
 
-    - name: Setup GCC
-      if: matrix.compiler == 'gcc'
-      uses: egor-tensin/setup-gcc@v1
-      with:
-        version: latest
-        
-    - name: Setup Clang
-      if: matrix.compiler == 'clang'
-      uses: egor-tensin/setup-clang@v1
-      with:
-        version: latest
-    
-    - name: List Dir
-      run: find . -type f | sort
-      
-    - name: Configure with CMake
-      run: cmake -B build -S .
-      
-    - name: Build
-      run: cmake --build build
-      
-    - name: List Dir
-      run: find . -type f | sort
+    steps:
+      - uses: actions/checkout@v6
+
+      # Setup Windows
+      - name: Setup MSVC (Windows native x64 & arm64)
+        if: runner.os == 'Windows' && matrix.target == 'native'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch == 'x64' && 'x64' || 'amd64_arm64' }}
+
+      # Setup Linux
+      - name: Setup GCC (Linux native x64 & arm64)
+        if: runner.os == 'Linux' && matrix.target == 'native'
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: gcc
+          cmake: true
+
+      # Setup macOS
+      - name: Setup Clang (macOS native x64 & arm64)
+        if: runner.os == 'macOS' && matrix.target == 'native'
+        uses: aminya/setup-cpp@v1
+        with:
+            compiler: apple-clang
+            cmake: true
+
+      # Setup Android
+      - name: Setup Android NDK (Linux android x64 & arm64)
+        if: runner.os == 'Linux' && matrix.target == 'android'
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26d
+
+      # Build Windows: MSVC (MSBuild)
+      - name: Build (Windows)
+        if: runner.os == 'Windows' && matrix.target == 'native'
+        run: sln-build-windows.bat ${{ matrix.arch }}
+        shell: cmd
+
+      # Build Linux: GCC
+      - name: Build (Linux)
+        if: runner.os == 'Linux' && matrix.target == 'native'
+        run: |
+          chmod +x cmake-build-linux.sh
+          ./cmake-build-linux.sh ${{ matrix.arch }}
+        shell: bash
+
+      # Build macOS: Clang
+      - name: Build (macOS)
+        if: runner.os == 'macOS' && matrix.target == 'native'
+        run: |
+          chmod +x cmake-build-macos.sh
+          if [[ "${{ matrix.arch }}" == "x64" ]]; then
+            arch -x86_64 ./cmake-build-macos.sh ${{ matrix.arch }}
+          else
+            ./cmake-build-macos.sh ${{ matrix.arch }}
+          fi
+        shell: bash
+
+      # Build Android: Linux Android NDK
+      - name: Build for Android
+        if: runner.os == 'Linux' && matrix.target == 'android'
+        run: |
+          chmod +x cmake-build-android.sh
+          ./cmake-build-android.sh ${{ matrix.arch }}
+        shell: bash
+
+      # List Unix
+      - name: List Dir (Unix)
+        if: runner.os != 'Windows'
+        run: find . -type f | sort
+
+      # List Windows
+      - name: List Dir (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          (Get-ChildItem -Recurse -File).FullName | Sort-Object
+        shell: pwsh
+
+      # Upload build artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.os }}-${{ matrix.target }}-${{ matrix.arch }}-artifacts
+          path: artifacts/
+          if-no-files-found: error
