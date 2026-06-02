@@ -106,6 +106,11 @@ void FixTileEntityId(NBT_Type::Compound &cpdTileEntity, const NBT_Type::Int iV7M
 		{MU8STR("facing"),					{},														MU8STR("minecraft:piston")},
 		{MU8STR("extending"),				{},														MU8STR("minecraft:piston")},
 		{MU8STR("x"),						{MU8STR("y"),	MU8STR("z")},							MU8STR("minecraft:piston")},
+
+		{MU8STR("Primary"),					{},														MU8STR("minecraft:beacon")},
+		{MU8STR("Secondary"),				{},														MU8STR("minecraft:beacon")},
+		{MU8STR("primary_effect"),			{},														MU8STR("minecraft:beacon")},
+		{MU8STR("secondary_effect"),		{},														MU8STR("minecraft:beacon")},
 	};
 
 	//遍历猜测表，挨个匹配
@@ -1638,6 +1643,40 @@ void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 			continue;
 		}
 	}
+}
+
+void ProcessBeaconEffect(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+{
+	if (!nodeV7Tag.IsString())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &strEffect = nodeV7Tag.GetString();
+	const static NBT_Type::Int iDefaultEffect = 1;//default -> speed
+
+	//buff映射表
+	const static std::unordered_map<NBT_Type::String, NBT_Type::Int> mapBeaconEffect =
+	{
+		{ MU8STR("minecraft:speed"),				1 },
+		{ MU8STR("minecraft:haste"),				3 },
+		{ MU8STR("minecraft:strength"),				5 },
+		{ MU8STR("minecraft:jump_boost"),			8 },
+		{ MU8STR("minecraft:regeneration"),			10 },
+		{ MU8STR("minecraft:resistance"),			11 },
+	};
+
+	//查找并映射
+	NBT_Type::Int iEffect = iDefaultEffect;
+	auto itFind = mapBeaconEffect.find(strEffect);
+	if (itFind != mapBeaconEffect.end())
+	{
+		iEffect = itFind->second;
+	}
+	nodeV6Tag.SetInt(iEffect);
+
+	return;
 }
 
 void ProcessEntityItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion, size_t szSlotSize)

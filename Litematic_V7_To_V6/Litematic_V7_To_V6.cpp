@@ -110,7 +110,7 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 	{
 		{ MU8STR("custom_name"),				std::bind(RenameProcess,	MU8STR("CustomName"),	_1, _2, _3, _4) },//重命名处理
 
-		{ MU8STR("ticks_since_song_started"),	funcJukeboxProcess }, //音符盒特殊处理
+		{ MU8STR("ticks_since_song_started"),	funcJukeboxProcess }, //唱片机特殊处理
 
 		{ MU8STR("Items"),						std::bind(DefaultProcess,	MU8STR("Items"),		ProcessItems,			_1, _2, _3, _4) },
 		{ MU8STR("patterns"),					std::bind(DefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,		_1, _2, _3, _4) },
@@ -124,6 +124,9 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 		{ MU8STR("front_text"),					std::bind(DefaultProcess,	MU8STR("front_text"),	ProcessSignText,		_1, _2, _3, _4) },
 		{ MU8STR("back_text"),					std::bind(DefaultProcess,	MU8STR("back_text"),	ProcessSignText,		_1, _2, _3, _4) },
+
+		{ MU8STR("primary_effect"),				std::bind(DefaultProcess,	MU8STR("Primary"),		ProcessBeaconEffect,	_1, _2, _3, _4) },
+		{ MU8STR("secondary_effect"),			std::bind(DefaultProcess,	MU8STR("Secondary"),	ProcessBeaconEffect,	_1, _2, _3, _4) },
 	};
 
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)
