@@ -728,10 +728,17 @@ NBT_Type::String EscapeString(const NBT_Type::String &strRaw)
 	{
 		switch (it)
 		{
-		case '\"':	case '\\':	/*case '/':*/	case '\b':
-		case '\f':	case '\n':	case '\r':		case '\t':
+		case '\"':
+		case '\\':
 			strEscape.push_back('\\');
 			break;
+		//因为mc会直接处理这些空白字符的原始形式，仅需要手动处理可显示字符的转义
+		/*case '/':
+		case '\b':
+		case '\f':
+		case '\n':
+		case '\r':
+		case '\t':*/
 		default:
 			//不添加转义
 			break;
