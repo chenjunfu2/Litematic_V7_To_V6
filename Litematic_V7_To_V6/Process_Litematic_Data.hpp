@@ -712,22 +712,161 @@ void ProcessDyedColor(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::
 	return;
 }
 
+
+/*
+关于文本组件：
+游戏不会使用列表形式进行序列化，仅使用字符串形式和复合标签形式存储与传输。
+字符串格式是纯文本组件的简写形式。在实际使用中，字符串格式等价于复合标签格式的{text: <字符串>}。
+如果一个文本组件所有样式均为默认值、不包含子组件且为纯文本组件，游戏在序列化或持久化此组件时会直接使用字符串格式而非复合标签格式。
+*/
+
+NBT_Type::String EscapeString(const NBT_Type::String &strRaw)
+{
+	NBT_Type::String strEscape{};
+	strEscape.reserve(strRaw.size());//预分配
+	for (const auto &it : strRaw)
+	{
+		switch (it)
+		{
+		case '\"':	case '\\':	/*case '/':*/	case '\b':
+		case '\f':	case '\n':	case '\r':		case '\t':
+			strEscape.push_back('\\');
+			break;
+		default:
+			//不添加转义
+			break;
+		}
+
+		strEscape.push_back(it);
+	}
+
+	return strEscape;
+}
+
+NBT_Type::String DoubleEscapeString(const NBT_Type::String &strRaw)
+{
+	//进行两次转义，因为json解析需要消费一次转义，snbt解析也要消费一次转义
+
+	//因为只要发生转义，必然插入额外字符，所以判断转义前后的大小，如果不变，那么就说明没有进行过转义，跳过第二次无效转义
+	auto strFirst = EscapeString(strRaw);
+	if (strFirst.size() == strRaw.size())
+	{
+		return strFirst;//返回转义串（这里可以享受NRVO，假设这里返回原始串——虽然与转义串等价，则会导致二次拷贝，并且浪费已经进行过拷贝的转义串。)
+	}
+
+	auto strSecond = EscapeString(strFirst);//二次转义
+	return strSecond;
+}
+
+NBT_Type::String ToJsonString(const NBT_Type::String &strRaw)
+{
+	//为空改为引号包围的空字符串
+	if (strRaw.empty())
+	{
+		return MU8STR("{\"text\":\"\"}");
+	}
+
+	//不为空则添加双引号并转义内容，转义两次，因为json解析和snbt解析各消费一次
+	auto strTemp = DoubleEscapeString(strRaw);
+
+	NBT_Type::String strJson{};
+	//预分配
+	strJson.reserve(sizeof(MU8STR("{\"text\":\"\"}")) + strTemp.size() * sizeof(*strTemp.data()));
+
+	//拼接
+	strJson.append(MU8STR("{\"text\":\""));
+	strJson.append(std::move(strTemp));
+	strJson.append(MU8STR("\"}"));
+
+	//返回转义完成的字符串
+	return strJson;
+}
+
+bool ProcessTextComponent(NBT_Node& nodeTextComponent, NBT_Type::String& strRawJsonText)
+{
+	switch (nodeTextComponent.GetTag())
+	{
+	case NBT_TAG::String:
+		{
+			strRawJsonText = ToJsonString(GetString(nodeTextComponent));
+		}
+		break;
+	case NBT_TAG::Compound:
+		{
+			//因为NBT库序列化不会添加任何转义，转义仅由用户侧完成，所以需要转义后再进行SNBT序列化
+			auto &cpdText = GetCompound(nodeTextComponent);
+
+			//如果存在，那么转义两次，因为json解析和snbt解析各消费一次
+			auto pstrText = cpdText.HasString(MU8STR("text"));
+			if (pstrText != NULL)
+			{
+				*pstrText = DoubleEscapeString(*pstrText);
+			}
+
+			//最后把转义完成的进行序列化
+			strRawJsonText = NBT_Helper::Serialize<NBT_Helper::DefaultCompoundSort<true>, false, true>(cpdText);
+		}
+		break;
+	default:
+		return false;
+		break;
+	}
+
+	return true;
+}
+
 void ProcessCustomNameTag(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
-	//与ProcessItemName一样，放弃处理
+	if (!nodeV7Tag.IsString() && !nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
-	nodeV6Tag = std::move(nodeV7Tag);
+	//1.21.4及以前无需修改
+	if (iV7McDataVersion <= MC_1_21_4_MINECRAFT_DATA_VERSION)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	//1.21.4后修改
+	NBT_Type::String strJsonTemp{};
+	if (!ProcessTextComponent(nodeV7Tag, strJsonTemp))
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+	
+	nodeV6Tag.SetString(std::move(strJsonTemp));
 
 	return;
 }
 
 void ProcessItemName(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
-	//旧版中，Name标签只会是Json字符串
-	//新版可能是Compound、List或SNBT或Json
-	//根据实际情况，极其复杂，选择放弃处理，直接移动
+	if (!nodeV7Tag.IsString() && !nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
-	nodeV6Tag = std::move(nodeV7Tag);
+	//1.21.4及以前无需修改
+	if (iV7McDataVersion <= MC_1_21_4_MINECRAFT_DATA_VERSION)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	//1.21.4后修改
+	NBT_Type::String strJsonTemp{};
+	if (!ProcessTextComponent(nodeV7Tag, strJsonTemp))
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	nodeV6Tag.SetString(std::move(strJsonTemp));
 
 	return;
 }
@@ -1571,34 +1710,6 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 	return;
 }
 
-NBT_Type::String EscapeString(const NBT_Type::String &strRawText)
-{
-	//为空改为引号包围的空字符串
-	if (strRawText.empty())
-	{
-		return MU8STR("\"\"");
-	}
-
-	//不为空则添加双引号并转义内容
-	NBT_Type::String strNewText{};
-	strNewText.reserve(strRawText.size() + 2);//预分配
-
-	//转义拷贝
-	strNewText.push_back('\"');
-	for (const auto &it : strRawText)
-	{
-		if (it == '\\' || it == '\"')
-		{
-			strNewText.push_back('\\');
-		}
-		strNewText.push_back(it);
-	}
-	strNewText.push_back('\"');
-
-	//返回转义完成的字符串
-	return strNewText;
-}
-
 void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsCompound())
@@ -1628,20 +1739,14 @@ void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 	//解析消息，如果不是被引号包围的字符串，那么是1.21.10+，修改为引号包围，同时遍历转义字符串
 	for (auto &itV6 : *pMessages)
 	{
-		if (itV6.IsString())
+		NBT_Type::String strJsonTemp{};
+		if (!ProcessTextComponent(itV6, strJsonTemp))//nbt格式转化为json数据组件，字符串格式进行转义
 		{
-			auto &strText = GetString(itV6);
-			strText = EscapeString(strText);
+			continue;//失败跳过（保持原数据不变），处理下一个
 		}
-		else if (itV6.IsCompound())//nbt格式转化为json数据组件
-		{
-			auto &cpdText = GetCompound(itV6);
-			itV6.SetString(NBT_Helper::Serialize<NBT_Helper::DefaultCompoundSort<true>, false, true>(cpdText));
-		}
-		else
-		{
-			continue;
-		}
+
+		//成功，重设为json
+		itV6.SetString(std::move(strJsonTemp));
 	}
 }
 
