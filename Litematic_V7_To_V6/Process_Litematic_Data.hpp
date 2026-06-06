@@ -743,6 +743,7 @@ NBT_Type::String EscapeString(const NBT_Type::String &strRaw)
 	return strEscape;
 }
 
+/*
 NBT_Type::String DoubleEscapeString(const NBT_Type::String &strRaw)
 {
 	//进行两次转义，因为json解析需要消费一次转义，snbt解析也要消费一次转义
@@ -757,6 +758,7 @@ NBT_Type::String DoubleEscapeString(const NBT_Type::String &strRaw)
 	auto strSecond = EscapeString(strFirst);//二次转义
 	return strSecond;
 }
+*/
 
 NBT_Type::String ToJsonString(const NBT_Type::String &strRaw)
 {
@@ -766,8 +768,8 @@ NBT_Type::String ToJsonString(const NBT_Type::String &strRaw)
 		return MU8STR("{\"text\":\"\"}");
 	}
 
-	//不为空则添加双引号并转义内容，转义两次，因为json解析和snbt解析各消费一次
-	auto strTemp = DoubleEscapeString(strRaw);
+	//不为空则添加双引号并转义内容
+	auto strTemp = EscapeString(strRaw);
 
 	NBT_Type::String strJson{};
 	//预分配
@@ -796,11 +798,11 @@ bool ProcessTextComponent(NBT_Node& nodeTextComponent, NBT_Type::String& strRawJ
 			//因为NBT库序列化不会添加任何转义，转义仅由用户侧完成，所以需要转义后再进行SNBT序列化
 			auto &cpdText = GetCompound(nodeTextComponent);
 
-			//如果存在，那么转义两次，因为json解析和snbt解析各消费一次
+			//如果存在，那么转义
 			auto pstrText = cpdText.HasString(MU8STR("text"));
 			if (pstrText != NULL)
 			{
-				*pstrText = DoubleEscapeString(*pstrText);
+				*pstrText = EscapeString(*pstrText);
 			}
 
 			//最后把转义完成的进行序列化
