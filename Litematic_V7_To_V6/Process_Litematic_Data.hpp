@@ -744,6 +744,9 @@ NBT_Type::String EscapeString(const NBT_Type::String &strRaw)
 }
 
 /*
+//根据告示牌NBT最终序列化结果，事实上仅存储原始Json
+//并不需要任何二次转义，游戏内看到的多层转义只是NBT显示导致的转义
+
 NBT_Type::String DoubleEscapeString(const NBT_Type::String &strRaw)
 {
 	//进行两次转义，因为json解析需要消费一次转义，snbt解析也要消费一次转义
