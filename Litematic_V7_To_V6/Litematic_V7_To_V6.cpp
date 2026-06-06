@@ -108,7 +108,8 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 
 	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
 	{
-		{ MU8STR("custom_name"),				std::bind(RenameProcess,	MU8STR("CustomName"),	_1, _2, _3, _4) },//重命名处理
+		{ MU8STR("custom_name"),				std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomNameTag,	_1, _2, _3, _4) },
+		{ MU8STR("CustomName"),					std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomNameTag,	_1, _2, _3, _4) },//高版本仍有麻将忘记改名的遗留物
 
 		{ MU8STR("ticks_since_song_started"),	funcJukeboxProcess }, //唱片机特殊处理
 
