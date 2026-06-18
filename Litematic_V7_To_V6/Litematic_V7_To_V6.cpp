@@ -294,6 +294,65 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	return true;
 }
 
+struct MyCompoundSort
+{
+	static inline uint8_t u8Enabled;
+
+	static void Reset()
+	{
+		u8Enabled = 2;
+	}
+
+	/// @brief 对给定的 Compound 对象进行排序，返回指向其元素的迭代器向量。
+	/// @param cpdSort 需要排序的 Compound 对象。
+	/// @return `std::vector<NBT_Type::Compound::Const_Iterator>`，其中迭代器按排序顺序排列。
+	std::vector<NBT_Type::Compound::Const_Iterator> operator()(const NBT_Type::Compound &cpdSort)
+	{
+		if (u8Enabled == 0 || u8Enabled-- > 1)
+		{
+			return cpdSort.KeySortIt<>();
+		}
+
+		//第二层使用自定义排序
+		std::vector<NBT_Type::Compound::Const_Iterator> vSortCompound{};
+		vSortCompound.reserve(cpdSort.Size());
+		for (auto it = cpdSort.begin(), end = cpdSort.end(); it != end; ++it)
+		{
+			vSortCompound.push_back(it);
+		}
+
+		std::sort(vSortCompound.begin(), vSortCompound.end(),
+			[](const auto &l, const auto &r) -> bool
+			{
+				static std::unordered_map<NBT_Type::String, uint64_t> mapPriority =
+				{
+					{MU8STR("MinecraftDataVersion"),	0},
+					{MU8STR("Version"),					1},
+					{MU8STR("SubVersion"),				2},
+					{MU8STR("Metadata"),				3},
+					{MU8STR("Regions"),					4},
+				};
+
+				auto itL = mapPriority.find(l->first);
+				auto itR = mapPriority.find(r->first);
+
+				uint64_t u64LPriority = itL == mapPriority.end() ? (uint64_t)-1 : itL->second;
+				uint64_t u64RPriority = itR == mapPriority.end() ? (uint64_t)-1 : itR->second;
+
+				if (u64LPriority != u64RPriority)//都没找到才不成立
+				{
+					return u64LPriority < u64RPriority;
+				}
+				else
+				{
+					return l->first < r->first;
+				}
+			}
+		);
+
+		return vSortCompound;
+	}
+};
 
 bool ConvertLitematicFile_V7_To_V6(const std::string &sV7FilePath)
 {
@@ -334,7 +393,8 @@ bool ConvertLitematicFile_V7_To_V6(const std::string &sV7FilePath)
 	//写出cpdV6Output到文件sV6FilePath
 	{
 		std::vector<uint8_t> vDataV6Stream{};
-		if (!NBT_Writer::WriteNBT(vDataV6Stream, 0, cpdV6Output))
+		MyCompoundSort::Reset();
+		if (!NBT_Writer::WriteNBT<MyCompoundSort>(vDataV6Stream, 0, cpdV6Output))
 		{
 			printf("Unable to write data into stream!\n");
 			return false;
