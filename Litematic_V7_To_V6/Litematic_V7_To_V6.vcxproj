@@ -296,13 +296,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Litematic_V7_To_V6.cpp" />
+    <ClCompile Include="LitematicFileConversion.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Litematic_V7_To_V6.h" />
-    <ClInclude Include="Process_Litematic_Data.hpp" />
+    <ClInclude Include="BaseConversion.hpp" />
+    <ClInclude Include="ComponentsTagConversion.hpp" />
+    <ClInclude Include="EntityConversion.hpp" />
+    <ClInclude Include="LitematicConversion.hpp" />
+    <ClInclude Include="LitematicFileConversion.h" />
+    <ClInclude Include="Mappings.hpp" />
+    <ClInclude Include="RegionConversion.hpp" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="TileEntityConversion.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

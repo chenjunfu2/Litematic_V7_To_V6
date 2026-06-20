@@ -18,18 +18,36 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Litematic_V7_To_V6.cpp">
+    <ClCompile Include="LitematicFileConversion.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Litematic_V7_To_V6.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Process_Litematic_Data.hpp">
+    <ClInclude Include="LitematicFileConversion.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseConversion.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityConversion.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TileEntityConversion.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Mappings.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RegionConversion.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ComponentsTagConversion.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LitematicConversion.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
