@@ -116,8 +116,8 @@ NBT_Type::String ToJsonString(const NBT_Type::String &strRaw)
 
 	NBT_Type::String strJson{};
 	//预分配
-	constexpr size_t szBaseTextSize = MU8STRV("{\"text\":\"\"}").size();
-	strJson.reserve(szBaseTextSize + strTemp.size() * sizeof(*strTemp.data()));
+	constexpr size_t szBaseTextSize = MU8STRV("{\"text\":\"\"}").size();//MSVC在连续临时量求值发生崩溃，此处必须首先保存为constexpr
+	strJson.reserve(szBaseTextSize + strTemp.size() * sizeof(*strTemp.data()));//然后在下面进行求值
 
 	//拼接
 	strJson.append(MU8STRV("{\"text\":\""));
