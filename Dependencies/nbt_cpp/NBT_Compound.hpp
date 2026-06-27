@@ -26,6 +26,9 @@ class NBT_Compound :protected Compound//Compound is Map
 	friend class NBT_Helper;
 
 public:
+	/// @brief 父类类型
+	using Super = Compound;
+
 	/// @name 暴露父类定义的类型成员
 	/// @brief 使用using代理转发类型
 	/// @note 具体类型描述请参考标准库说明
@@ -84,6 +87,20 @@ public:
 	NBT_Compound(const NBT_Compound &_Copy) :Compound(_Copy)
 	{}
 
+	/// @brief 获取底层容器数据的常量引用
+	/// @return 底层容器数据的常量引用
+	const Compound &GetData(void) const noexcept
+	{
+		return *this;
+	}
+
+	/// @brief 获取底层容器数据的引用
+	/// @return 底层容器数据的引用
+	Compound &GetData(void) noexcept
+	{
+		return *this;
+	}
+
 	/// @brief 移动赋值运算符
 	/// @param _Move 要移动的源对象
 	/// @return 当前对象的引用
@@ -99,13 +116,6 @@ public:
 	NBT_Compound &operator=(const NBT_Compound &_Copy)
 	{
 		Compound::operator=(_Copy);
-		return *this;
-	}
-
-	/// @brief 获取底层容器数据的常量引用
-	/// @return 底层容器数据的常量引用
-	const Compound &GetData(void) const noexcept
-	{
 		return *this;
 	}
 

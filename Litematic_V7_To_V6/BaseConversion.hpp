@@ -12,7 +12,7 @@
 
 template<typename T, typename V>
 requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructible_v<T, V>)
-T CopyOrElse(T *p, V &&d)
+T CopyOrElse(const T *p, const V &d)
 {
 	return p != NULL ? *p : std::forward<V>(d);
 }
@@ -116,7 +116,7 @@ NBT_Type::String ToJsonString(const NBT_Type::String &strRaw)
 
 	NBT_Type::String strJson{};
 	//预分配
-	strJson.reserve(sizeof(MU8STR("{\"text\":\"\"}")) + strTemp.size() * sizeof(*strTemp.data()));
+	strJson.reserve(MU8STR("{\"text\":\"\"}").size() + strTemp.size() * sizeof(*strTemp.data()));
 
 	//拼接
 	strJson.append(MU8STR("{\"text\":\""));
