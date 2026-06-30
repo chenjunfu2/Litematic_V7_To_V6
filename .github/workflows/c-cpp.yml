@@ -133,7 +133,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ matrix.os }}-${{ matrix.target }}-${{ matrix.arch }}-artifacts
+          name: ${{ matrix.os }}-${{ matrix.target }}-${{ matrix.arch }}
           path: artifacts/
           if-no-files-found: error
 
@@ -176,7 +176,7 @@ jobs:
        uses: softprops/action-gh-release@v3
        with:
          tag_name: ${{ github.ref_name }}
-         name: Release ${{ github.ref_name }}
+         name: ${{ github.event.repository.name }} ${{ github.ref_name }}
          files: release-assets/*.zip
        env:
          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
