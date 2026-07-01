@@ -121,36 +121,6 @@ void ProcessJukebox(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal,
 	cpdV6TileEntityData.PutByte(MU8STR("IsPlaying"), 0);
 }
 
-void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
-{
-	if (!nodeV7Tag.IsCompound())
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &cpdV7Item = nodeV7Tag.GetCompound();
-	auto *pId = cpdV7Item.HasString(MU8STR("id"));
-	if (pId == NULL)
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &cpdV6Item = nodeV6Tag.SetCompound();
-	auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-	cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));
-
-	if (auto *pV7Tag = cpdV7Item.HasCompound(MU8STR("components")); pV7Tag != NULL)
-	{
-		NBT_Type::Compound cpdV6Tag;
-		ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
-		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
-	}
-
-	return;
-}
-
 void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsCompound())

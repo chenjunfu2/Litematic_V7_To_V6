@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include "BaseConversion.hpp"
+#include "BlockConversion.hpp"
+#include "ItemConversion.hpp"
 #include "TileEntityConversion.hpp"
 #include "EntityConversion.hpp"
 #include "ComponentsTagConversion.hpp"
@@ -39,12 +41,11 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 	//下面的可能没有，没有则跳过插入
 	(void)TransferDirectOptionalField(MU8STR("PendingBlockTicks"), NBT_TAG::List);
 	(void)TransferDirectOptionalField(MU8STR("PendingFluidTicks"), NBT_TAG::List);
-	//(void)TransferDirectOptionalField(MU8STR("BlockStatePalette"), NBT_TAG::List);
 	(void)TransferDirectOptionalField(MU8STR("BlockStates"), NBT_TAG::LongArray);
 
 	//如果没有则跳过转换处理
 
-	//方块处理（方块可能有同名注册实体，根据转换映射注册表决定）
+	//方块调色板处理（方块可能有同名注册实体，根据转换映射注册表决定）
 	do
 	{
 		auto *pBlockStatePalette = cpdV7RegionData.HasList(MU8STR("BlockStatePalette"));
@@ -60,6 +61,7 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 			if (pCpdBlockState == NULL)
 			{
 				listV6BlockStatePalette.AddBack(std::move(nodeBlockState));
+				continue;
 			}
 
 			auto &cpdNode = listV6BlockStatePalette.AddBackCompound({}).GetCompound();
@@ -79,8 +81,15 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 		auto &listV6EntityList = cpdV6RegionData.PutList(MU8STR("Entities"), {}).first->second.GetList();
 		for (auto &nodeEntity : *pEntities)
 		{
+			auto *pCpdEntity = nodeEntity.GetIfCompound();
+			if (pCpdEntity == NULL)
+			{
+				listV6EntityList.AddBack(std::move(nodeEntity));
+				continue;
+			}
+
 			auto &cpdNode = listV6EntityList.AddBackCompound({}).GetCompound();
-			ProcessEntity(GetCompound(nodeEntity), cpdNode, iV7McDataVersion);
+			ProcessEntity(*pCpdEntity, cpdNode, iV7McDataVersion);
 		}
 	} while (false);
 
@@ -96,8 +105,15 @@ bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV
 		auto &listV6TileEntityList = cpdV6RegionData.PutList(MU8STR("TileEntities"), {}).first->second.GetList();
 		for (auto &nodeTileEntity : *pTileEntities)
 		{
+			auto *pCpdTileEntity = nodeTileEntity.GetIfCompound();
+			if (pCpdTileEntity == NULL)
+			{
+				listV6TileEntityList.AddBack(std::move(nodeTileEntity));
+				continue;
+			}
+
 			auto &cpdNode = listV6TileEntityList.AddBackCompound({}).GetCompound();
-			ProcessTileEntity(GetCompound(nodeTileEntity), cpdNode, iV7McDataVersion);
+			ProcessTileEntity(*pCpdTileEntity, cpdNode, iV7McDataVersion);
 		}
 	} while (false);
 
