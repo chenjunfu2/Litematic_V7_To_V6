@@ -303,9 +303,8 @@
     <ClInclude Include="BaseConversion.hpp" />
     <ClInclude Include="BlockConversion.hpp" />
     <ClInclude Include="BlockMappings.hpp" />
-    <ClInclude Include="ComponentsTagConversion.hpp" />
-    <ClInclude Include="EntityConversion.hpp" />
     <ClInclude Include="ItemConversion.hpp" />
+    <ClInclude Include="EntityConversion.hpp" />
     <ClInclude Include="ItemMappings.hpp" />
     <ClInclude Include="LitematicConversion.hpp" />
     <ClInclude Include="LitematicFileConversion.h" />

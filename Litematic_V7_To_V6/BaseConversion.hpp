@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "nbt_cpp/NBT_All.hpp"
+#include <nbt_cpp/NBT_All.hpp>
 #include "TagMappings.hpp"
 
 #include <unordered_map>
@@ -46,7 +46,8 @@ void RenameProcess(const NBT_Type::String &strNewKey, const NBT_Type::String &st
 //前向声明
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData, const NBT_Type::Int iV7McDataVersion);
 void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compound &cpdV6TileEntityData, const NBT_Type::Int iV7McDataVersion);
-void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag, const NBT_Type::Int iV7McDataVersion);
+void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion);
+void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion);
 
 /*
 关于文本组件：
@@ -509,84 +510,6 @@ void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Typ
 	if (!listTextures.Empty())
 	{
 		cpdV6.PutCompound(MU8STR("Properties"), NBT_Type::Compound{ {MU8STR("textures"), NBT_Node{ std::move(listTextures) }} });
-	}
-
-	return;
-}
-
-void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
-{
-	if (!nodeV7Tag.IsList())
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &listV7 = nodeV7Tag.GetList();
-	auto &listV6 = nodeV6Tag.SetList();
-
-	NBT_Type::Byte bSlot = -1;
-	for (auto &itV7Entry : listV7)
-	{
-		++bSlot;//槽位计数，用于默认值修复
-
-		if (!itV7Entry.IsCompound())
-		{
-			continue;
-		}
-
-		auto &cpdV7Entry = itV7Entry.GetCompound();
-		NBT_Type::Compound cpdV6Entry;
-
-		auto *pId = cpdV7Entry.HasString(MU8STR("id"));
-		if (pId == NULL)
-		{
-			--bSlot;//空物品不递增计数
-			continue;
-		}
-
-		const auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
-		cpdV6Entry.PutByte(MU8STR("Slot"), CopyOrElse(cpdV7Entry.HasByte(MU8STR("Slot")), bSlot));
-
-		if (auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components")); pV7Tag != NULL)
-		{
-			NBT_Type::Compound cpdV6Tag;
-			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
-			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
-		}
-
-		listV6.AddBackCompound(std::move(cpdV6Entry));
-	}
-
-	return;
-}
-
-void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
-{
-	if (!nodeV7Tag.IsCompound())
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &cpdV7Item = nodeV7Tag.GetCompound();
-	auto *pId = cpdV7Item.HasString(MU8STR("id"));
-	if (pId == NULL)
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &cpdV6Item = nodeV6Tag.SetCompound();
-	auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-	cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));
-
-	if (auto *pV7Tag = cpdV7Item.HasCompound(MU8STR("components")); pV7Tag != NULL)
-	{
-		NBT_Type::Compound cpdV6Tag;
-		ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
-		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
 	}
 
 	return;

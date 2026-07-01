@@ -5,7 +5,6 @@
 #include "ItemConversion.hpp"
 #include "TileEntityConversion.hpp"
 #include "EntityConversion.hpp"
-#include "ComponentsTagConversion.hpp"
 
 bool ProcessRegion(NBT_Type::Compound &cpdV7RegionData, NBT_Type::Compound &cpdV6RegionData, const NBT_Type::Int iV7McDataVersion)
 {

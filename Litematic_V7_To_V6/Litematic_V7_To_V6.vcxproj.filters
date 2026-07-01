@@ -44,16 +44,13 @@
     <ClInclude Include="RegionConversion.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ComponentsTagConversion.hpp">
+    <ClInclude Include="ItemConversion.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="LitematicConversion.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BlockConversion.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ItemConversion.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BlockMappings.hpp">
