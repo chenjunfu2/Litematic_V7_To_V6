@@ -38,7 +38,7 @@
     <ClInclude Include="TileEntityConversion.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Mappings.hpp">
+    <ClInclude Include="TagMappings.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RegionConversion.hpp">
@@ -48,6 +48,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="LitematicConversion.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BlockConversion.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ItemConversion.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BlockMappings.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ItemMappings.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

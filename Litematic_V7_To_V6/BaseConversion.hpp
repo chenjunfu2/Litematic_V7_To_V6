@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "nbt_cpp/NBT_All.hpp"
-#include "Mappings.hpp"
+#include "TagMappings.hpp"
 
 #include <unordered_map>
 #include <functional>
