@@ -189,7 +189,7 @@ void ProcessUnbreakable(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type
 	return;
 }
 
-void CustomDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+void ProcessCustomData(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
@@ -202,7 +202,7 @@ void CustomDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagV
 	return;
 }
 
-void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+void ProcessLodestoneTracker(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
@@ -236,7 +236,7 @@ void LodestoneTrackerProcess(const NBT_Type::String &strV7TagKey, NBT_Node &node
 	return;
 }
 
-void PotionContentsProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+void ProcessPotionContents(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
@@ -446,7 +446,7 @@ void ProcessItemName(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 	return;
 }
 
-void BlockEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+void ProcessBlockEntityData(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
@@ -459,7 +459,7 @@ void BlockEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV
 	return;
 }
 
-void BucketEntityDataProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+void ProcessBucketEntityData(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsCompound())
 	{
@@ -688,9 +688,9 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:profile"),					{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("SkullOwner"),			ProcessSkullProfile,			_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:unbreakable"),				{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Unbreakable"),			ProcessUnbreakable,				_1, _2, _3, _4) } },
 
-		{ MU8STR("minecraft:custom_data"),				{ false,	UseTagType::V6Tag,			CustomDataProcess } },
-		{ MU8STR("minecraft:lodestone_tracker"),		{ false,	UseTagType::V6Tag,			LodestoneTrackerProcess } },
-		{ MU8STR("minecraft:potion_contents"),			{ false,	UseTagType::V6Tag,			PotionContentsProcess } },
+		{ MU8STR("minecraft:custom_data"),				{ false,	UseTagType::V6Tag,			ProcessCustomData } },
+		{ MU8STR("minecraft:lodestone_tracker"),		{ false,	UseTagType::V6Tag,			ProcessLodestoneTracker } },
+		{ MU8STR("minecraft:potion_contents"),			{ false,	UseTagType::V6Tag,			ProcessPotionContents } },
 		{ MU8STR("minecraft:writable_book_content"),	{ false,	UseTagType::V6Tag,			ProcessWritableBookContent } },
 		{ MU8STR("minecraft:written_book_content"),		{ false,	UseTagType::V6Tag,			ProcessWrittenBookContent } },
 
@@ -704,8 +704,8 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 
 
 
-		{ MU8STR("minecraft:block_entity_data"),		{ false,	UseTagType::BlockEntityTag,	BlockEntityDataProcess } },
-		{ MU8STR("minecraft:bucket_entity_data"),		{ false,	UseTagType::BlockEntityTag,	BucketEntityDataProcess } },
+		{ MU8STR("minecraft:block_entity_data"),		{ false,	UseTagType::BlockEntityTag,	ProcessBlockEntityData } },
+		{ MU8STR("minecraft:bucket_entity_data"),		{ false,	UseTagType::BlockEntityTag,	ProcessBucketEntityData } },
 
 
 
