@@ -4,6 +4,9 @@
 
 #include "ItemMappings.hpp"
 
+//可能递归调用，前向声明
+void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag, const NBT_Type::Int iV7McDataVersion);
+
 void ProcessEnchantments(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsCompound())
@@ -640,9 +643,6 @@ void ProcessLootTable(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::
 
 	return;
 }
-
-//递归，前向声明
-void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag, const NBT_Type::Int iV7McDataVersion);
 
 void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
