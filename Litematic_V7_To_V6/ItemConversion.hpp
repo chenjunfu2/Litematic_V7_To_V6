@@ -906,12 +906,5 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		cpdV6Tag.PutCompound(MU8STR("display"), std::move(cpdDisplayTag));
 	}
 
-	//现在物品id已经在V6中
-	auto *pItemId = cpdV6Tag.HasString(MU8STR("id"));
-	if (pItemId != NULL)
-	{
-		(void)ItemIdMap(*pItemId, *pItemId, iV7McDataVersion);//如果映射成功，那么会自动替换，否则不变
-	}
-
 	return;
 }
