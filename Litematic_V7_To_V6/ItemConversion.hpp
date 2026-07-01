@@ -504,110 +504,13 @@ void ProcessChargedProjectile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NB
 			continue;
 		}
 
+		//映射物品ID
+		(void)ItemIdMap(*pId, *pId, iV7McDataVersion);
+
 		const auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
 		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
 
 		if (auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components")); pV7Tag != NULL)
-		{
-			NBT_Type::Compound cpdV6Tag;
-			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
-			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
-		}
-
-		listV6.AddBackCompound(std::move(cpdV6Entry));
-	}
-
-	return;
-}
-
-void ProcessSingleItemNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
-{
-	if (!nodeV7Tag.IsCompound())
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &cpdV7Item = nodeV7Tag.GetCompound();
-	auto &cpdV6Item = nodeV6Tag.SetCompound();
-
-	//低版本不存在，无用
-	//auto iSlot = CopyOrElse(cpdV7Item.HasInt(MU8STR("slot")), 0);
-	auto *pItem = cpdV7Item.HasCompound(MU8STR("item"));
-	if (pItem == NULL)
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	//没有id，无用
-	auto *pId = cpdV7Item.HasString(MU8STR("id"));
-	if (pId == NULL)
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-	cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));
-
-	if (auto *pV7Tag = cpdV7Item.HasCompound(MU8STR("components")); pV7Tag != NULL)
-	{
-		NBT_Type::Compound cpdV6Tag;
-		ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
-		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
-	}
-
-	return;
-}
-
-void ProcessItemsNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
-{
-	if (!nodeV7Tag.IsList())
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &listV7 = nodeV7Tag.GetList();
-	auto &listV6 = nodeV6Tag.SetList();
-
-	NBT_Type::Byte bSlot = -1;
-	for (auto &itV7Entry : listV7)
-	{
-		++bSlot;//槽位计数，用于默认值修复
-
-		if (!itV7Entry.IsCompound())
-		{
-			continue;
-		}
-
-		auto &cpdV7Entry = itV7Entry.GetCompound();
-		NBT_Type::Compound cpdV6Entry;
-
-		//查找物品组件
-		auto *pItem = cpdV7Entry.HasCompound(MU8STR("item"));
-		if (pItem == NULL)
-		{
-			--bSlot;//空物品，不要递增修复计数
-			continue;
-		}
-
-		//无id视为空物品
-		auto *pId = pItem->HasString(MU8STR("id"));
-		if (pId == NULL)
-		{
-			--bSlot;//空物品，不要递增修复计数
-			continue;
-		}
-
-		//依次插入Id，Count和Slot
-		const auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(pItem->HasInt(MU8STR("count")), 1));//至少要有1个
-		cpdV6Entry.PutByte(MU8STR("Slot"), (NBT_Type::Byte)CopyOrElse(cpdV7Entry.HasInt(MU8STR("slot")), bSlot));//获取外层槽位，如果不存在则使用修复值
-
-		//递归转换tag
-		if (auto *pV7Tag = pItem->HasCompound(MU8STR("components")); pV7Tag != NULL)
 		{
 			NBT_Type::Compound cpdV6Tag;
 			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
@@ -675,11 +578,76 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int 
 			continue;
 		}
 
+		//映射物品ID
+		(void)ItemIdMap(*pId, *pId, iV7McDataVersion);
+
 		const auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
 		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
 		cpdV6Entry.PutByte(MU8STR("Slot"), CopyOrElse(cpdV7Entry.HasByte(MU8STR("Slot")), bSlot));
 
 		if (auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components")); pV7Tag != NULL)
+		{
+			NBT_Type::Compound cpdV6Tag;
+			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
+			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
+		}
+
+		listV6.AddBackCompound(std::move(cpdV6Entry));
+	}
+
+	return;
+}
+
+void ProcessItemsNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+{
+	if (!nodeV7Tag.IsList())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &listV7 = nodeV7Tag.GetList();
+	auto &listV6 = nodeV6Tag.SetList();
+
+	NBT_Type::Byte bSlot = -1;
+	for (auto &itV7Entry : listV7)
+	{
+		++bSlot;//槽位计数，用于默认值修复
+
+		if (!itV7Entry.IsCompound())
+		{
+			continue;
+		}
+
+		auto &cpdV7Entry = itV7Entry.GetCompound();
+		NBT_Type::Compound cpdV6Entry;
+
+		//查找物品组件
+		auto *pItem = cpdV7Entry.HasCompound(MU8STR("item"));
+		if (pItem == NULL)
+		{
+			--bSlot;//空物品，不要递增修复计数
+			continue;
+		}
+
+		//无id视为空物品
+		auto *pId = pItem->HasString(MU8STR("id"));
+		if (pId == NULL)
+		{
+			--bSlot;//空物品，不要递增修复计数
+			continue;
+		}
+
+		//映射物品ID
+		(void)ItemIdMap(*pId, *pId, iV7McDataVersion);
+
+		//依次插入Id，Count和Slot
+		const auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(pItem->HasInt(MU8STR("count")), 1));//至少要有1个
+		cpdV6Entry.PutByte(MU8STR("Slot"), (NBT_Type::Byte)CopyOrElse(cpdV7Entry.HasInt(MU8STR("slot")), bSlot));//获取外层槽位，如果不存在则使用修复值
+
+		//递归转换tag
+		if (auto *pV7Tag = pItem->HasCompound(MU8STR("components")); pV7Tag != NULL)
 		{
 			NBT_Type::Compound cpdV6Tag;
 			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
@@ -708,6 +676,9 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 		return;
 	}
 
+	//映射物品ID
+	(void)ItemIdMap(*pId, *pId, iV7McDataVersion);
+
 	auto &cpdV6Item = nodeV6Tag.SetCompound();
 	auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
 	cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));
@@ -718,6 +689,44 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 		ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
 		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
 	}
+
+	return;
+}
+
+//套了一层item而已，解出来使用ProcessSingleItem处理
+void ProcessSingleItemNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+{
+	if (!nodeV7Tag.IsList())//一个列表，有且只有一个元素，多余忽略
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &listV7Entry = nodeV7Tag.GetList();
+	if (listV7Entry.Empty())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto *pV7Entry = listV7Entry.FrontIfCompound();
+	if (pV7Entry == NULL)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+
+	//低版本不存在，无用
+	//auto iSlot = CopyOrElse(pV7Entry->HasInt(MU8STR("slot")), 0);//理论上必须存在且为0，不做验证
+	auto *pV7Item = pV7Entry->Has(MU8STR("item"));
+	if (pV7Item == NULL)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	ProcessSingleItem(*pV7Item, nodeV6Tag, iV7McDataVersion);
 
 	return;
 }
