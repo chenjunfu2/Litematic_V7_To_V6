@@ -30,7 +30,7 @@ void ProcessEnchantments(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Typ
 	}
 	else//1.21.4之后，附魔在当前一级Compound中
 	{
-		pEnchantments = &GetCompound(nodeV6Tag);
+		pEnchantments = &GetCompound(nodeV7Tag);
 	}
 
 	auto &listV6 = nodeV6Tag.SetList();
