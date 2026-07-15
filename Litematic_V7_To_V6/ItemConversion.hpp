@@ -15,15 +15,26 @@ void ProcessEnchantments(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Typ
 		return;
 	}
 
-	auto *pLevels = GetCompound(nodeV7Tag).HasCompound(MU8STR("levels"));
-	if (pLevels == NULL)
+	NBT_Type::Compound *pEnchantments = NULL;
+
+	if (iV7McDataVersion <= MC_1_21_4_MINECRAFT_DATA_VERSION)//1.21.4及之前，附魔在二级Compound："levels"中
 	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
+		auto *pLevels = GetCompound(nodeV7Tag).HasCompound(MU8STR("levels"));
+		if (pLevels == NULL)
+		{
+			nodeV6Tag = std::move(nodeV7Tag);
+			return;
+		}
+
+		pEnchantments = pLevels;
+	}
+	else//1.21.4之后，附魔在当前一级Compound中
+	{
+		pEnchantments = &GetCompound(nodeV6Tag);
 	}
 
 	auto &listV6 = nodeV6Tag.SetList();
-	for (auto &[strV7Key, nodeV7Val] : *pLevels)//集合相当于列表，每个key是附魔，val是值
+	for (auto &[strV7Key, nodeV7Val] : *pEnchantments)//*pEnchantments集合相当于列表，每个key是附魔，val是值
 	{
 		NBT_Type::Compound cpdV6Entry;
 
