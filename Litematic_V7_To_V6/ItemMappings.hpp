@@ -10,6 +10,7 @@ bool ItemIdMap(const NBT_Type::String &strItemId, NBT_Type::String &strMappedIte
 	std::unordered_map<NBT_Type::String, NBT_Type::String> mapItemId =
 	{
 		{MU8STR("minecraft:short_grass"), MU8STR("minecraft:grass")},
+		{MU8STR("minecraft:iron_chain"), MU8STR("minecraft:chain")},
 		{MU8STR("minecraft:turtle_scute"), MU8STR("minecraft:scute")},
 	};
 

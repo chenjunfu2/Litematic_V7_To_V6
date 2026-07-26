@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "BaseConversion.hpp"
+#include "EntityMappings.hpp"
 
 void ProcessBlockPosExternal(const NBT_Type::String &strPosPerfix, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
@@ -183,6 +184,24 @@ void ProcessEntityDropChances(const NBT_Type::String &strV7TagKey, NBT_Node &nod
 	return;
 }
 
+void ProcessIdMappings(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+{
+	if (!nodeV7Tag.IsString())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	if (!EntityIdMap(nodeV7Tag.GetString(), nodeV6Tag.SetString(), iV7McDataVersion))
+	{
+		nodeV6Tag = std::move(nodeV7Tag);//失败直接移动
+		return;
+	}
+
+	return;
+}
+
+
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData, const NBT_Type::Int iV7McDataVersion)
 {
 	using std::placeholders::_1;
@@ -203,6 +222,7 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 		{ MU8STR("home_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("HomePos"),			_1, _2, _3, _4) },
 		{ MU8STR("sleeping_pos"),		std::bind(ProcessBlockPosExternal,	MU8STR("Sleeping"),			_1, _2, _3, _4) },
 
+		{ MU8STR("id"),					std::bind(DefaultProcess,			MU8STR("id"),			ProcessIdMappings,	_1, _2, _3, _4) },
 		{ MU8STR("attributes"),			std::bind(DefaultProcess,			MU8STR("Attributes"),	ProcessAttributes,	_1, _2, _3, _4) },
 		{ MU8STR("flower_pos"),			std::bind(DefaultProcess,			MU8STR("FlowerPos"),	ProcessBlockPos,	_1, _2, _3, _4) },
 		{ MU8STR("hive_pos"),			std::bind(DefaultProcess,			MU8STR("HivePos"),		ProcessBlockPos,	_1, _2, _3, _4) },

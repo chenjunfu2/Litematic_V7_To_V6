@@ -59,6 +59,9 @@
     <ClInclude Include="ItemMappings.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="EntityMappings.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt">

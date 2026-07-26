@@ -10,6 +10,7 @@ bool BlockNameMap(const NBT_Type::String &strBlockName, NBT_Type::String& strMap
 	std::unordered_map<NBT_Type::String, NBT_Type::String> mapBlockName =
 	{
 		{MU8STR("minecraft:short_grass"), MU8STR("minecraft:grass")},
+		{MU8STR("minecraft:iron_chain"), MU8STR("minecraft:chain")},
 	};
 
 	auto itFind = mapBlockName.find(strBlockName);

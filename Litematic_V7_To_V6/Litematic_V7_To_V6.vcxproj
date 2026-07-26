@@ -303,6 +303,7 @@
     <ClInclude Include="BaseConversion.hpp" />
     <ClInclude Include="BlockConversion.hpp" />
     <ClInclude Include="BlockMappings.hpp" />
+    <ClInclude Include="EntityMappings.hpp" />
     <ClInclude Include="ItemConversion.hpp" />
     <ClInclude Include="EntityConversion.hpp" />
     <ClInclude Include="ItemMappings.hpp" />
