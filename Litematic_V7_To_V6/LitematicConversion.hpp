@@ -10,12 +10,16 @@
 
 bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Compound &cpdV6Output, std::string &strErrorMessage)
 {
+	//尝试获取唯一根部
 	if (cpdV7Input.Size() != 1)
 	{
-		strErrorMessage = cpdV7Input.Empty() ? "Root node is missing! (expect exactly one)\n" : "Root node is ambiguous! (expect exactly one)\n";
+		strErrorMessage = cpdV7Input.Empty() ?
+			"Root node is missing! (expect exactly one)\n" :
+			"Root node is ambiguous! (expect exactly one)\n";
 		return false;
 	}
 	
+	//必须要是Compound
 	auto *pRoot = cpdV7Input.begin()->second.GetIfCompound();
 	const auto &strRootName = cpdV7Input.begin()->first;
 	if (pRoot == NULL)
