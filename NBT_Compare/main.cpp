@@ -484,17 +484,26 @@ int main(int argc, char *argv[])
 		PAUSE_RETURN(0);
 	}
 
-	if (!cpdInput[0].HasCompound(MU8STR("")) ||
-		!cpdInput[1].HasCompound(MU8STR("")))
+	if (cpdInput[0].Empty() ||
+		cpdInput[1].Empty() ||
+		!cpdInput[0].begin()->second.IsCompound() ||
+		!cpdInput[1].begin()->second.IsCompound())
 	{
 		printf(COLOR_RED "Root Compound not found!\n" COLOR_RESET);
 		PAUSE_RETURN(0);
 	}
 
-	auto tmp0 = std::move(cpdInput[0].GetCompound(MU8STR("")));
+	//指定字符集为utf8
+	setlocale(LC_ALL, ".UTF-8");
+
+	//获取首个元素
+	auto tmp0 = std::move(cpdInput[0].begin()->second.GetCompound());
+	printf(COLOR_GREEN "File1 root name: \"%s\"\n" COLOR_RESET, cpdInput[0].begin()->first.ToCharTypeUTF8().c_str());
 	cpdInput[0] = std::move(tmp0);
 
-	auto tmp1 = std::move(cpdInput[1].GetCompound(MU8STR("")));
+	//获取首个元素
+	auto tmp1 = std::move(cpdInput[1].begin()->second.GetCompound());
+	printf(COLOR_YELLOW "File2 root name: \"%s\"\n" COLOR_RESET, cpdInput[1].begin()->first.ToCharTypeUTF8().c_str());
 	cpdInput[1] = std::move(tmp1);
 
 
@@ -510,68 +519,66 @@ int main(int argc, char *argv[])
 
 	printf(COLOR_BLUE "No equal!\n" COLOR_RESET COLOR_BOLD "Diff Info:\n\n" COLOR_RESET);
 	//详细信息输出
-	
-	//指定字符集为utf8
-	setlocale(LC_ALL, ".UTF-8");
+
 	for (auto &it : listReports)
 	{
 		printf(COLOR_CYAN "[%s]: " COLOR_RESET COLOR_BOLD "%s\n" COLOR_RESET "%s\n\n", NBT_Compare::GetDiffTypeInfo(it.enDiffInfo), it.strPath.c_str(), it.strDiffInfo.c_str());
 	}
 	setlocale(LC_ALL, "");//恢复为默认
 
-	printf(COLOR_BLUE "\nGen cmp file...\n" COLOR_RESET);
+	//printf(COLOR_BLUE "\nGen cmp file...\n" COLOR_RESET);
 
-	//生成格式化文件方便文本查看
-	//查找合法文件
-	auto FindFileName = [](const std::string &strOldFileName, std::string &strNewFileName) -> bool
-	{
-		//找到后缀名
-		size_t szPos = strOldFileName.find_last_of('.');
-
-		//'.'前面的部分，不包含'.'
-		std::string sNewFileName = strOldFileName.substr(0, szPos).append("Cmp");
-
-		//唯一文件名
-		strNewFileName = GenerateUniqueFilename(sNewFileName, ".txt");
-		if (strNewFileName.empty())
-		{
-			printf(COLOR_RED "Unable to find a valid file name or lack of permission!\n" COLOR_RESET);
-			return false;
-		}
-
-		return true;
-	};
-
-	std::string strCmpFileName[2];
-	b0 = FindFileName(argv[1], strCmpFileName[0]);
-	b1 = FindFileName(argv[2], strCmpFileName[1]);
-
-	if (!b0 || !b1)
-	{
-		printf(COLOR_RED "FindFileName fail!\n" COLOR_RESET);
-		PAUSE_RETURN(0);
-	}
-
-
-	FILE *pFile[2];
-	pFile[0] = fopen(strCmpFileName[0].c_str(), "wb");
-	pFile[1] = fopen(strCmpFileName[1].c_str(), "wb");
-
-	if (pFile[0] == NULL || pFile[1] == NULL)
-	{
-		fclose(pFile[0]);
-		fclose(pFile[1]);
-		printf(COLOR_RED "Cmp file open fail!\n" COLOR_RESET);
-		PAUSE_RETURN(0);
-	}
-
-	NBT_Helper::Print(cpdInput[0], 0, "    ", NBT_Print{ pFile[0] });
-	NBT_Helper::Print(cpdInput[1], 0, "    ", NBT_Print{ pFile[1] });
-
-	fclose(pFile[0]);
-	fclose(pFile[1]);
-
-	printf(COLOR_BLUE "Cmp file gen!\n" COLOR_RESET);
+	////生成格式化文件方便文本查看
+	////查找合法文件
+	//auto FindFileName = [](const std::string &strOldFileName, std::string &strNewFileName) -> bool
+	//{
+	//	//找到后缀名
+	//	size_t szPos = strOldFileName.find_last_of('.');
+	//
+	//	//'.'前面的部分，不包含'.'
+	//	std::string sNewFileName = strOldFileName.substr(0, szPos).append("Cmp");
+	//
+	//	//唯一文件名
+	//	strNewFileName = GenerateUniqueFilename(sNewFileName, ".txt");
+	//	if (strNewFileName.empty())
+	//	{
+	//		printf(COLOR_RED "Unable to find a valid file name or lack of permission!\n" COLOR_RESET);
+	//		return false;
+	//	}
+	//
+	//	return true;
+	//};
+	//
+	//std::string strCmpFileName[2];
+	//b0 = FindFileName(argv[1], strCmpFileName[0]);
+	//b1 = FindFileName(argv[2], strCmpFileName[1]);
+	//
+	//if (!b0 || !b1)
+	//{
+	//	printf(COLOR_RED "FindFileName fail!\n" COLOR_RESET);
+	//	PAUSE_RETURN(0);
+	//}
+	//
+	//
+	//FILE *pFile[2];
+	//pFile[0] = fopen(strCmpFileName[0].c_str(), "wb");
+	//pFile[1] = fopen(strCmpFileName[1].c_str(), "wb");
+	//
+	//if (pFile[0] == NULL || pFile[1] == NULL)
+	//{
+	//	fclose(pFile[0]);
+	//	fclose(pFile[1]);
+	//	printf(COLOR_RED "Cmp file open fail!\n" COLOR_RESET);
+	//	PAUSE_RETURN(0);
+	//}
+	//
+	//NBT_Helper::Print(cpdInput[0], 0, "    ", NBT_Print{ pFile[0] });
+	//NBT_Helper::Print(cpdInput[1], 0, "    ", NBT_Print{ pFile[1] });
+	//
+	//fclose(pFile[0]);
+	//fclose(pFile[1]);
+	//
+	//printf(COLOR_BLUE "Cmp file gen!\n" COLOR_RESET);
 
 	PAUSE_RETURN(0);
 }

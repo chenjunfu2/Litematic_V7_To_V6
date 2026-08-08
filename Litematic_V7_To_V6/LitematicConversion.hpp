@@ -10,16 +10,23 @@
 
 bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Compound &cpdV6Output, std::string &strErrorMessage)
 {
-	auto *pRoot = cpdV7Input.HasCompound(MU8STR(""));
+	if (cpdV7Input.Size() != 1)
+	{
+		strErrorMessage = cpdV7Input.Empty() ? "Root node is missing! (expect exactly one)\n" : "Root node is ambiguous! (expect exactly one)\n";
+		return false;
+	}
+	
+	auto *pRoot = cpdV7Input.begin()->second.GetIfCompound();
+	const auto &strRootName = cpdV7Input.begin()->first;
 	if (pRoot == NULL)
 	{
-		strErrorMessage = "Root Compound not found!\n";
+		strErrorMessage = "Root node is not a Compound type! (expected Compound)\n";
 		return false;
 	}
 
 	//获取根部，并插入根部，最后获取根部引用
 	auto &cpdV7DataRoot = *pRoot;
-	auto &cpdV6DataRoot = cpdV6Output.PutCompound(MU8STR(""), {}).first->second.GetCompound();
+	auto &cpdV6DataRoot = cpdV6Output.PutCompound(strRootName, {}).first->second.GetCompound();//拷贝原先的V7根部名称
 
 	//先处理版本信息
 	auto *pMinecraftDataVersion = cpdV7DataRoot.HasInt(MU8STR("MinecraftDataVersion"));

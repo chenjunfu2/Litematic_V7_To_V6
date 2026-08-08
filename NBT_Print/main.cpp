@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <limits>
 #include <format>
+#include <locale.h>
 
 /// @brief 流式打印Visitor，随Scanner按二进制流实际顺序直接输出NBT到标准输出
 /// @note 不构建内存树，不排序，完全按照二进制流中的条目顺序输出
@@ -273,11 +274,13 @@ int main(int argc, char *argv[])
 	// 创建流式打印Visitor并扫描
 	PrintVisitor visitor(stdout, "    ");
 
+	setlocale(LC_ALL, ".UTF-8");//设置为U8
 	if (!NBT_Scanner::ScanNBT(vNbtData, 0, visitor))
 	{
 		fprintf(stderr, "Error: NBT scan failed\n");
 		return(1);
 	}
+	setlocale(LC_ALL, "");//恢复默认值
 
 	return(0);
 }
