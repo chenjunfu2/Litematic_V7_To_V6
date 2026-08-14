@@ -184,6 +184,39 @@ void ProcessEntityDropChances(const NBT_Type::String &strV7TagKey, NBT_Node &nod
 	return;
 }
 
+bool ProcessBoatMappings(
+	NBT_Type::String &strEntityId,
+	NBT_Type::String &strMappedId,
+	NBT_Type::String::View &strvBoatType,
+	NBT_Type::String::View strvBoatSuffix,
+	NBT_Type::String::View strvChestBoatSuffix)
+{
+	static constexpr auto strvMcPrefix = MU8STRV("minecraft:");
+	static constexpr auto strvBoat = MU8STRV("minecraft:boat");
+	static constexpr auto strvChestBoat = MU8STRV("minecraft:chest_boat");
+
+	if (!strEntityId.ends_with(strvBoatSuffix) || !strEntityId.starts_with(strvMcPrefix))
+	{
+		return false;
+	}
+
+	strvBoatType = NBT_Type::String::View{ strEntityId };
+	strvBoatType.remove_prefix(strvMcPrefix.size());
+
+	if (strEntityId.ends_with(strvChestBoatSuffix))
+	{
+		strvBoatType.remove_suffix(strvChestBoatSuffix.size());
+		strMappedId = strvChestBoat;
+	}
+	else
+	{
+		strvBoatType.remove_suffix(strvBoatSuffix.size());
+		strMappedId = strvBoat;
+	}
+
+	return true;
+}
+
 void ProcessIdMappings(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsString())
@@ -195,26 +228,23 @@ void ProcessIdMappings(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagV
 	auto &strEntityId = nodeV7TagVal.GetString();
 	NBT_Type::String strMappedId{};
 
-	static constexpr auto strvMcPrefix = MU8STRV("minecraft:");
-	static constexpr auto strvChestBoatSuffix = MU8STRV("_chest_boat");
-	static constexpr auto strvBoatSuffix = MU8STRV("_boat");
-
-	//处理船映射
-	if (strEntityId.ends_with(strvBoatSuffix) && strEntityId.starts_with(strvMcPrefix))
+	//处理船、筏映射
+	do
 	{
-		NBT_Type::String::View strvBoatType = NBT_Type::String::View{ strEntityId };
-		strvBoatType.remove_prefix(strvMcPrefix.size());
+		static constexpr auto strvBoatSuffix = MU8STRV("_boat");
+		static constexpr auto strvRaftSuffix = MU8STRV("_raft");
 
-		if (strEntityId.ends_with(MU8STR("_chest_boat")))
+		static constexpr auto strvChestBoatSuffix = MU8STRV("_chest_boat");
+		static constexpr auto strvChestRaftSuffix = MU8STRV("_chest_raft");
+
+		NBT_Type::String::View strvBoatType;
+		if (!ProcessBoatMappings(strEntityId, strMappedId, strvBoatType, strvBoatSuffix, strvChestBoatSuffix) &&
+			!ProcessBoatMappings(strEntityId, strMappedId, strvBoatType, strvRaftSuffix, strvChestRaftSuffix))
 		{
-			strvBoatType.remove_suffix(strvChestBoatSuffix.size());
-			strMappedId = MU8STR("minecraft:chest_boat");
+			break;
 		}
-		else
-		{
-			strvBoatType.remove_suffix(strvBoatSuffix.size());
-			strMappedId = MU8STR("minecraft:boat");
-		}
+
+		//至少有一个映射成功
 
 		//插入"Type":strvBoatType
 		cpdV6TagData.PutString(MU8STR("Type"), strvBoatType);
@@ -223,7 +253,7 @@ void ProcessIdMappings(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagV
 		cpdV6TagData.PutString(strV7TagKey, std::move(strMappedId));
 
 		return;
-	}
+	} while (false);
 
 	//处理其它映射
 	if (!EntityIdMap(strEntityId, strMappedId, iV7McDataVersion))

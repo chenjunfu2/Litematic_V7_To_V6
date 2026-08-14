@@ -14,8 +14,8 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	if (cpdV7Input.Size() != 1)
 	{
 		strErrorMessage = cpdV7Input.Empty() ?
-			"Root node is missing! (expect exactly one)\n" :
-			"Root node is ambiguous! (expect exactly one)\n";
+			"Root node is missing! (expect exactly one)" :
+			"Root node is ambiguous! (expect exactly one)";
 		return false;
 	}
 	
@@ -24,7 +24,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	const auto &strRootName = cpdV7Input.begin()->first;
 	if (pRoot == NULL)
 	{
-		strErrorMessage = "Root node is not a Compound type! (expected Compound)\n";
+		strErrorMessage = "Root node is not a Compound type! (expected Compound)";
 		return false;
 	}
 
@@ -40,7 +40,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	//版本验证
 	if (pMinecraftDataVersion == NULL || *pMinecraftDataVersion <= V6_MINECRAFT_DATA_VERSION)// || (pVersion == NULL || *pVersion <= V6_LITEMATIC_VERSION)//投影版本检测去除，仅关注MC版本
 	{
-		strErrorMessage = "MinecraftDataVersion Error!\n";
+		strErrorMessage = "MinecraftDataVersion Error! (must be > 3700)";
 		return false;
 	}
 
@@ -48,7 +48,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	auto *pMetadata = cpdV7DataRoot.HasCompound(MU8STR("Metadata"));
 	if (pMetadata == NULL)
 	{
-		strErrorMessage = "Metadata not found!\n";
+		strErrorMessage = "Metadata not found!";
 		return false;
 	}
 
@@ -64,7 +64,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	auto *pRegions = cpdV7DataRoot.HasCompound(MU8STR("Regions"));
 	if (pRegions == NULL)
 	{
-		strErrorMessage = "Regions not found!\n";
+		strErrorMessage = "Regions not found!";
 		return false;
 	}
 
@@ -77,7 +77,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 		auto &cpdNewV6RegionData = cpdV6Regions.PutCompound(sV7RegionName, {}).first->second.GetCompound();
 		if (!ProcessRegion(GetCompound(nodeV7RegionData), cpdNewV6RegionData, *pMinecraftDataVersion))
 		{
-			strErrorMessage = "ProcessRegion fail!\n";
+			strErrorMessage = "ProcessRegion fail!";
 			return false;
 		}
 	}
