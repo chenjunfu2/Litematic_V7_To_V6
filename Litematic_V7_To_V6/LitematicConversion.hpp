@@ -4,7 +4,9 @@
 
 #include <string>
 
-#define V6_MINECRAFT_DATA_VERSION 3700
+#define V6_MINECRAFT_DATA_VERSION_END 3700//1.20.4->3700 检测值，至少大于此版本识别为v7
+#define V6_MINECRAFT_DATA_VERSION_SAFE 3463//1.20->3463 写一个安全的值，以确保不要导致无法触发投影映射
+#define NUM_TO_STR(x) #x
 #define V6_LITEMATIC_VERSION 6
 #define V6_LITEMATIC_SUBVERSION 1
 
@@ -38,9 +40,9 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	//auto *pSubVersion = cpdV7DataRoot.HasInt(MU8STR("SubVersion"));
 
 	//版本验证
-	if (pMinecraftDataVersion == NULL || *pMinecraftDataVersion <= V6_MINECRAFT_DATA_VERSION)// || (pVersion == NULL || *pVersion <= V6_LITEMATIC_VERSION)//投影版本检测去除，仅关注MC版本
+	if (pMinecraftDataVersion == NULL || *pMinecraftDataVersion <= V6_MINECRAFT_DATA_VERSION_END)// || (pVersion == NULL || *pVersion <= V6_LITEMATIC_VERSION)//投影版本检测去除，仅关注MC版本
 	{
-		strErrorMessage = "MinecraftDataVersion Error! (must be > 3700)";
+		strErrorMessage = "MinecraftDataVersion Error! (must be > " NUM_TO_STR(V6_MINECRAFT_DATA_VERSION_END) ")";
 		return false;
 	}
 
@@ -56,7 +58,7 @@ bool ConvertLitematicData_V7_To_V6(NBT_Type::Compound &cpdV7Input, NBT_Type::Com
 	cpdV6DataRoot.PutCompound(MU8STR("Metadata"), std::move(*pMetadata));
 
 	//设置基础版本信息
-	cpdV6DataRoot.PutInt(MU8STR("MinecraftDataVersion"), V6_MINECRAFT_DATA_VERSION);
+	cpdV6DataRoot.PutInt(MU8STR("MinecraftDataVersion"), V6_MINECRAFT_DATA_VERSION_SAFE);
 	cpdV6DataRoot.PutInt(MU8STR("Version"), V6_LITEMATIC_VERSION);
 	cpdV6DataRoot.PutInt(MU8STR("SubVersion"), V6_LITEMATIC_SUBVERSION);
 

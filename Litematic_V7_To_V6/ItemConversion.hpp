@@ -488,6 +488,19 @@ void ProcessBucketEntityData(const NBT_Type::String &strV7TagKey, NBT_Node &node
 	return;
 }
 
+void ProcessItemComponentsAndMappingItemId(NBT_Type::Compound &cpdV7Item, NBT_Type::Compound &cpdV6Item, NBT_Type::String &strItemId, const NBT_Type::Int iV7McDataVersion)
+{
+	if (auto *pV7Tag = cpdV7Item.HasCompound(MU8STR("components")); pV7Tag != NULL)
+	{
+		NBT_Type::Compound cpdV6Tag;
+		ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
+		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
+	}
+
+	//映射物品ID
+	(void)ItemIdMap(strItemId, strItemId, iV7McDataVersion);
+}
+
 void ProcessChargedProjectile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsList())
@@ -507,7 +520,7 @@ void ProcessChargedProjectile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NB
 		}
 
 		auto &cpdV7Entry = itV7Entry.GetCompound();
-		NBT_Type::Compound cpdV6Entry;
+		NBT_Type::Compound cpdV6Item;
 
 		auto *pId = cpdV7Entry.HasString(MU8STR("id"));
 		if (pId == NULL)
@@ -515,20 +528,12 @@ void ProcessChargedProjectile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NB
 			continue;
 		}
 
-		auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
+		auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+		cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
 
-		if (auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components")); pV7Tag != NULL)
-		{
-			NBT_Type::Compound cpdV6Tag;
-			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
-			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
-		}
+		ProcessItemComponentsAndMappingItemId(cpdV7Entry, cpdV6Item, strItemId, iV7McDataVersion);
 
-		//映射物品ID
-		(void)ItemIdMap(strItemId, strItemId, iV7McDataVersion);
-
-		listV6.AddBackCompound(std::move(cpdV6Entry));
+		listV6.AddBackCompound(std::move(cpdV6Item));
 	}
 
 	return;
@@ -580,7 +585,7 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int 
 		}
 
 		auto &cpdV7Entry = itV7Entry.GetCompound();
-		NBT_Type::Compound cpdV6Entry;
+		NBT_Type::Compound cpdV6Item;
 
 		auto *pId = cpdV7Entry.HasString(MU8STR("id"));
 		if (pId == NULL)
@@ -589,21 +594,13 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int 
 			continue;
 		}
 
-		auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
-		cpdV6Entry.PutByte(MU8STR("Slot"), CopyOrElse(cpdV7Entry.HasByte(MU8STR("Slot")), bSlot));
+		auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+		cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
+		cpdV6Item.PutByte(MU8STR("Slot"), CopyOrElse(cpdV7Entry.HasByte(MU8STR("Slot")), bSlot));
 
-		if (auto *pV7Tag = cpdV7Entry.HasCompound(MU8STR("components")); pV7Tag != NULL)
-		{
-			NBT_Type::Compound cpdV6Tag;
-			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
-			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
-		}
+		ProcessItemComponentsAndMappingItemId(cpdV7Entry, cpdV6Item, strItemId, iV7McDataVersion);
 
-		//映射物品ID
-		(void)ItemIdMap(strItemId, strItemId, iV7McDataVersion);
-
-		listV6.AddBackCompound(std::move(cpdV6Entry));
+		listV6.AddBackCompound(std::move(cpdV6Item));
 	}
 
 	return;
@@ -631,18 +628,20 @@ void ProcessItemsNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type
 		}
 
 		auto &cpdV7Entry = itV7Entry.GetCompound();
-		NBT_Type::Compound cpdV6Entry;
+		NBT_Type::Compound cpdV6Item;
 
 		//查找物品组件
-		auto *pItem = cpdV7Entry.HasCompound(MU8STR("item"));
-		if (pItem == NULL)
+		auto *pV7Item = cpdV7Entry.HasCompound(MU8STR("item"));
+		if (pV7Item == NULL)
 		{
 			--bSlot;//空物品，不要递增修复计数
 			continue;
 		}
 
+		auto &cpdV7Item = *pV7Item;
+
 		//无id视为空物品
-		auto *pId = pItem->HasString(MU8STR("id"));
+		auto *pId = cpdV7Item.HasString(MU8STR("id"));
 		if (pId == NULL)
 		{
 			--bSlot;//空物品，不要递增修复计数
@@ -650,22 +649,14 @@ void ProcessItemsNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type
 		}
 
 		//依次插入Id，Count和Slot
-		auto &strItemId = cpdV6Entry.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-		cpdV6Entry.PutByte(MU8STR("Count"), CopyOrElse(pItem->HasInt(MU8STR("count")), 1));//至少要有1个
-		cpdV6Entry.PutByte(MU8STR("Slot"), (NBT_Type::Byte)CopyOrElse(cpdV7Entry.HasInt(MU8STR("slot")), bSlot));//获取外层槽位，如果不存在则使用修复值
+		auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
+		cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));//至少要有1个
+		cpdV6Item.PutByte(MU8STR("Slot"), (NBT_Type::Byte)CopyOrElse(cpdV7Entry.HasInt(MU8STR("slot")), bSlot));//获取外层槽位，如果不存在则使用修复值
 
 		//递归转换tag
-		if (auto *pV7Tag = pItem->HasCompound(MU8STR("components")); pV7Tag != NULL)
-		{
-			NBT_Type::Compound cpdV6Tag;
-			ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
-			cpdV6Entry.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
-		}
+		ProcessItemComponentsAndMappingItemId(cpdV7Item, cpdV6Item, strItemId, iV7McDataVersion);
 
-		//映射物品ID
-		(void)ItemIdMap(strItemId, strItemId, iV7McDataVersion);
-
-		listV6.AddBackCompound(std::move(cpdV6Entry));
+		listV6.AddBackCompound(std::move(cpdV6Item));
 	}
 
 	return;
@@ -691,15 +682,7 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 	auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
 	cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));
 
-	if (auto *pV7Tag = cpdV7Item.HasCompound(MU8STR("components")); pV7Tag != NULL)
-	{
-		NBT_Type::Compound cpdV6Tag;
-		ProcessComponentsTag(*pV7Tag, strItemId, cpdV6Tag, iV7McDataVersion);
-		cpdV6Item.PutCompound(MU8STR("tag"), std::move(cpdV6Tag));
-	}
-
-	//映射物品ID
-	(void)ItemIdMap(strItemId, strItemId, iV7McDataVersion);
+	ProcessItemComponentsAndMappingItemId(cpdV7Item, cpdV6Item, strItemId, iV7McDataVersion);
 
 	return;
 }
