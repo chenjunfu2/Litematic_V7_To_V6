@@ -217,7 +217,7 @@ consteval NBT_Type::Int MakeTropicalFishPattern(NBT_Type::Int iSize, NBT_Type::I
 {
 	using UINT = std::make_unsigned_t<NBT_Type::Int>;
 	using UBYTE = std::make_unsigned_t<NBT_Type::Byte>;
-	return ((UINT)(UBYTE)iMarking) << 8 | ((UINT)(UBYTE)iSize);//低8bit为0或1，代表体型，高8bit为0~5(包含)，代表花纹
+	return (((UINT)(UBYTE)iMarking) << 8) | (((UINT)(UBYTE)iSize) << 0);//低8bit为0或1，代表体型，高8bit为0~5(包含)，代表花纹
 }
 
 NBT_Type::Int TropicalFishPatternMap(const NBT_Type::String &strPattern)

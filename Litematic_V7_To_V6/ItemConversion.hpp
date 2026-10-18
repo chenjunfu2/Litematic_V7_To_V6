@@ -544,13 +544,13 @@ void ProcessTropicalFishData(const NBT_Type::String &strV7TagKey, NBT_Node &node
 	switch (itFind->second)
 	{
 	case Process::Pattern://低2byte
-		iBucketVariantTag |= (UINT)TropicalFishPatternMap(strTropicalFishData) & 0xFF'FFu;
+		iBucketVariantTag |= ((UINT)TropicalFishPatternMap(strTropicalFishData) & 0xFF'FFu) << 0;
 		break;
 	case Process::BaseColor://第3byte
-		iBucketVariantTag |= (UINT)DyeColorMap(strTropicalFishData) & 0xFFu << 16;
+		iBucketVariantTag |= ((UINT)DyeColorMap(strTropicalFishData) & 0xFFu) << 16;
 		break;
 	case Process::PatternColor://第4byte
-		iBucketVariantTag |= (UINT)DyeColorMap(strTropicalFishData) & 0xFFu << 24;
+		iBucketVariantTag |= ((UINT)DyeColorMap(strTropicalFishData) & 0xFFu) << 24;
 		break;
 	}
 
