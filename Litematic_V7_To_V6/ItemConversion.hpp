@@ -506,6 +506,57 @@ void ProcessBucketEntityData(const NBT_Type::String &strV7TagKey, NBT_Node &node
 	return;
 }
 
+void ProcessTropicalFishData(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+{
+	if (!nodeV7TagVal.IsString())
+	{
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
+
+	auto &strTropicalFishData = nodeV7TagVal.GetString();
+
+	enum class Process
+	{
+		Pattern,
+		BaseColor,
+		PatternColor,
+	};
+
+	const static std::unordered_map<NBT_Type::String, Process> mapProcess =
+	{
+		{ MU8STR("minecraft:tropical_fish/pattern"),		Process::Pattern },
+		{ MU8STR("minecraft:tropical_fish/base_color"),		Process::BaseColor },
+		{ MU8STR("minecraft:tropical_fish/pattern_color"),	Process::PatternColor },
+	};
+
+	auto itFind = mapProcess.find(strV7TagKey);
+	if (itFind == mapProcess.end())
+	{
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));
+		return;
+	}
+
+	//如果没有则插入，否则返回引用
+	auto &iBucketVariantTag = cpdV6TagData.TryPutInt(MU8STR("BucketVariantTag"), 0).first->second.GetInt();
+
+	using UINT = std::make_unsigned_t<NBT_Type::Int>;
+	switch (itFind->second)
+	{
+	case Process::Pattern://低2byte
+		iBucketVariantTag |= (UINT)TropicalFishPatternMap(strTropicalFishData) & 0xFF'FFu;
+		break;
+	case Process::BaseColor://第3byte
+		iBucketVariantTag |= (UINT)DyeColorMap(strTropicalFishData) & 0xFFu << 16;
+		break;
+	case Process::PatternColor://第4byte
+		iBucketVariantTag |= (UINT)DyeColorMap(strTropicalFishData) & 0xFFu << 24;
+		break;
+	}
+
+	return;
+}
+
 void ProcessItemComponentsAndMappingItemId(NBT_Type::Compound &cpdV7Item, NBT_Type::Compound &cpdV6Item, NBT_Type::String &strItemId, const NBT_Type::Int iV7McDataVersion)
 {
 	if (auto *pV7Tag = cpdV7Item.HasCompound(MU8STR("components")); pV7Tag != NULL)
@@ -757,6 +808,7 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		V6Tag,
 		BlockEntityTag,
 		DisplayTag,
+		MergeDataTag,
 	};
 
 	struct MapVal_T
@@ -801,6 +853,9 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:writable_book_content"),	{ false,	UseTagType::V6Tag,			ProcessWritableBookContent } },
 		{ MU8STR("minecraft:written_book_content"),		{ false,	UseTagType::V6Tag,			ProcessWrittenBookContent } },
 		{ MU8STR("minecraft:bucket_entity_data"),		{ false,	UseTagType::V6Tag,			ProcessBucketEntityData } },
+		{ MU8STR("minecraft:tropical_fish/pattern"),	{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
+		{ MU8STR("minecraft:tropical_fish/base_color"),	{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
+		{ MU8STR("minecraft:tropical_fish/pattern_color"),{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
 
 
 		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		std::bind(RenameProcess,	MU8STR("Lore"),					_1, _2, _3, _4) } },
@@ -881,6 +936,7 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 
 	NBT_Type::Compound cpdBlockEntityTag;
 	NBT_Type::Compound cpdDisplayTag;
+	NBT_Type::Compound cpdMergeDataTag;
 
 	for (auto &[strV7Key, strV7Val] : cpdV7Tag)
 	{
@@ -907,6 +963,9 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		case UseTagType::DisplayTag:
 			mapVal.funcProcess(mapVal.bUseItemId ? strItemId : strV7Key, strV7Val, cpdDisplayTag, iV7McDataVersion);
 			break;
+		case UseTagType::MergeDataTag:
+			mapVal.funcProcess(mapVal.bUseItemId ? strItemId : strV7Key, strV7Val, cpdMergeDataTag, iV7McDataVersion);
+			break;
 		}
 	}
 
@@ -918,6 +977,11 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 	if (!cpdDisplayTag.Empty())
 	{
 		cpdV6Tag.PutCompound(MU8STR("display"), std::move(cpdDisplayTag));
+	}
+
+	if (!cpdMergeDataTag.Empty())
+	{
+		cpdV6Tag.Merge(std::move(cpdMergeDataTag));
 	}
 
 	return;

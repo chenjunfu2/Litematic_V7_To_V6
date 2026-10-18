@@ -117,7 +117,7 @@ NBT_Type::Byte FireworkShapeMap(const NBT_Type::String &strShape)
 	return itFind != mapShape.end() ? itFind->second : 0; // default
 }
 
-NBT_Type::Int BannerColorMap(const NBT_Type::String &strColor)
+NBT_Type::Int DyeColorMap(const NBT_Type::String &strColor)
 {
 	const static std::unordered_map<NBT_Type::String, NBT_Type::Int> mapColor =
 	{
@@ -202,15 +202,45 @@ NBT_Type::Int AxolotlVariantMap(const NBT_Type::String &strVariant)
 {
 	const static std::unordered_map<NBT_Type::String, NBT_Type::Int> mapAxolotlVariant =
 	{
-		{ MU8STR("lucy"),				0 },
-		{ MU8STR("wild"),				1 },
-		{ MU8STR("gold"),				2 },
-		{ MU8STR("cyan"),				3 },
-		{ MU8STR("blue"),				4 },
+		{ MU8STR("lucy"),	0 },
+		{ MU8STR("wild"),	1 },
+		{ MU8STR("gold"),	2 },
+		{ MU8STR("cyan"),	3 },
+		{ MU8STR("blue"),	4 },
 	};
 
 	auto itFind = mapAxolotlVariant.find(strVariant);
 	return itFind != mapAxolotlVariant.end() ? itFind->second : 0; // default variant
+}
+
+consteval NBT_Type::Int MakeTropicalFishPattern(NBT_Type::Int iSize, NBT_Type::Int iMarking)
+{
+	using UINT = std::make_unsigned_t<NBT_Type::Int>;
+	using UBYTE = std::make_unsigned_t<NBT_Type::Byte>;
+	return ((UINT)(UBYTE)iMarking) << 8 | ((UINT)(UBYTE)iSize);//低8bit为0或1，代表体型，高8bit为0~5(包含)，代表花纹
+}
+
+NBT_Type::Int TropicalFishPatternMap(const NBT_Type::String &strPattern)
+{
+	const static std::unordered_map<NBT_Type::String, NBT_Type::Int> mapTropicalFishPattern =
+	{
+		{ MU8STR("kob"),		MakeTropicalFishPattern(0, 0) },
+		{ MU8STR("sunstreak"),	MakeTropicalFishPattern(0, 1) },
+		{ MU8STR("snooper"),	MakeTropicalFishPattern(0, 2) },
+		{ MU8STR("dasher"),		MakeTropicalFishPattern(0, 3) },
+		{ MU8STR("brinely"),	MakeTropicalFishPattern(0, 4) },
+		{ MU8STR("spotty"),		MakeTropicalFishPattern(0, 5) },
+
+		{ MU8STR("flopper"),	MakeTropicalFishPattern(1, 0) },
+		{ MU8STR("stripey"),	MakeTropicalFishPattern(1, 1) },
+		{ MU8STR("glitter"),	MakeTropicalFishPattern(1, 2) },
+		{ MU8STR("blockfish"),	MakeTropicalFishPattern(1, 3) },
+		{ MU8STR("betty"),		MakeTropicalFishPattern(1, 4) },
+		{ MU8STR("clayfish"),	MakeTropicalFishPattern(1, 5) },
+	};
+
+	auto itFind = mapTropicalFishPattern.find(strPattern);
+	return itFind != mapTropicalFishPattern.end() ? itFind->second : 0; // default pattern: kob
 }
 
 enum class HandArmorSlot
