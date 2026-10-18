@@ -198,6 +198,21 @@ NBT_Type::Int BeaconEffectMap(const NBT_Type::String &strEffect)
 	return itFind != mapBeaconEffect.end() ? itFind->second : 1; // default speed
 }
 
+NBT_Type::Int AxolotlVariantMap(const NBT_Type::String &strVariant)
+{
+	const static std::unordered_map<NBT_Type::String, NBT_Type::Int> mapAxolotlVariant =
+	{
+		{ MU8STR("lucy"),				0 },
+		{ MU8STR("wild"),				1 },
+		{ MU8STR("gold"),				2 },
+		{ MU8STR("cyan"),				3 },
+		{ MU8STR("blue"),				4 },
+	};
+
+	auto itFind = mapAxolotlVariant.find(strVariant);
+	return itFind != mapAxolotlVariant.end() ? itFind->second : 0; // default variant
+}
+
 enum class HandArmorSlot
 {
 	mainhand,

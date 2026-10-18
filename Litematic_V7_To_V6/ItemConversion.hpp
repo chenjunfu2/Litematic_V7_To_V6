@@ -388,21 +388,19 @@ void ProcessDyedColor(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::
 	}
 
 	auto *pRGB = GetCompound(nodeV7Tag).Has(MU8STR("rgb"));
-	//要么是Int，要么是列表，否则失败
-	bool bIsIntRGB = pRGB->IsInt();
-	bool bIsListRGB = pRGB->IsList();
-	if (pRGB == NULL || (!bIsIntRGB && !bIsListRGB))
+	if (pRGB == NULL)
 	{
 		nodeV6Tag.SetInt(16777215);//default
 		return;
 	}
 
-	if (bIsIntRGB)
+	//要么是Int，要么是列表，否则失败
+	if (pRGB->IsInt())
 	{
 		nodeV6Tag.SetInt(pRGB->GetInt());
 		return;
 	}
-	else if (bIsListRGB)
+	else if (pRGB->IsList())
 	{
 		auto &listRGB = pRGB->GetList();
 		if (listRGB.Size() != 3 ||
@@ -429,6 +427,11 @@ void ProcessDyedColor(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::
 			(uint32_t)bB << 0;
 
 		nodeV6Tag.SetInt(iRGB);
+	}
+	else
+	{
+		nodeV6Tag.SetInt(16777215);//default
+		return;
 	}
 
 	return;
@@ -475,6 +478,21 @@ void ProcessBlockEntityData(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV
 	return;
 }
 
+void ProcessAxolotlVariant(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+{
+	if (!nodeV7Tag.IsString())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &strVariant = nodeV7Tag.GetString();
+	auto iVariant = AxolotlVariantMap(strVariant);
+
+	nodeV6Tag.SetInt(iVariant);
+	return;
+}
+
 void ProcessBucketEntityData(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsCompound())
@@ -499,6 +517,7 @@ void ProcessItemComponentsAndMappingItemId(NBT_Type::Compound &cpdV7Item, NBT_Ty
 
 	//映射物品ID
 	(void)ItemIdMap(strItemId, strItemId, iV7McDataVersion);
+	return;
 }
 
 void ProcessChargedProjectile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
@@ -774,12 +793,14 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:map_decorations"),			{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Decorations"),			ProcessMapDecorations,			_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:profile"),					{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("SkullOwner"),			ProcessSkullProfile,			_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:unbreakable"),				{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Unbreakable"),			ProcessUnbreakable,				_1, _2, _3, _4) } },
+		{ MU8STR("minecraft:axolotl/variant"),			{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Variant"),				ProcessAxolotlVariant,			_1, _2, _3, _4) } },
 
 		{ MU8STR("minecraft:custom_data"),				{ false,	UseTagType::V6Tag,			ProcessCustomData } },
 		{ MU8STR("minecraft:lodestone_tracker"),		{ false,	UseTagType::V6Tag,			ProcessLodestoneTracker } },
 		{ MU8STR("minecraft:potion_contents"),			{ false,	UseTagType::V6Tag,			ProcessPotionContents } },
 		{ MU8STR("minecraft:writable_book_content"),	{ false,	UseTagType::V6Tag,			ProcessWritableBookContent } },
 		{ MU8STR("minecraft:written_book_content"),		{ false,	UseTagType::V6Tag,			ProcessWrittenBookContent } },
+		{ MU8STR("minecraft:bucket_entity_data"),		{ false,	UseTagType::V6Tag,			ProcessBucketEntityData } },
 
 
 		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		std::bind(RenameProcess,	MU8STR("Lore"),					_1, _2, _3, _4) } },
@@ -792,7 +813,6 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 
 
 		{ MU8STR("minecraft:block_entity_data"),		{ false,	UseTagType::BlockEntityTag,	ProcessBlockEntityData } },
-		{ MU8STR("minecraft:bucket_entity_data"),		{ false,	UseTagType::BlockEntityTag,	ProcessBucketEntityData } },
 
 
 

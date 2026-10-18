@@ -490,7 +490,7 @@ void ProcessSkullProfile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Typ
 
 		for (auto &itTexture : *pTextures)
 		{
-			if (itTexture.IsString())
+			if (!itTexture.IsString())
 			{
 				continue;
 			}
