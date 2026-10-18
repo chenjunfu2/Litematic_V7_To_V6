@@ -853,6 +853,8 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:writable_book_content"),	{ false,	UseTagType::V6Tag,			ProcessWritableBookContent } },
 		{ MU8STR("minecraft:written_book_content"),		{ false,	UseTagType::V6Tag,			ProcessWrittenBookContent } },
 		{ MU8STR("minecraft:bucket_entity_data"),		{ false,	UseTagType::V6Tag,			ProcessBucketEntityData } },
+
+
 		{ MU8STR("minecraft:tropical_fish/pattern"),	{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
 		{ MU8STR("minecraft:tropical_fish/base_color"),	{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
 		{ MU8STR("minecraft:tropical_fish/pattern_color"),{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
@@ -864,7 +866,6 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:custom_name"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Name"),					ProcessCustomNameTag,			_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:dyed_color"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("color"),				ProcessDyedColor,				_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:item_name"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Name"),					ProcessItemName,				_1, _2, _3, _4) } },
-
 
 
 		{ MU8STR("minecraft:block_entity_data"),		{ false,	UseTagType::BlockEntityTag,	ProcessBlockEntityData } },
