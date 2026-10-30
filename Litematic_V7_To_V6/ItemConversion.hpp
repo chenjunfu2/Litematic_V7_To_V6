@@ -437,34 +437,6 @@ void ProcessDyedColor(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::
 	return;
 }
 
-void ProcessItemName(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
-{
-	if (!nodeV7Tag.IsString() && !nodeV7Tag.IsCompound())
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	//1.21.4及以前无需修改
-	if (iV7McDataVersion <= MC_1_21_4_MINECRAFT_DATA_VERSION)
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	//1.21.4后修改
-	NBT_Type::String strJsonTemp{};
-	if (!ProcessTextComponent(nodeV7Tag, strJsonTemp))
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	nodeV6Tag.SetString(std::move(strJsonTemp));
-
-	return;
-}
-
 void ProcessBlockEntityData(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsCompound())
@@ -859,13 +831,12 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:tropical_fish/base_color"),	{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
 		{ MU8STR("minecraft:tropical_fish/pattern_color"),{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
 
-
-		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		std::bind(RenameProcess,	MU8STR("Lore"),					_1, _2, _3, _4) } },
+		
 		{ MU8STR("minecraft:map_color"),				{ false,	UseTagType::DisplayTag,		std::bind(RenameProcess,	MU8STR("MapColor"),				_1, _2, _3, _4) } },
-
-		{ MU8STR("minecraft:custom_name"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Name"),					ProcessCustomNameTag,			_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:dyed_color"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("color"),				ProcessDyedColor,				_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:item_name"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Name"),					ProcessItemName,				_1, _2, _3, _4) } },
+		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Lore"),					ProcessTextComponentTag,		_1, _2, _3, _4) } },
+		{ MU8STR("minecraft:custom_name"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Name"),					ProcessTextComponentTag,		_1, _2, _3, _4) } },
+		{ MU8STR("minecraft:item_name"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Name"),					ProcessTextComponentTag,		_1, _2, _3, _4) } },
 
 
 		{ MU8STR("minecraft:block_entity_data"),		{ false,	UseTagType::BlockEntityTag,	ProcessBlockEntityData } },

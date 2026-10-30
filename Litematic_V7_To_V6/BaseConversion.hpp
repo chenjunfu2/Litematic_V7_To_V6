@@ -72,19 +72,104 @@ bool IsBoolKey(const NBT_Type::String &key)
 	return setBoolKeys.contains(key);
 }
 
-bool ProcessTextComponent(NBT_Node &nodeTextComponent, NBT_Type::String &strRawJsonText)
+void ProcessClickEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
+	static_assert(false, "TODO!");
+}
+
+void ProcessHoverEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+{
+	static_assert(false, "TODO!");
+}
+
+
+//进行映射，因为所有文本注解都从这里转换，MC WIKI已经无法提供更多信息，从Java多版本源代码分析格式变动
+void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeTextConversion, const NBT_Type::Int iV7McDataVersion)
+{
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+	using std::placeholders::_3;
+	using std::placeholders::_4;
+
+	static const std::unordered_map<NBT_Type::String, MapValFunc_T> mapProcess =
+	{
+		{ MU8STR("click_event"),	std::bind(DefaultProcess,	MU8STR("clickEvent"),		ProcessClickEvent,					_1, _2, _3, _4)	},
+		{ MU8STR("hover_event"),	std::bind(DefaultProcess,	MU8STR("hoverEvent"),		ProcessHoverEvent,					_1, _2, _3, _4)	},
+		{ MU8STR("extra"),			std::bind(DefaultProcess,	MU8STR("extra"),			ProcessTextComponentConversion,		_1, _2, _3, _4)	},//此处递归，因为extra是递归结构，内部可以继续存储TextComponentTag
+		//TODO!
+
+	};
+	static_assert(false, "TODO!");
+
+	auto *ProcessAll =//使用+退化为函数指针
+	+[](NBT_Type::Compound &cpdV7TextData, NBT_Type::Compound &cpdV6TextData, const NBT_Type::Int iV7McDataVersion) -> void
+	{
+		for (auto &[itV7TagKey, itV7TagVal] : cpdV7TextData)
+		{
+			//查找是否有匹配的处理过程
+			auto itFind = mapProcess.find(itV7TagKey);
+			if (itFind == mapProcess.end())
+			{
+				//不匹配直接移动处理
+				cpdV6TextData.Put(itV7TagKey, std::move(itV7TagVal));
+				continue;
+			}
+
+			//进行处理
+			auto &funcProcess = itFind->second;
+			funcProcess(itV7TagKey, itV7TagVal, cpdV6TextData, iV7McDataVersion);
+		}
+	};
+
 	switch (nodeTextComponent.GetTag())
+	{
+	case NBT_TAG::Compound:
+		{
+			ProcessAll(GetCompound(nodeTextComponent), GetCompound(nodeTextConversion), iV7McDataVersion);
+		}
+		break;
+	case NBT_TAG::List://对每个list项递归处理
+		{
+			auto &listTextComponent = GetList(nodeTextComponent);
+			auto &listTextConversion = nodeTextConversion.SetList();
+
+			for (auto &itText : listTextComponent)
+			{
+				ProcessTextComponentConversion(itText, listTextConversion.AddBack(NBT_Node{}), iV7McDataVersion);//插入并转换
+			}
+		}
+		break;
+	case NBT_TAG::String:
+	default://unknown type
+		nodeTextConversion = std::move(nodeTextComponent);
+		return;
+		break;
+	}
+}
+
+//调用语义，如果目标只接受字符串，那么直接完整调用，否则如果目标本身是字符串列表，就应该外部解包后挨个调用
+bool ProcessTextComponent(NBT_Node &nodeTextComponent, NBT_Type::String &strRawJsonText, const NBT_Type::Int iV7McDataVersion)
+{
+	NBT_Node nodeTextConversion{};
+	ProcessTextComponentConversion(nodeTextComponent, nodeTextConversion, iV7McDataVersion);//进行全部的映射转换
+
+	switch (nodeTextConversion.GetTag())
 	{
 	case NBT_TAG::String:
 		{
-			strRawJsonText = NBTJsonHelper::RawStringToJsonString(GetString(nodeTextComponent));
+			strRawJsonText = NBTJsonHelper::RawStringToJsonString(GetString(nodeTextConversion));
 		}
 		break;
 	case NBT_TAG::Compound:
 		{
-			auto &cpdText = GetCompound(nodeTextComponent);
+			auto &cpdText = GetCompound(nodeTextConversion);
 			strRawJsonText = NBTJsonHelper::JsonSerialize<IsBoolKey>(cpdText);//转化为json字符串（自动转义特殊字符）
+		}
+		break;
+	case NBT_TAG::List:
+		{
+			auto &listText = GetList(nodeTextConversion);
+			strRawJsonText = NBTJsonHelper::JsonSerialize<IsBoolKey>(listText);//转化为json字符串（自动转义特殊字符）
 		}
 		break;
 	default:
@@ -322,7 +407,7 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 	return;
 }
 
-void ProcessCustomNameTag(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+void ProcessTextComponentTag(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsString() && !nodeV7Tag.IsCompound())
 	{
@@ -339,7 +424,7 @@ void ProcessCustomNameTag(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 
 	//1.21.4后修改
 	NBT_Type::String strJsonTemp{};
-	if (!ProcessTextComponent(nodeV7Tag, strJsonTemp))
+	if (!ProcessTextComponent(nodeV7Tag, strJsonTemp, iV7McDataVersion))//目标只能是字符串，不论是str、cpd、list都直接序列化为字符串
 	{
 		nodeV6Tag = std::move(nodeV7Tag);
 		return;

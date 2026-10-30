@@ -141,17 +141,40 @@ void ProcessSignText(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 	//1.21.4后修改
 	auto &cpdV6 = nodeV6Tag.GetCompound();
 	auto *pMessages = cpdV6.HasList(MU8STR("messages"));//编辑V6中的数据
+	auto *pFilteredMessages = cpdV6.HasList(MU8STR("filtered_messages"));
 
 	if (pMessages == NULL)
 	{
-		return;
+		return;//pFilteredMessages也没处理必要了
 	}
 
+	//目标是字符串列表，必须拆解后挨个调用每个项，而不是作为json字符串合并列表
 	//解析消息，如果不是被引号包围的字符串，那么是1.21.10+，修改为引号包围，同时遍历转义字符串
-	for (auto &itV6 : *pMessages)
+	
+	for (size_t i = 0, n = pMessages->Size(); i < n; ++i)
 	{
+		auto &itV6 = (*pMessages)[i];
+
+		if (pFilteredMessages != NULL && i < pFilteredMessages->Size())
+		{
+			auto &itFiltered = (*pFilteredMessages)[i];
+			if (itV6 == itFiltered)//相等，直接置为空串
+			{
+				itFiltered.SetString(NBTJsonHelper::RawStringToJsonString(MU8STR("")));
+			}
+			else//不相等，按照规则转换
+			{
+				NBT_Type::String strJsonTemp{};
+				if (ProcessTextComponent(itFiltered, strJsonTemp, iV7McDataVersion))//nbt格式转化为json数据组件，字符串格式进行转义
+				{
+					itFiltered.SetString(std::move(strJsonTemp));
+				}
+				//失败跳过（保持原数据不变）
+			}
+		}
+
 		NBT_Type::String strJsonTemp{};
-		if (!ProcessTextComponent(itV6, strJsonTemp))//nbt格式转化为json数据组件，字符串格式进行转义
+		if (!ProcessTextComponent(itV6, strJsonTemp, iV7McDataVersion))//nbt格式转化为json数据组件，字符串格式进行转义
 		{
 			continue;//失败跳过（保持原数据不变），处理下一个
 		}
@@ -186,10 +209,10 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 	using std::placeholders::_3;
 	using std::placeholders::_4;
 
-	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
+	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProcess =
 	{
-		{ MU8STR("custom_name"),				std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomNameTag,	_1, _2, _3, _4) },
-		{ MU8STR("CustomName"),					std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessCustomNameTag,	_1, _2, _3, _4) },//高版本仍有麻将忘记改名的遗留物
+		{ MU8STR("custom_name"),				std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessTextComponentTag,	_1, _2, _3, _4) },
+		{ MU8STR("CustomName"),					std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessTextComponentTag,	_1, _2, _3, _4) },//高版本仍有麻将忘记改名的遗留物
 
 		{ MU8STR("ticks_since_song_started"),	ProcessJukebox }, //唱片机特殊处理
 
@@ -213,8 +236,8 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)
 	{
 		//查找是否有匹配的处理过程
-		auto itFind = mapProccess.find(itV7TagKey);
-		if (itFind == mapProccess.end())
+		auto itFind = mapProcess.find(itV7TagKey);
+		if (itFind == mapProcess.end())
 		{
 			//不匹配直接移动处理
 			cpdV6TileEntityData.Put(itV7TagKey, std::move(itV7TagVal));

@@ -282,6 +282,9 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 
 	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
 	{
+		{ MU8STR("custom_name"),		std::bind(DefaultProcess,			MU8STR("CustomName"),		ProcessTextComponentTag,	_1, _2, _3, _4) },
+		{ MU8STR("CustomName"),			std::bind(DefaultProcess,			MU8STR("CustomName"),		ProcessTextComponentTag,	_1, _2, _3, _4) },
+
 		{ MU8STR("has_egg"),			std::bind(RenameProcess,			MU8STR("HasEgg"),			_1, _2, _3, _4) },
 		{ MU8STR("life_ticks"),			std::bind(RenameProcess,			MU8STR("LifeTicks"),		_1, _2, _3, _4) },
 		{ MU8STR("size"),				std::bind(RenameProcess,			MU8STR("Size"),				_1, _2, _3, _4) },
@@ -293,15 +296,15 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 		{ MU8STR("home_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("HomePos"),			_1, _2, _3, _4) },
 		{ MU8STR("sleeping_pos"),		std::bind(ProcessBlockPosExternal,	MU8STR("Sleeping"),			_1, _2, _3, _4) },
 
-		{ MU8STR("attributes"),			std::bind(DefaultProcess,			MU8STR("Attributes"),	ProcessAttributes,	_1, _2, _3, _4) },
-		{ MU8STR("flower_pos"),			std::bind(DefaultProcess,			MU8STR("FlowerPos"),	ProcessBlockPos,	_1, _2, _3, _4) },
-		{ MU8STR("hive_pos"),			std::bind(DefaultProcess,			MU8STR("HivePos"),		ProcessBlockPos,	_1, _2, _3, _4) },
-		{ MU8STR("Item"),				std::bind(DefaultProcess,			MU8STR("Item"),			ProcessSingleItem,	_1, _2, _3, _4) },
-		{ MU8STR("Items"),				std::bind(DefaultProcess,			MU8STR("Items"),		ProcessItems,		_1, _2, _3, _4) },
+		{ MU8STR("attributes"),			std::bind(DefaultProcess,			MU8STR("Attributes"),		ProcessAttributes,	_1, _2, _3, _4) },
+		{ MU8STR("flower_pos"),			std::bind(DefaultProcess,			MU8STR("FlowerPos"),		ProcessBlockPos,	_1, _2, _3, _4) },
+		{ MU8STR("hive_pos"),			std::bind(DefaultProcess,			MU8STR("HivePos"),			ProcessBlockPos,	_1, _2, _3, _4) },
+		{ MU8STR("Item"),				std::bind(DefaultProcess,			MU8STR("Item"),				ProcessSingleItem,	_1, _2, _3, _4) },
+		{ MU8STR("Items"),				std::bind(DefaultProcess,			MU8STR("Items"),			ProcessItems,		_1, _2, _3, _4) },
 
-		{ MU8STR("ArmorItems"),			std::bind(DefaultProcess,			MU8STR("ArmorItems"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 4),		_1, _2, _3, _4) },
-		{ MU8STR("HandItems"),			std::bind(DefaultProcess,			MU8STR("HandItems"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 2),		_1, _2, _3, _4) },
-		{ MU8STR("Inventory"),			std::bind(DefaultProcess,			MU8STR("Inventory"),	(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 1),		_1, _2, _3, _4) },
+		{ MU8STR("ArmorItems"),			std::bind(DefaultProcess,			MU8STR("ArmorItems"),		(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 4),		_1, _2, _3, _4) },
+		{ MU8STR("HandItems"),			std::bind(DefaultProcess,			MU8STR("HandItems"),		(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 2),		_1, _2, _3, _4) },
+		{ MU8STR("Inventory"),			std::bind(DefaultProcess,			MU8STR("Inventory"),		(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 1),		_1, _2, _3, _4) },
 
 		{ MU8STR("id"),					ProcessIdMappings },
 		{ MU8STR("equipment"),			ProcessEntityEquipment },
