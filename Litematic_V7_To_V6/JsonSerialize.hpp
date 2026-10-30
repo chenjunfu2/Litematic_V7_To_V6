@@ -273,9 +273,9 @@ public:
 						sRet += '\"';
 						sRet += EscapeJsonString(it.first);
 						sRet += MU8STR("\":");
-						if (it->second.GetTag() == NBT_TAG::Byte && IsBoolKey(it->first))
+						if (it.second.GetTag() == NBT_TAG::Byte && IsBoolKey(it.first))
 						{
-							sRet += it->second.Get<NBT_Type::Byte>() ? MU8STR("true") : MU8STR("false");
+							sRet += it.second.Get<NBT_Type::Byte>() ? MU8STR("true") : MU8STR("false");
 						}
 						else
 						{
