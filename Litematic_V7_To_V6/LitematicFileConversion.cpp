@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <format>
+#include <filesystem>
 
 //找到一个唯一文件名
 std::string GenerateUniqueFilename(const std::string &sBeg, const std::string &sEnd, uint32_t u32TryCount = 10)//默认最多重试10次
@@ -138,13 +139,9 @@ bool ConvertLitematicFile_V7_To_V6(const std::string &sV7FilePath)
 		//查找合法文件
 		std::string sV6FilePath{};
 		{
-			//找到后缀名
-			size_t szPos = sV7FilePath.find_last_of('.');
-
-			//'.'前面的部分，不包含'.'
-			std::string sV7FileName = sV7FilePath.substr(0, szPos).append("_V6_");
-			//'.'后面的部分，包含'.'
-			std::string sV7FileExten = sV7FilePath.substr(szPos);
+			auto path = std::filesystem::path(sV7FilePath);
+			std::string sV7FileName = path.stem().string().append("_V6_");
+			std::string sV7FileExten = path.extension().string();
 
 			//唯一文件名
 			sV6FilePath = GenerateUniqueFilename(sV7FileName, sV7FileExten);

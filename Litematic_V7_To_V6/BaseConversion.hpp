@@ -57,7 +57,7 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 如果一个文本组件所有样式均为默认值、不包含子组件且为纯文本组件，游戏在序列化或持久化此组件时会直接使用字符串格式而非复合标签格式。
 */
 
-static bool IsBoolKey(const NBT_Type::String &key)
+bool IsBoolKey(const NBT_Type::String &key)
 {
 	static const std::unordered_set<NBT_Type::String> setBoolKeys =
 	{
@@ -164,6 +164,8 @@ void ProcessAttributes(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 				return;
 			}
 		}
+
+		return;
 	}
 
 	auto &listV7 = nodeV7Tag.GetList();
