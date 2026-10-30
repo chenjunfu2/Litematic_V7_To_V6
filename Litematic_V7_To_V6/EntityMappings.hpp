@@ -1,13 +1,13 @@
-#pragma once
+ï»¿#pragma once
 
 #include <nbt_cpp/NBT_Node.hpp>
 
 #include <unordered_map>
 
-//ÎªÁËÏû¿½±´£¬Èç¹ûÎ´½øĞĞÓ³Éä£¬ÄÇÃ´²»»á¸³Öµ£¬²¢·µ»Øfalse£¬·ñÔò¸³Öµ·µ»Øtrue
+//ä¸ºäº†æ¶ˆæ‹·è´ï¼Œå¦‚æœæœªè¿›è¡Œæ˜ å°„ï¼Œé‚£ä¹ˆä¸ä¼šèµ‹å€¼ï¼Œå¹¶è¿”å›falseï¼Œå¦åˆ™èµ‹å€¼è¿”å›true
 bool EntityIdMap(const NBT_Type::String &strEntityId, NBT_Type::String &strMappedEntityId, const NBT_Type::Int iV7McDataVersion)
 {
-	std::unordered_map<NBT_Type::String, NBT_Type::String> mapEntityId =
+	static const std::unordered_map<NBT_Type::String, NBT_Type::String> mapEntityId =
 	{
 		
 	};

@@ -62,6 +62,9 @@
     <ClInclude Include="EntityMappings.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="JsonSerialize.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt">

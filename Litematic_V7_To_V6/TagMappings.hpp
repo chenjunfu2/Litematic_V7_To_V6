@@ -240,7 +240,7 @@ NBT_Type::Int TropicalFishPatternMap(const NBT_Type::String &strPattern)
 	};
 
 	auto itFind = mapTropicalFishPattern.find(strPattern);
-	return itFind != mapTropicalFishPattern.end() ? itFind->second : 0; // default pattern: kob
+	return itFind != mapTropicalFishPattern.end() ? itFind->second : MakeTropicalFishPattern(0, 0); // default pattern: kob
 }
 
 enum class HandArmorSlot

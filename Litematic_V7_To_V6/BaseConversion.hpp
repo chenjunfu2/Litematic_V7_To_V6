@@ -2,6 +2,7 @@
 
 #include <nbt_cpp/NBT_All.hpp>
 #include "TagMappings.hpp"
+#include "JsonSerialize.hpp"
 
 #include <unordered_map>
 #include <functional>
@@ -55,78 +56,20 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 字符串格式是纯文本组件的简写形式。在实际使用中，字符串格式等价于复合标签格式的{text: <字符串>}。
 如果一个文本组件所有样式均为默认值、不包含子组件且为纯文本组件，游戏在序列化或持久化此组件时会直接使用字符串格式而非复合标签格式。
 */
-NBT_Type::String EscapeString(const NBT_Type::String &strRaw)
+
+static bool IsBoolKey(const NBT_Type::String &key)
 {
-	NBT_Type::String strEscape{};
-	strEscape.reserve(strRaw.size());//预分配
-	for (const auto &it : strRaw)
+	static const std::unordered_set<NBT_Type::String> setBoolKeys =
 	{
-		switch (it)
-		{
-		case '\"':
-		case '\\':
-			strEscape.push_back('\\');
-			break;
-			//因为mc会直接处理这些空白字符的原始形式，仅需要手动处理可显示字符的转义
-			/*case '/':
-			case '\b':
-			case '\f':
-			case '\n':
-			case '\r':
-			case '\t':*/
-		default:
-			//不添加转义
-			break;
-		}
+		MU8STR("bold"),
+		MU8STR("italic"),
+		MU8STR("underlined"),
+		MU8STR("strikethrough"),
+		MU8STR("obfuscated"),
+		MU8STR("interpret"),
+	};
 
-		strEscape.push_back(it);
-	}
-
-	return strEscape;
-}
-
-/*
-//根据告示牌NBT最终序列化结果，事实上仅存储原始Json
-//并不需要任何二次转义，游戏内看到的多层转义只是NBT显示导致的转义
-
-NBT_Type::String DoubleEscapeString(const NBT_Type::String &strRaw)
-{
-	//进行两次转义，因为json解析需要消费一次转义，snbt解析也要消费一次转义
-
-	//因为只要发生转义，必然插入额外字符，所以判断转义前后的大小，如果不变，那么就说明没有进行过转义，跳过第二次无效转义
-	auto strFirst = EscapeString(strRaw);
-	if (strFirst.size() == strRaw.size())
-	{
-		return strFirst;//返回转义串（这里可以享受NRVO，假设这里返回原始串——虽然与转义串等价，则会导致二次拷贝，并且浪费已经进行过拷贝的转义串。)
-	}
-
-	auto strSecond = EscapeString(strFirst);//二次转义
-	return strSecond;
-}
-*/
-NBT_Type::String ToJsonString(const NBT_Type::String &strRaw)
-{
-	//为空改为引号包围的空字符串
-	if (strRaw.empty())
-	{
-		return MU8STR("{\"text\":\"\"}");
-	}
-
-	//不为空则添加双引号并转义内容
-	auto strTemp = EscapeString(strRaw);
-
-	NBT_Type::String strJson{};
-	//预分配
-	constexpr size_t szBaseTextSize = MU8STRV("{\"text\":\"\"}").size();//MSVC在连续临时量求值发生崩溃，此处必须首先保存为constexpr
-	strJson.reserve(szBaseTextSize + strTemp.size() * sizeof(*strTemp.data()));//然后在下面进行求值
-
-	//拼接
-	strJson.append(MU8STRV("{\"text\":\""));
-	strJson.append(std::move(strTemp));
-	strJson.append(MU8STRV("\"}"));
-
-	//返回转义完成的字符串
-	return strJson;
+	return setBoolKeys.contains(key);
 }
 
 bool ProcessTextComponent(NBT_Node &nodeTextComponent, NBT_Type::String &strRawJsonText)
@@ -135,23 +78,13 @@ bool ProcessTextComponent(NBT_Node &nodeTextComponent, NBT_Type::String &strRawJ
 	{
 	case NBT_TAG::String:
 		{
-			strRawJsonText = ToJsonString(GetString(nodeTextComponent));
+			strRawJsonText = NBTJsonHelper::RawStringToJsonString(GetString(nodeTextComponent));
 		}
 		break;
 	case NBT_TAG::Compound:
 		{
-			//因为NBT库序列化不会添加任何转义，转义仅由用户侧完成，所以需要转义后再进行SNBT序列化
 			auto &cpdText = GetCompound(nodeTextComponent);
-
-			//如果存在，那么转义
-			auto pstrText = cpdText.HasString(MU8STR("text"));
-			if (pstrText != NULL)
-			{
-				*pstrText = EscapeString(*pstrText);
-			}
-
-			//最后把转义完成的进行序列化
-			strRawJsonText = NBT_Helper::Serialize<NBT_Helper::DefaultCompoundSort<true>, false, true>(cpdText);
+			strRawJsonText = NBTJsonHelper::JsonSerialize<IsBoolKey>(cpdText);//转化为json字符串（自动转义特殊字符）
 		}
 		break;
 	default:

@@ -7,7 +7,7 @@
 //为了消拷贝，如果未进行映射，那么不会赋值，并返回false，否则赋值返回true
 bool BlockNameMap(const NBT_Type::String &strBlockName, NBT_Type::String& strMappedBlockName, const NBT_Type::Int iV7McDataVersion)
 {
-	std::unordered_map<NBT_Type::String, NBT_Type::String> mapBlockName =
+	static const std::unordered_map<NBT_Type::String, NBT_Type::String> mapBlockName =
 	{
 		{MU8STR("minecraft:short_grass"), MU8STR("minecraft:grass")},
 		{MU8STR("minecraft:iron_chain"), MU8STR("minecraft:chain")},

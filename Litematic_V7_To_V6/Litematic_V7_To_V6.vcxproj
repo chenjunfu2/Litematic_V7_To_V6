@@ -307,6 +307,7 @@
     <ClInclude Include="ItemConversion.hpp" />
     <ClInclude Include="EntityConversion.hpp" />
     <ClInclude Include="ItemMappings.hpp" />
+    <ClInclude Include="JsonSerialize.hpp" />
     <ClInclude Include="LitematicConversion.hpp" />
     <ClInclude Include="LitematicFileConversion.h" />
     <ClInclude Include="TagMappings.hpp" />
