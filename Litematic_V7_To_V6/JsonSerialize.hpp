@@ -85,27 +85,72 @@ public:
 	{
 		NBT_Type::String strEscape{};
 		strEscape.reserve(strRaw.size());//预分配
+
+		using UC = std::make_unsigned_t<std::remove_cvref_t<decltype(strRaw[0])>>;
+		bool bIsC0 = false;
 		for (const auto &it : strRaw)
 		{
-			switch (it)
+			if (bIsC0)
 			{
-			case '\"':
-			case '\\':
-				strEscape.push_back('\\');
-				break;
-				//因为mc会直接处理这些空白字符的原始形式，仅需要手动处理必须的转义
-				/*case '/':
-				case '\b':
-				case '\f':
-				case '\n':
-				case '\r':
-				case '\t':*/
-			default:
-				//不添加转义
-				break;
+				if ((UC)it == (UC)0x80)
+				{
+					strEscape.append(MU8STRV("\\u0000"));
+					bIsC0 = false;
+					continue;
+				}
+				else
+				{
+					strEscape.push_back((UC)0xC0);
+					bIsC0 = false;
+				}
 			}
 
-			strEscape.push_back(it);
+			switch ((UC)it)
+			{
+			case (UC)'\"':
+			case (UC)'\\':
+				strEscape.push_back('\\');
+				strEscape.push_back(it);
+				break;
+				/*case '/': //此项无必要*/
+			case (UC)'\b':
+				strEscape.append(MU8STRV("\\b"));
+				break;
+			case (UC)'\f':
+				strEscape.append(MU8STRV("\\f"));
+				break;
+			case (UC)'\n':
+				strEscape.append(MU8STRV("\\n"));
+				break;
+			case (UC)'\r':
+				strEscape.append(MU8STRV("\\r"));
+				break;
+			case (UC)'\t':
+				strEscape.append(MU8STRV("\\t"));
+				break;
+			case (UC)0xC0:
+				bIsC0 = true;
+				continue;
+				break;
+			default:
+				if ((UC)it > (UC)0x1F)
+				{
+					strEscape.push_back(it);
+				}
+				else//0x00~0x1F
+				{
+					strEscape.append(MU8STRV("\\u00"));
+					strEscape.push_back(MU8STRV("0123456789ABCDEF")[((UC)it >> 4) & 0x0F]);
+					strEscape.push_back(MU8STRV("0123456789ABCDEF")[((UC)it >> 0) & 0x0F]);
+				}
+				break;
+			}
+		}
+
+		if (bIsC0)
+		{
+			strEscape.push_back((UC)0xC0);
+			bIsC0 = false;
 		}
 
 		return strEscape;
