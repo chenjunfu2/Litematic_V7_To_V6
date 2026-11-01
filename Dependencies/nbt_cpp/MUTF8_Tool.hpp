@@ -394,7 +394,7 @@ private:
 			szIndex += 1;
 		}
 
-		constexpr const ARRAY_TYPE &GetData(void) const noexcept
+		constexpr const ARRAY_TYPE &GetData(void) const & noexcept
 		{
 			return arrData;
 		}
@@ -423,7 +423,7 @@ private:
 			return *this;
 		}
 
-		constexpr const String &GetData(void) const noexcept
+		constexpr const String &GetData(void) const & noexcept
 		{
 			return *this;
 		}

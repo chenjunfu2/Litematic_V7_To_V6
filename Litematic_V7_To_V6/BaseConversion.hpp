@@ -82,21 +82,6 @@ bool Uuid2String(NBT_Type::IntArray &iaUuidList, NBT_Type::String &strUuid)
 如果一个文本组件所有样式均为默认值、不包含子组件且为纯文本组件，游戏在序列化或持久化此组件时会直接使用字符串格式而非复合标签格式。
 */
 
-bool IsBoolKey(const NBT_Type::String &key)
-{
-	static const std::unordered_set<NBT_Type::String> setBoolKeys =
-	{
-		MU8STR("bold"),
-		MU8STR("italic"),
-		MU8STR("underlined"),
-		MU8STR("strikethrough"),
-		MU8STR("obfuscated"),
-		MU8STR("interpret"),
-	};
-
-	return setBoolKeys.contains(key);
-}
-
 void ProcessClickEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	static const std::unordered_map<NBT_Type::String, NBT_Type::String> mapActionType =
@@ -422,6 +407,22 @@ void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeT
 		}
 		break;
 	}
+}
+
+
+bool IsBoolKey(const NBT_Type::String &key)
+{
+	static const std::unordered_set<NBT_Type::String> setBoolKeys =
+	{
+		MU8STR("bold"),
+		MU8STR("italic"),
+		MU8STR("underlined"),
+		MU8STR("strikethrough"),
+		MU8STR("obfuscated"),
+		MU8STR("interpret"),
+	};
+
+	return setBoolKeys.contains(key);
 }
 
 //调用语义，如果目标只接受字符串，那么直接完整调用，否则如果目标本身是字符串列表，就应该外部解包后挨个调用
