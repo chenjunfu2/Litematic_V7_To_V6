@@ -312,19 +312,26 @@ void ProcessHoverEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 			
 			if (pName != NULL)
 			{
-				if (pName->IsString())
+				switch (pName->GetTag())
 				{
-					cpdV6Contents.PutString(MU8STR("name"), pName->GetString());
-				}
-				else if (pName->IsCompound())
-				{
-					NBT_Node nodeV6TextComponent{};
-					ProcessTextComponentConversion(*pName, nodeV6TextComponent, iV7McDataVersion);
-					cpdV6Contents.Put(MU8STR("name"), std::move(nodeV6TextComponent));
-				}
-				else
-				{
-					//ignored
+				case NBT_TAG::String:
+					{
+						cpdV6Contents.PutString(MU8STR("name"), pName->GetString());
+					}
+					break;
+				case NBT_TAG::Compound:
+				case NBT_TAG::List:
+					{
+						NBT_Node nodeV6TextComponent{};
+						ProcessTextComponentConversion(*pName, nodeV6TextComponent, iV7McDataVersion);
+						cpdV6Contents.Put(MU8STR("name"), std::move(nodeV6TextComponent));
+					}
+					break;
+				default:
+					{
+						//ignored
+					}
+					break;
 				}
 			}
 
@@ -359,6 +366,8 @@ void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeT
 		{ MU8STR("click_event"),	std::bind(DefaultProcess,	MU8STR("clickEvent"),		ProcessClickEvent,					_1, _2, _3, _4)	},
 		{ MU8STR("hover_event"),	std::bind(DefaultProcess,	MU8STR("hoverEvent"),		ProcessHoverEvent,					_1, _2, _3, _4)	},
 		{ MU8STR("extra"),			std::bind(DefaultProcess,	MU8STR("extra"),			ProcessTextComponentConversion,		_1, _2, _3, _4)	},//此处递归，因为extra是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("with"),			std::bind(DefaultProcess,	MU8STR("with"),				ProcessTextComponentConversion,		_1, _2, _3, _4)	},//此处递归，因为with是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("separator"),		std::bind(DefaultProcess,	MU8STR("separator"),		ProcessTextComponentConversion,		_1, _2, _3, _4)	},//此处递归，因为separator是递归结构，内部可以继续存储TextComponentTag
 	};
 
 	auto *ProcessAll =//使用+退化为函数指针
@@ -687,13 +696,7 @@ void ProcessPatterns(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::I
 
 void ProcessTextComponentTag(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
-	if (!nodeV7Tag.IsString() && !nodeV7Tag.IsCompound())
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	//1.21.4及以前无需修改
+	//1.21.4及以前无需修改（具体问题参考ProcessTextComponentListTag中的说明）
 	if (iV7McDataVersion <= MC_1_21_4_MINECRAFT_DATA_VERSION)
 	{
 		nodeV6Tag = std::move(nodeV7Tag);
@@ -709,6 +712,42 @@ void ProcessTextComponentTag(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT
 	}
 
 	nodeV6Tag.SetString(std::move(strJsonTemp));
+
+	return;
+}
+
+//lore专用
+void ProcessTextComponentListTag(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+{
+	//1.21.4及以前无需修改（实际上1.21.4之前，虽然还是json字符串，但是内部部分key已经部分根据1.20.5+的nbt规则修改了，如果需要
+	//严格映射，必须写json反解析器到nbt，然后重新递归传入ProcessTextComponent之类的例程，我*你*的mojang，劳资不搞了，此处直接忽略！
+	if (iV7McDataVersion <= MC_1_21_4_MINECRAFT_DATA_VERSION)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	//1.21.4后修改
+	if (!nodeV7Tag.IsList())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &listV7 = nodeV7Tag.GetList();
+	auto &listV6 = nodeV6Tag.SetList();
+
+	for (auto &it : listV7)
+	{
+		NBT_Type::String strJsonTemp{};
+		if (!ProcessTextComponent(it, strJsonTemp, iV7McDataVersion))//目标只能是字符串，不论是str、cpd、list都直接序列化为字符串
+		{
+			listV6.AddBack(std::move(it));
+			continue;
+		}
+
+		listV6.AddBackString(std::move(strJsonTemp));
+	}
 
 	return;
 }
