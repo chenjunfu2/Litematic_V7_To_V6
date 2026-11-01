@@ -408,6 +408,7 @@ void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &no
 			else
 			{
 				pRaw = &page;
+				pFiltered = NULL;
 			}
 
 			NBT_Type::String strJson{};
