@@ -93,12 +93,50 @@ void ProcessClickEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 	auto &cpdV7ClickEvent = nodeV7Tag.GetCompound();
 
 	//从action匹配
-	auto *pAction = cpdV7ClickEvent.HasString(MU8STRV("acrtion"));
+	auto *pAction = cpdV7ClickEvent.HasString(MU8STRV("action"));
+	if (pAction == NULL)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
+	//找不到：未知字段、新字段等情况，不处理，原始保留
+	auto itMappedActionTypeKey = mapActionType.find(*pAction);
+	if (itMappedActionTypeKey == mapActionType.end())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
+	//找到，不存在，原始保留，不处理
+	auto pActionValue = cpdV7ClickEvent.Has(itMappedActionTypeKey->second);
+	if (pActionValue == NULL)
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
+	NBT_Type::String strValue{};
 
+	//目前只可能是这两种类型，否则失败
+	if (pActionValue->IsString())
+	{
+		strValue = std::move(pActionValue->GetString());
+	}
+	else if (pActionValue->IsInt())
+	{
+		strValue = (NBT_Type::String)std::format("{:d}", pActionValue->GetInt());
+	}
+	else
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
+	//全部验证通过，转换
+	auto &cpdV6ClickEvent = nodeV6Tag.SetCompound();
+	cpdV6ClickEvent.PutString(MU8STRV("action"), std::move(*pAction));
+	cpdV6ClickEvent.PutString(MU8STRV("value"), std::move(strValue));
 }
 
 void ProcessHoverEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
