@@ -264,29 +264,44 @@ public:
 	//简化map查询
 
 	/// @brief 根据标签名获取对应的NBT值
+	/// @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
 	/// @param sTagName 要查找的标签名
 	/// @return 标签名对应的值的引用
-	/// @note 如果标签不存在则抛出异常，具体请参考std::unordered_map关于at的说明
-	typename Compound::mapped_type &Get(const typename Compound::key_type &sTagName)
+	/// @note 如果标签不存在则抛出异常
+	template <NBT_String_Helper::Is_NBT_String_Or_View K>
+	typename Compound::mapped_type &Get(const K &sTagName)
 	{
-		return Compound::at(sTagName);
+		auto find = Compound::find(sTagName);//cpp26起at才有is_transparent重载，20使用find+异常替代
+		if (find == Compound::end())
+		{
+			throw std::out_of_range("invalid NBT_Compound::Get key");
+		}
+		return find->second;
 	}
 
 	/// @brief 根据标签名获取对应的NBT值（常量版本）
+	/// @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
 	/// @param sTagName 要查找的标签名
 	/// @return 标签名对应的值的常量引用
-	/// @note 如果标签不存在则抛出异常，具体请参考std::unordered_map关于at的说明
-	const typename Compound::mapped_type &Get(const typename Compound::key_type &sTagName) const
+	/// @note 如果标签不存在则抛出异常
+	template <NBT_String_Helper::Is_NBT_String_Or_View K>
+	const typename Compound::mapped_type &Get(const K &sTagName) const
 	{
-		return Compound::at(sTagName);
+		auto find = Compound::find(sTagName);//cpp26起at才有is_transparent重载，20使用find+异常替代
+		if (find == Compound::end())
+		{
+			throw std::out_of_range("invalid NBT_Compound::Get key");
+		}
+		return find->second;
 	}
 
-
 	/// @brief 搜索标签是否存在
+	/// @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
 	/// @param sTagName 要搜索的标签名
 	/// @return 如果找到，则返回指向标签名对应的值的指针，否则返回nullptr指针
 	/// @note 标签不存在时不会抛出异常，适用于检查性访问
-	typename Compound::mapped_type *Has(const typename Compound::key_type &sTagName) noexcept
+	template <NBT_String_Helper::Is_NBT_String_Or_View K>
+	typename Compound::mapped_type *Has(const K &sTagName) noexcept
 	{
 		auto find = Compound::find(sTagName);
 		return find == Compound::end()
@@ -295,10 +310,12 @@ public:
 	}
 
 	/// @brief 搜索标签是否存在（常量版本）
+	/// @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
 	/// @param sTagName 要搜索的标签名
 	/// @return 如果找到，则返回指向标签名对应的值的常量指针，否则返回nullptr指针
 	/// @note 标签不存在时不会抛出异常，适用于检查性访问
-	const typename Compound::mapped_type *Has(const typename Compound::key_type &sTagName) const noexcept
+	template <NBT_String_Helper::Is_NBT_String_Or_View K>
+	const typename Compound::mapped_type *Has(const K &sTagName) const noexcept
 	{
 		auto find = Compound::find(sTagName);
 		return find == Compound::end()
@@ -310,7 +327,7 @@ public:
 	//使用完美转发，不丢失引用、右值信息
 
 	/// @brief 插入或替换键值对
-	/// @tparam K 标签名类型，必须可构造为key_type
+	/// @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束，或可构造为key_type
 	/// @tparam V 标签值类型，必须可构造为mapped_type
 	/// @param sTagName 标签名
 	/// @param vTagVal 标签名对应的值
@@ -318,14 +335,15 @@ public:
 	/// @note 允许插入End类型的值，这样设计的目的在于允许处理过程出现特殊值，
 	/// 请确保输出前处理完毕所有End类型，否则通过NBT_Write输出时会忽略这些值并生成警告
 	template <typename K, typename V>
-	requires std::constructible_from<typename Compound::key_type, K &&> &&std::constructible_from<typename Compound::mapped_type, V &&>
+	requires (NBT_String_Helper::Is_NBT_String_Or_View<K> || std::constructible_from<typename Compound::key_type, K &&>) &&
+		std::constructible_from<typename Compound::mapped_type, V &&>
 	std::pair<typename Compound::iterator, bool> Put(K &&sTagName, V &&vTagVal)
 	{
 		return Compound::insert_or_assign(std::forward<K>(sTagName), std::forward<V>(vTagVal));
 	}
 
 	/// @brief 原位构造键值对
-	/// @tparam K 标签名类型，必须可构造为key_type
+	/// @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束，或可构造为key_type
 	/// @tparam V 标签值类型，必须可构造为mapped_type
 	/// @param sTagName 标签名
 	/// @param vTagVal 标签名对应的值
@@ -333,16 +351,19 @@ public:
 	/// @note 允许插入End类型的值，这样设计的目的在于允许处理过程出现特殊值，
 	/// 请确保输出前处理完毕所有End类型，否则通过NBT_Write输出时会忽略这些值并生成警告
 	template <typename K, typename V>
-	requires std::constructible_from<typename Compound::key_type, K &&> &&std::constructible_from<typename Compound::mapped_type, V &&>
+	requires (NBT_String_Helper::Is_NBT_String_Or_View<K> || std::constructible_from<typename Compound::key_type, K &&>) &&
+		std::constructible_from<typename Compound::mapped_type, V &&>
 	std::pair<typename Compound::iterator, bool> TryPut(K &&sTagName, V &&vTagVal)
 	{
 		return Compound::try_emplace(std::forward<K>(sTagName), std::forward<V>(vTagVal));
 	}
 
 	/// @brief 删除指定标签
+	/// @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
 	/// @param sTagName 要删除的标签名
 	/// @return 是否成功删除（标签存在且被删除返回true，否则返回false）
-	bool Remove(const typename Compound::key_type &sTagName)
+	template <NBT_String_Helper::Is_NBT_String_Or_View K>
+	bool Remove(const K &sTagName)
 	{
 		return Compound::erase(sTagName) != 0;//返回1即为成功，否则为0，标准库：返回值为删除的元素数（0 或 1）。
 	}
@@ -387,9 +408,11 @@ public:
 	}
 
 	/// @brief 检查是否包含指定标签
+	/// @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
 	/// @param sTagName 要检查的标签名
 	/// @return 如果包含指定标签返回true，否则返回false
-	bool Contains(const typename Compound::key_type &sTagName) const noexcept
+	template <NBT_String_Helper::Is_NBT_String_Or_View K>
+	bool Contains(const K &sTagName) const noexcept
 	{
 		return Compound::contains(sTagName);
 	}
@@ -415,11 +438,13 @@ public:
 #define TYPE_GET_FUNC(type)\
 /**
  @brief 检查是否包含指定标签名的 type 类型数据
+ @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
  @param sTagName 要检查的标签名
  @return 如果包含指定标签名，且对应的值的类型匹配，则返回true，否则返回false
  @note 同时检查标签存在性和值类型
  */\
-bool Contains##type(const typename Compound::key_type &sTagName) const\
+template <NBT_String_Helper::Is_NBT_String_Or_View K>\
+bool Contains##type(const K &sTagName) const noexcept\
 {\
 	auto *p = Has(sTagName);\
 	return p != nullptr && p->Is##type();\
@@ -427,35 +452,39 @@ bool Contains##type(const typename Compound::key_type &sTagName) const\
 \
 /**
  @brief 获取指定标签名的 type 类型数据（常量版本）
+ @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
  @param sTagName 标签名
  @return type 类型数据的常量引用
- @note 如果标签不存在或类型不匹配则抛出异常，
- 具体请参考std::unordered_map关于at的说明与std::get的说明
+ @note 如果标签不存在或类型不匹配则抛出异常
  */\
-const typename NBT_Type::type &Get##type(const typename Compound::key_type & sTagName) const\
+template <NBT_String_Helper::Is_NBT_String_Or_View K>\
+const typename NBT_Type::type &Get##type(const K & sTagName) const\
 {\
-	return Compound::at(sTagName).Get##type();\
+	return Get(sTagName).Get##type();\
 }\
 \
 /**
  @brief 获取指定标签名的 type 类型数据
+ @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
  @param sTagName 标签名
  @return type 类型数据的引用
- @note 如果标签不存在或类型不匹配则抛出异常，
- 具体请参考std::unordered_map关于at的说明与std::get的说明
+ @note 如果标签不存在或类型不匹配则抛出异常
  */\
-typename NBT_Type::type &Get##type(const typename Compound::key_type & sTagName)\
+template <NBT_String_Helper::Is_NBT_String_Or_View K>\
+typename NBT_Type::type &Get##type(const K & sTagName)\
 {\
-	return Compound::at(sTagName).Get##type();\
+	return Get(sTagName).Get##type();\
 }\
 \
 /**
  @brief 安全检查并获取指定标签名的 type 类型数据（常量版本）
+ @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
  @param sTagName 标签名
  @return 如果存在且对应值的类型为 type 则返回指向数据的常量指针，否则返回nullptr
  @note 标签不存在或类型不为 type 时不会抛出异常，适用于检查性访问
  */\
-const typename NBT_Type::type *Has##type(const typename Compound::key_type & sTagName) const noexcept\
+template <NBT_String_Helper::Is_NBT_String_Or_View K>\
+const typename NBT_Type::type *Has##type(const K & sTagName) const noexcept\
 {\
 	auto *p = Has(sTagName);\
 	return p != nullptr\
@@ -465,11 +494,13 @@ const typename NBT_Type::type *Has##type(const typename Compound::key_type & sTa
 \
 /**
  @brief 安全检查并获取指定标签名的 type 类型数据
+ @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束
  @param sTagName 标签名
  @return 如果存在且对应值的类型为 type 则返回指向数据的指针，否则返回nullptr
  @note 标签不存在或类型不为 type 时不会抛出异常，适用于检查性访问
  */\
-typename NBT_Type::type *Has##type(const typename Compound::key_type & sTagName) noexcept\
+template <NBT_String_Helper::Is_NBT_String_Or_View K>\
+typename NBT_Type::type *Has##type(const K & sTagName) noexcept\
 {\
 	auto *p = Has(sTagName);\
 	return p != nullptr\
@@ -479,7 +510,7 @@ typename NBT_Type::type *Has##type(const typename Compound::key_type & sTagName)
 
 	/// @name 针对每种类型提供一个方便使用的函数，由宏批量生成
 	/// @brief 具体作用说明：
-	/// - Get开头+类型名的函数：直接获取指定标签名且对应类型的引用，异常由std::unordered_map的at与std::get具体实现决定
+	/// - Get开头+类型名的函数：直接获取指定标签名且对应类型的引用，部分函数可能在特定情况下抛出异常
 	/// - Has开头 + 类型名的函数：判断指定标签名是否存在，且标签名对应的类型是否是指定类型，都符合则返回对应指针，否则返回nullptr指针
 	/// @{
 
@@ -507,7 +538,7 @@ typename NBT_Type::type *Has##type(const typename Compound::key_type & sTagName)
 #define TYPE_PUT_FUNC(type)\
 /**
  @brief 插入或替换 type 类型的键值对（拷贝）
- @tparam K 标签名类型，必须可构造为key_type
+ @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束，或可构造为key_type
  @param sTagName 标签名
  @param vTagVal 要插入的 type 类型值
  @return 包含迭代器和bool值的pair，迭代器指向插入或替换的元素，bool值为true则执行了插入，否则执行了替换
@@ -515,7 +546,7 @@ typename NBT_Type::type *Has##type(const typename Compound::key_type & sTagName)
  请确保输出前处理完毕所有End类型，否则通过NBT_Write输出时会忽略这些值并生成警告
  */\
 template <typename K>\
-requires std::constructible_from<typename Compound::key_type, K &&>\
+requires NBT_String_Helper::Is_NBT_String_Or_View<K> || std::constructible_from<typename Compound::key_type, K &&>\
 std::pair<typename Compound::iterator, bool> Put##type(K &&sTagName, const typename NBT_Type::type &vTagVal)\
 {\
 	return Put(std::forward<K>(sTagName), vTagVal);\
@@ -523,7 +554,7 @@ std::pair<typename Compound::iterator, bool> Put##type(K &&sTagName, const typen
 \
 /**
  @brief 插入或替换 type 类型的键值对（移动）
- @tparam K 标签名类型，必须可构造为key_type
+ @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束，或可构造为key_type
  @param sTagName 标签名
  @param vTagVal 要插入的 type 类型值
  @return 包含迭代器和bool值的pair，迭代器指向插入或替换的元素，bool值为true则执行了插入，否则执行了替换
@@ -531,7 +562,7 @@ std::pair<typename Compound::iterator, bool> Put##type(K &&sTagName, const typen
  请确保输出前处理完毕所有End类型，否则通过NBT_Write输出时会忽略这些值并生成警告
  */\
 template <typename K>\
-requires std::constructible_from<typename Compound::key_type, K &&>\
+requires NBT_String_Helper::Is_NBT_String_Or_View<K> || std::constructible_from<typename Compound::key_type, K &&>\
 std::pair<typename Compound::iterator, bool> Put##type(K &&sTagName, typename NBT_Type::type &&vTagVal)\
 {\
 	return Put(std::forward<K>(sTagName), std::move(vTagVal));\
@@ -539,7 +570,7 @@ std::pair<typename Compound::iterator, bool> Put##type(K &&sTagName, typename NB
 \
  /**
  @brief 尝试插入 type 类型的键值对（拷贝）
- @tparam K 标签名类型，必须可构造为key_type
+ @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束，或可构造为key_type
  @param sTagName 标签名
  @param vTagVal 要插入的 type 类型值
  @return 包含迭代器和bool值的pair，迭代器指向插入或替换的元素，bool值为true则执行了插入，否则键已存在，不会进行拷贝或移动
@@ -547,7 +578,7 @@ std::pair<typename Compound::iterator, bool> Put##type(K &&sTagName, typename NB
  请确保输出前处理完毕所有End类型，否则通过NBT_Write输出时会忽略这些值并生成警告
  */\
 template <typename K>\
-requires std::constructible_from<typename Compound::key_type, K &&>\
+requires NBT_String_Helper::Is_NBT_String_Or_View<K> || std::constructible_from<typename Compound::key_type, K &&>\
 std::pair<typename Compound::iterator, bool> TryPut##type(K &&sTagName, const typename NBT_Type::type &vTagVal)\
 {\
 	return TryPut(std::forward<K>(sTagName), vTagVal);\
@@ -555,7 +586,7 @@ std::pair<typename Compound::iterator, bool> TryPut##type(K &&sTagName, const ty
 \
 /**
  @brief 尝试插入 type 类型的键值对（移动）
- @tparam K 标签名类型，必须可构造为key_type
+ @tparam K 标签名类型，必须满足Is_NBT_String_Or_View约束，或可构造为key_type
  @param sTagName 标签名
  @param vTagVal 要插入的 type 类型值
  @return 包含迭代器和bool值的pair，迭代器指向插入或替换的元素，bool值为true则执行了插入，否则键已存在，不会进行拷贝或移动
@@ -563,7 +594,7 @@ std::pair<typename Compound::iterator, bool> TryPut##type(K &&sTagName, const ty
  请确保输出前处理完毕所有End类型，否则通过NBT_Write输出时会忽略这些值并生成警告
  */\
 template <typename K>\
-requires std::constructible_from<typename Compound::key_type, K &&>\
+requires NBT_String_Helper::Is_NBT_String_Or_View<K> || std::constructible_from<typename Compound::key_type, K &&>\
 std::pair<typename Compound::iterator, bool> TryPut##type(K &&sTagName, typename NBT_Type::type &&vTagVal)\
 {\
 	return TryPut(std::forward<K>(sTagName), std::move(vTagVal));\

@@ -19,6 +19,8 @@ template <typename Array>
 class NBT_Array;
 template <typename String, typename StringView>
 class NBT_String;
+struct NBT_String_Transparent_Hash;
+struct NBT_String_Transparent_Equal;
 template <typename List>
 class NBT_List;
 template <typename Compound>
@@ -70,7 +72,7 @@ public:
 
 	//集合类型
 	//挂在序列下的内容都通过map绑定名称
-	using Compound		= NBT_Compound<std::unordered_map<String, NBT_Node>>;	///< 集合类型，可存储任意不同的NBT类型，通过名称映射值
+	using Compound		= NBT_Compound<std::unordered_map<String, NBT_Node, NBT_String_Transparent_Hash, NBT_String_Transparent_Equal>>;	///< 集合类型，可存储任意不同的NBT类型，通过名称映射值
 
 	/// @}
 
@@ -306,7 +308,7 @@ public:
 
 	/// @brief 判断类型是否为NBT String类型
 	/// @tparam T 需要检查的类型（自动移除CV限定与引用）
-	/// @return 如果类型是String，则返回true，否则返回false
+	/// @return 如果类型是NBT String，则返回true，否则返回false
 	template <typename T>
 	static constexpr bool IsStringType_V =
 		std::is_same_v<std::remove_cvref_t<T>, String>;

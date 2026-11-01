@@ -74,7 +74,31 @@ bool IsBoolKey(const NBT_Type::String &key)
 
 void ProcessClickEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
-	static_assert(false, "TODO!");
+	static const std::unordered_map<NBT_Type::String, NBT_Type::String> mapActionType =
+	{
+		{ MU8STR("open_url"),			MU8STR("url") },
+		{ MU8STR("open_file"),			MU8STR("path") },
+		{ MU8STR("run_command"),		MU8STR("command") },
+		{ MU8STR("suggest_command"),	MU8STR("command") },
+		{ MU8STR("copy_to_clipboard"),	MU8STR("value") },
+		{ MU8STR("change_page"),		MU8STR("page") },
+	};
+
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
+
+	auto &cpdV7ClickEvent = nodeV7Tag.GetCompound();
+
+	//从action匹配
+	auto *pAction = cpdV7ClickEvent.HasString(MU8STRV("acrtion"));
+
+
+
+
+
 }
 
 void ProcessHoverEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
@@ -141,8 +165,10 @@ void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeT
 		break;
 	case NBT_TAG::String:
 	default://unknown type
-		nodeTextConversion = std::move(nodeTextComponent);
-		return;
+		{
+			nodeTextConversion = std::move(nodeTextComponent);
+			return;
+		}
 		break;
 	}
 }

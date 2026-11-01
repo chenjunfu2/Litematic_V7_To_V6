@@ -2,6 +2,7 @@
 
 #include <string>
 #include <array>
+#include <concepts>
 
 #include "MUTF8_Tool.hpp"
 
@@ -278,15 +279,34 @@ public:
 	{}
 
 
+	/// @brief 直接从当前对象获取视图
+	/// @return 当前对象的视图View
+	/// @note 在修改本对象，或离开作用域后，不应该再使用此函数原先返回的view类型。
+	View GetView(void) const & noexcept
+	{
+		return View{ *this };
+	}
+
+	/// @brief 删除临时对象转化为视图的方式，防止从临时对象构造导致悬空指针
+	/// @return 当前对象的视图View
+	/// @note 一定程度上的防御，防止用户疏忽，但是无法完全杜绝极端情况。
+	View GetView(void) const &&noexcept = delete;
+
 
 	/// @brief 直接从当前对象获取char类型的视图
 	/// @return char类型的视图View
 	/// @note 仅用于方便部分只支持char类型字符串的库使用，如果需要转换到其它字符编码，请调用本类的转换API。
 	/// 在修改本对象，或离开作用域后，不应该再使用此函数原先返回的view类型。
-	std::basic_string_view<char> GetCharTypeView(void) const noexcept
+	std::basic_string_view<char> GetCharTypeView(void) const & noexcept
 	{
 		return std::basic_string_view<char>((const char *)String::data(), String::size());
 	}
+
+	/// @brief 删除临时对象转化为char类型视图的方式，防止从临时对象构造导致悬空指针
+	/// @return char类型的视图View
+	/// @note 一定程度上的防御，防止用户疏忽，但是无法完全杜绝极端情况。
+	std::basic_string_view<char> GetCharTypeView(void) const &&noexcept = delete;
+
 
 
 	/// @brief 获取底层容器数据的常量引用
@@ -302,6 +322,7 @@ public:
 	{
 		return *this;
 	}
+
 
 
 	/// @brief 转换到UTF-8字符编码，但是返回为char类型而非char8_t类型
@@ -486,3 +507,83 @@ namespace std
 		}
 	};
 }
+
+/// @brief 内部命名空间，提供概念约束
+namespace NBT_String_Helper
+{
+	/// @cond
+
+	template <typename T>
+	struct Is_NBT_String : std::false_type
+	{};
+
+	template <typename String, typename StringView>
+	struct Is_NBT_String<NBT_String<String, StringView>> : std::true_type
+	{};
+
+	template <typename T>
+	inline constexpr bool Is_NBT_String_V = Is_NBT_String<T>::value;
+
+	template <typename T>
+	struct Is_NBT_String_View : std::false_type
+	{};
+
+	template <typename String, typename StringView>
+	struct Is_NBT_String_View<NBT_StringView<String, StringView>> : std::true_type
+	{};
+
+	template <typename T>
+	inline constexpr bool Is_NBT_String_View_V = Is_NBT_String_View<T>::value;
+
+	/// @endcond
+
+	/// @brief 约束类型 T 去除 cv-ref 限定后必须是 NBT_String 或其对应的 View
+	/// @tparam T 需要检查的类型（自动推导，会去除顶层 cv 和引用）
+	/// @note 用于透明哈希和透明比较器的 requires 约束
+	template <typename T>
+	concept Is_NBT_String_Or_View =
+		Is_NBT_String_V<std::remove_cvref_t<T>> ||
+		Is_NBT_String_View_V<std::remove_cvref_t<T>>;
+};
+
+/// @brief 透明哈希函数对象，用于 unordered 容器的异构查找
+struct NBT_String_Transparent_Hash
+{
+	/// @brief 透明哈希标记
+	using is_transparent = void;
+
+	/// @brief 计算满足 Is_NBT_String_Or_View 约束的类型的哈希值
+	/// @tparam T 自动推导的类型（必须是 NBT_String 或其 View 之一）
+	/// @param s 需要计算哈希的对象引用
+	/// @return 哈希值，与对应 NBT_String / View 的 std::hash 特化结果一致
+	template <typename T>
+	requires (NBT_String_Helper::Is_NBT_String_Or_View<T>)
+	std::size_t operator()(const T &s) const
+	{
+		return std::hash<std::basic_string_view<char>>{}(s.GetCharTypeView());
+	}
+};
+
+/// @brief 透明相等比较函数对象，用于 unordered 容器的异构查找
+struct NBT_String_Transparent_Equal
+{
+	/// @brief 透明比较标记
+	using is_transparent = void;
+
+	/// @brief 比较两个满足 Is_NBT_String_Or_View 约束的对象是否相等
+	/// @tparam TL 左操作数的类型（NBT_String 或其 View）
+	/// @tparam TR 右操作数的类型（NBT_String 或其 View）
+	/// @param l 左操作数引用
+	/// @param r 右操作数引用
+	/// @return l == r 的布尔结果
+	template <typename TL, typename TR>
+	requires (
+		NBT_String_Helper::Is_NBT_String_Or_View<TL> &&
+		NBT_String_Helper::Is_NBT_String_Or_View<TR> &&
+		std::equality_comparable_with<TL, TR>
+	)
+	bool operator()(const TL &l, const TR &r) const
+	{
+		return l == r;
+	}
+};

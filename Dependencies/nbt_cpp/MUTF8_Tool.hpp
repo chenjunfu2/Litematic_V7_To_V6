@@ -319,7 +319,7 @@ private:
 			szCounter += 1;
 		}
 
-		constexpr const size_t &GetData(void) const noexcept
+		constexpr const size_t GetData(void) const noexcept
 		{
 			return szCounter;
 		}
@@ -398,6 +398,11 @@ private:
 		{
 			return arrData;
 		}
+
+		constexpr ARRAY_TYPE &&GetData(void) && noexcept
+		{
+			return std::move(arrData);
+		}
 	};
 
 	//魔法类3，给String添加静态转换接口，与原先一致，防止报错
@@ -421,6 +426,11 @@ private:
 		constexpr const String &GetData(void) const noexcept
 		{
 			return *this;
+		}
+
+		constexpr String &&GetData(void) && noexcept
+		{
+			return std::move(*this);
 		}
 	};
 
