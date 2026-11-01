@@ -306,8 +306,8 @@ void ProcessWritableBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &n
 			auto *pRaw = cpdPage.HasString(MU8STR("raw"));
 			if (pRaw == NULL)//页面不可用
 			{
-				--iPageNum;//恢复
-				continue;//未知页面跳过
+				listPages.AddBackString({});
+				continue;//未知页面保持页码
 			}
 			listPages.AddBackString(*pRaw);
 
@@ -324,8 +324,8 @@ void ProcessWritableBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &n
 		}
 		else
 		{
-			--iPageNum;//恢复
-			continue;//未知页面跳过
+			listPages.AddBackString({});
+			continue;//未知页面保持页码
 		}
 	}
 
@@ -373,8 +373,63 @@ void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &no
 		cpdV6TagData.PutInt(MU8STR("generation"), *pGeneration);
 	}
 
-	//处理书的页面，使用书与笔处理过程的代理
-	ProcessWritableBookContent(strV7TagKey, nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
+	//不存在无需处理 
+	auto *pPages = cpdBook.HasList(MU8STRV("pages"));
+	if (pPages == NULL)
+	{
+		return;
+	}
+
+	//处理书的页面
+	if (iV7McDataVersion <= MC_1_21_4_MINECRAFT_DATA_VERSION)
+	{
+		//低版本使用书与笔处理过程的代理，平台格式，字符串处理
+		ProcessWritableBookContent(strV7TagKey, nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
+	}
+	else
+	{
+		//组件格式，解析转换
+		auto &listV6Pages = cpdV6TagData.PutList(MU8STR("pages"), {}).first->second.GetList();
+		NBT_Type::Compound cpdV6Filtered{};
+		NBT_Type::Int iPageIndex = -1;
+		for (auto &page : *pPages)
+		{
+			NBT_Type::String strJson{};
+			++iPageIndex;
+
+			if (!page.IsCompound())
+			{
+				listV6Pages.AddBackString(std::move(strJson));
+				continue;
+			}
+
+			auto &cpdPage = page.GetCompound();
+
+			auto *pRaw = cpdPage.Has(MU8STRV("raw"));
+			if (pRaw == NULL)
+			{
+				listV6Pages.AddBackString(std::move(strJson));
+				continue;
+			}
+
+			(void)ProcessTextComponent(*pRaw, strJson, iV7McDataVersion);//忽略返回值，如果失败写入空
+			listV6Pages.AddBackString(std::move(strJson));
+			
+			auto *pFiltered = cpdPage.Has(MU8STRV("filtered"));//可选
+			if (pFiltered != NULL)
+			{
+				strJson = {};
+				ProcessTextComponent(*pFiltered, strJson, iV7McDataVersion);
+				auto strPageIndex = MUTF8_Tool<uint8_t, char16_t, char>::U8ToMU8(std::to_string(iPageIndex));
+				cpdV6Filtered.PutString(strPageIndex, std::move(strJson));//页面号是key
+			}
+		}
+
+		if (!cpdV6Filtered.Empty())
+		{
+			cpdV6TagData.PutCompound(MU8STR("filtered"), std::move(cpdV6Filtered));
+		}
+	}
 
 	return;
 }
