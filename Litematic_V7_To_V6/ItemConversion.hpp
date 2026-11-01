@@ -389,33 +389,35 @@ void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &no
 	else
 	{
 		//组件格式，解析转换
-		auto &listV6Pages = cpdV6TagData.PutList(MU8STR("pages"), {}).first->second.GetList();
+		NBT_Type::List listV6Pages{};
 		NBT_Type::Compound cpdV6Filtered{};
 		NBT_Type::Int iPageIndex = -1;
 		for (auto &page : *pPages)
 		{
-			NBT_Type::String strJson{};
 			++iPageIndex;
 
-			if (!page.IsCompound())
+			NBT_Node *pRaw = NULL;
+			NBT_Node *pFiltered = NULL;
+
+			if (page.IsCompound() && page.GetCompound().Contains(MU8STRV("raw")))
 			{
-				listV6Pages.AddBackString(std::move(strJson));
-				continue;
+				auto &tmp = page.GetCompound();
+				pRaw = &tmp.Get(MU8STRV("raw"));
+				pFiltered = tmp.Has(MU8STRV("filtered"));//可选
+			}
+			else
+			{
+				pRaw = &page;
 			}
 
-			auto &cpdPage = page.GetCompound();
-
-			auto *pRaw = cpdPage.Has(MU8STRV("raw"));
-			if (pRaw == NULL)
+			NBT_Type::String strJson{};
+			if (pRaw != NULL)
 			{
-				listV6Pages.AddBackString(std::move(strJson));
-				continue;
+				(void)ProcessTextComponent(*pRaw, strJson, iV7McDataVersion);
 			}
 
-			(void)ProcessTextComponent(*pRaw, strJson, iV7McDataVersion);//忽略返回值，如果失败写入空
-			listV6Pages.AddBackString(std::move(strJson));
+			listV6Pages.AddBackString(std::move(strJson));//如果失败或不存在写入空
 			
-			auto *pFiltered = cpdPage.Has(MU8STRV("filtered"));//可选
 			if (pFiltered != NULL)
 			{
 				strJson = {};
@@ -425,9 +427,13 @@ void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &no
 			}
 		}
 
+		if (!listV6Pages.Empty())
+		{
+			cpdV6TagData.PutList(MU8STR("pages"), std::move(listV6Pages));
+		}
 		if (!cpdV6Filtered.Empty())
 		{
-			cpdV6TagData.PutCompound(MU8STR("filtered"), std::move(cpdV6Filtered));
+			cpdV6TagData.PutCompound(MU8STR("filtered_pages"), std::move(cpdV6Filtered));
 		}
 	}
 
