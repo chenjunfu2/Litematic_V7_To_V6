@@ -52,6 +52,8 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int 
 void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion);
 void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag, const NBT_Type::Int iV7McDataVersion);
 void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeTextConversion, const NBT_Type::Int iV7McDataVersion);
+NBT_Type::String MapEntityTypeIdForDisplay(NBT_Type::String &strId, const NBT_Type::Int iV7McDataVersion);
+
 
 bool Uuid2String(NBT_Type::IntArray &iaUuidList, NBT_Type::String &strUuid)
 {
@@ -204,18 +206,25 @@ void ProcessHoverEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 			}
 
 			NBT_Node nodeV6Contents{};
-			if (pValue->IsString())
+			switch (pValue->GetTag())
 			{
-				nodeV6Contents.SetString(std::move(pValue->GetString()));
-			}
-			else if (pValue->IsCompound())//递归到文本组件主根（嵌套）
-			{
-				ProcessTextComponentConversion(*pValue, nodeV6Contents, iV7McDataVersion);
-			}
-			else//必须有，否则失败
-			{
-				nodeV6Tag = std::move(nodeV7Tag);
-				return;
+			case NBT_TAG::String:
+				{
+					nodeV6Contents.SetString(std::move(pValue->GetString()));
+				}
+				break;
+			case NBT_TAG::Compound://递归到文本组件主根（嵌套）
+			case NBT_TAG::List://列表
+				{
+					ProcessTextComponentConversion(*pValue, nodeV6Contents, iV7McDataVersion);
+				}
+				break;
+			default://必须有，否则失败
+				{
+					nodeV6Tag = std::move(nodeV7Tag);
+					return;
+				}
+				break;
 			}
 
 			//准备就绪，一次性插入
@@ -278,15 +287,11 @@ void ProcessHoverEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 				return;
 			}
 
-
-			auto *pName = cpdV7ClickEvent.Has(MU8STRV("name"));//可选
-
-
 			//处理contents
 			NBT_Node nodeV6Contents{};
 			auto &cpdV6Contents = nodeV6Contents.SetCompound();
 
-			//别问为什么映射这么奇怪，问mojang去，无敌了
+			//别问为什么映射这么奇怪，id是uuid，type才是id，name是组件，问mojang去，无敌了
 			if (pUuid->IsString())
 			{
 				cpdV6Contents.PutString(MU8STR("id"), std::move(pUuid->GetString()));
@@ -308,15 +313,16 @@ void ProcessHoverEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 			}
 
 			//前面失败提前返回，此插入必须在之后
-			cpdV6Contents.PutString(MU8STR("type"), std::move(*pId));
+			cpdV6Contents.PutString(MU8STR("type"), MapEntityTypeIdForDisplay(*pId, iV7McDataVersion));
 			
+			auto *pName = cpdV7ClickEvent.Has(MU8STRV("name"));//可选
 			if (pName != NULL)
 			{
 				switch (pName->GetTag())
 				{
 				case NBT_TAG::String:
 					{
-						cpdV6Contents.PutString(MU8STR("name"), pName->GetString());
+						cpdV6Contents.PutString(MU8STR("name"), std::move(pName->GetString()));
 					}
 					break;
 				case NBT_TAG::Compound:

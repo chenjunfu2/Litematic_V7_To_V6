@@ -356,12 +356,25 @@ void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &no
 	{
 		cpdV6TagData.PutString(MU8STR("author"), std::move(*pAuthor));
 	}
-	if (auto *pTitle = cpdBook.HasCompound(MU8STR("title")); pTitle != NULL)
+	if (auto *pTitle = cpdBook.Has(MU8STR("title")); pTitle != NULL)
 	{
-		cpdV6TagData.PutString(MU8STR("title"), MoveOrElse(pTitle->HasString(MU8STR("raw")), MU8STR("")));//必选段
-		if (auto *pFilteredTitle = pTitle->HasString(MU8STR("filtered")); pFilteredTitle != NULL)//可选段
+		if (pTitle->IsCompound())
 		{
-			cpdV6TagData.PutString(MU8STR("filtered_title"), *pFilteredTitle);
+			auto &cpdTitle = pTitle->GetCompound();
+			cpdV6TagData.PutString(MU8STR("title"), MoveOrElse(cpdTitle.HasString(MU8STR("raw")), MU8STR("")));//必选段
+			if (auto *pFilteredTitle = cpdTitle.HasString(MU8STR("filtered")); pFilteredTitle != NULL)//可选段
+			{
+				cpdV6TagData.PutString(MU8STR("filtered_title"), *pFilteredTitle);
+			}
+		}
+		else if (pTitle->IsString())
+		{
+			auto &strTitle = pTitle->GetString();
+			cpdV6TagData.PutString(MU8STR("title"), std::move(strTitle));//bare str
+		}
+		else
+		{
+			//ignore
 		}
 	}
 	if (auto *pResolved = cpdBook.HasByte(MU8STR("resolved")); pResolved != NULL)

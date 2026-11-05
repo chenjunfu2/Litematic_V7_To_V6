@@ -272,6 +272,30 @@ void ProcessIdMappings(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagV
 	return;
 }
 
+NBT_Type::String MapEntityTypeIdForDisplay(NBT_Type::String &strId, const NBT_Type::Int iV7McDataVersion)
+{
+	do
+	{
+		static constexpr auto strvBoatSuffix = MU8STRV("_boat");
+		static constexpr auto strvRaftSuffix = MU8STRV("_raft");
+
+		static constexpr auto strvChestBoatSuffix = MU8STRV("_chest_boat");
+		static constexpr auto strvChestRaftSuffix = MU8STRV("_chest_raft");
+
+		NBT_Type::String::View strvBoatType;
+		if (!ProcessBoatMappings(strId, strId, strvBoatType, strvBoatSuffix, strvChestBoatSuffix) &&
+			!ProcessBoatMappings(strId, strId, strvBoatType, strvRaftSuffix, strvChestRaftSuffix))
+		{
+			break;
+		}
+
+		return std::move(strId);
+	} while (false);
+
+	(void)EntityIdMap(strId, strId, iV7McDataVersion);
+	return std::move(strId);
+}
+
 
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData, const NBT_Type::Int iV7McDataVersion)
 {
