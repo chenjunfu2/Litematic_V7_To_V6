@@ -99,7 +99,7 @@ bool String2Uuid(NBT_Type::String &strUuid, NBT_Type::IntArray &iaUuidList)
 	auto GetCharByte =
 	[](uint32_t &data, MUTF8_Char_Type ch, MUTF8_Char_Type cl) -> bool
 	{
-		static constinit auto charMap = //字符映射值
+		static const constinit auto charMap = //字符映射值
 		[]() -> auto
 		{
 			std::array<uint8_t, std::numeric_limits<MUTF8_Char_Type>::max() + 1> arr{};
@@ -136,7 +136,7 @@ bool String2Uuid(NBT_Type::String &strUuid, NBT_Type::IntArray &iaUuidList)
 	};
 
 	uint32_t u32Uuid[4]{};
-	static constinit auto indexMap = //索引映射
+	static const constinit auto indexMap = //索引映射
 	[]() -> auto
 	{
 		std::array<size_t, 32> arr{};
@@ -168,7 +168,9 @@ bool String2Uuid(NBT_Type::String &strUuid, NBT_Type::IntArray &iaUuidList)
 	//转换到nbt数组
 	iaUuidList.clear();
 	iaUuidList.reserve(4);
-	std::ranges::transform(u32Uuid, std::back_inserter(iaUuidList), [](const uint32_t &u) -> auto { return std::bit_cast<NBT_Type::Int>(u); });
+	std::ranges::transform(u32Uuid, std::back_inserter(iaUuidList),
+		[](const uint32_t &u) -> auto { return std::bit_cast<NBT_Type::Int>(u); }
+	);
 
 	return true;
 }
