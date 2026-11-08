@@ -881,7 +881,6 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:note_block_sound"),			{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("note_block_sound"),		_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:repair_cost"),				{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("RepairCost"),			_1, _2, _3, _4) } },
 
-		{ MU8STR("minecraft:attribute_modifiers"),		{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("AttributeModifiers"),	ProcessAttributes,				_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:bundle_contents"),			{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Items"),				ProcessItems,					_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:enchantments"),				{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Enchantments"),			ProcessEnchantments,			_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:stored_enchantments"),		{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("StoredEnchantments"),	ProcessEnchantments,			_1, _2, _3, _4) } },
@@ -893,6 +892,7 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:unbreakable"),				{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Unbreakable"),			ProcessUnbreakable,				_1, _2, _3, _4) } },
 		{ MU8STR("minecraft:axolotl/variant"),			{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Variant"),				ProcessAxolotlVariant,			_1, _2, _3, _4) } },
 
+		{ MU8STR("minecraft:attribute_modifiers"),		{ false,	UseTagType::V6Tag,			ProcessAttributeModifiers } },
 		{ MU8STR("minecraft:custom_data"),				{ false,	UseTagType::V6Tag,			ProcessCustomData } },
 		{ MU8STR("minecraft:lodestone_tracker"),		{ false,	UseTagType::V6Tag,			ProcessLodestoneTracker } },
 		{ MU8STR("minecraft:potion_contents"),			{ false,	UseTagType::V6Tag,			ProcessPotionContents } },

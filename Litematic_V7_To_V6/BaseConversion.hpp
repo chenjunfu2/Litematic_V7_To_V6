@@ -9,6 +9,7 @@
 #include <functional>
 #include <utility>
 #include <charconv>
+#include <type_traits>
 
 //定义
 #define MC_1_21_4_MINECRAFT_DATA_VERSION 4189
@@ -25,6 +26,57 @@ requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructib
 T MoveOrElse(T *p, V &&d)
 {
 	return p != NULL ? std::move(*p) : std::forward<V>(d);
+}
+
+template<typename SS, typename ST>
+requires
+(
+	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<SS>> &&
+	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<ST>>
+)
+bool TryRenameMove(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Compound &cpdTarget, ST &&strTarget, NBT_TAG tagType = NBT_TAG::ENUM_END)
+{
+	if (NBT_Node *pSources = cpdSource.Has(std::forward<SS>(strSource)); pSources != NULL)
+	{
+		if (tagType != NBT_TAG::ENUM_END && pSources->GetTag() != tagType)
+		{
+			return false;
+		}
+
+		cpdTarget.Put(std::forward<ST>(strTarget), std::move(*pSources));
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+template<typename SS, typename ST, typename F>
+requires
+(
+	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<SS>> &&
+	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<ST>> &&
+	std::is_invocable_v<F, NBT_Node &, NBT_Node &> &&
+	std::same_as<std::invoke_result_t<F, NBT_Node &, NBT_Node &>, bool>
+)// use: [](NBT_Node &v7Val, NBT_Node &v6Val) -> bool {};
+bool TryRenameTransfer(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Compound &cpdTarget, ST &&strTarget, F &&funcTransfer)
+{
+	if (NBT_Node *pSources = cpdSource.Has(std::forward<SS>(strSource)); pSources != NULL)
+	{
+		NBT_Node tmpTarget{};
+		if (!std::invoke(funcTransfer, *pSources, tmpTarget))
+		{
+			return false;
+		}
+
+		cpdTarget.Put(std::forward<ST>(strTarget), std::move(tmpTarget));
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 //实际转换
@@ -99,7 +151,7 @@ bool String2Uuid(NBT_Type::String &strUuid, NBT_Type::IntArray &iaUuidList)
 	auto GetCharByte =
 	[](uint32_t &data, MUTF8_Char_Type ch, MUTF8_Char_Type cl) -> bool
 	{
-		static const constinit auto charMap = //字符映射值
+		static constexpr auto charMap = //字符映射值
 		[]() -> auto
 		{
 			std::array<uint8_t, std::numeric_limits<MUTF8_Char_Type>::max() + 1> arr{};
@@ -136,7 +188,7 @@ bool String2Uuid(NBT_Type::String &strUuid, NBT_Type::IntArray &iaUuidList)
 	};
 
 	uint32_t u32Uuid[4]{};
-	static const constinit auto indexMap = //索引映射
+	static constexpr auto indexMap = //索引映射
 	[]() -> auto
 	{
 		std::array<size_t, 32> arr{};
@@ -572,7 +624,7 @@ bool ProcessTextComponent(NBT_Node &nodeTextComponent, NBT_Type::String &strRawJ
 	return true;
 }
 
-void ProcessAttributeModifiers(NBT_Type::List &listV7Tag, NBT_Type::List &listV6Tag, const NBT_Type::Int iV7McDataVersion)
+void ProcessAttributeModifiers1(NBT_Type::List &listV7Tag, NBT_Type::List &listV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	for (auto &itV7Entry : listV7Tag)
 	{
@@ -620,23 +672,158 @@ void ProcessAttributeModifiers(NBT_Type::List &listV7Tag, NBT_Type::List &listV6
 	}
 }
 
-void ttt(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+enum class HideFlag : NBT_Type::Int
 {
+	ENCHANTMENTS	= 1 << 0,	//附魔名
+	MODIFIERS		= 1 << 1,	//属性修饰符
+	UNBREAKABLE		= 1 << 2,	//无法破坏
+	CAN_DESTROY		= 1 << 3,	//可破坏
+	CAN_PLACE		= 1 << 4,	//可放置
+	ADDITIONAL		= 1 << 5,	//物品自身附加提示
+	DYE				= 1 << 6,	//染色
+	UPGRADES		= 1 << 7,	//盔甲纹饰
+};
 
-	//TODO
-	//TODO:std bind全改模板编译期绑定
-	//TODO:MUSTR尽量全改MU8STRV，NBT库全线支持透明查找
 
+void TrySetHideFlag(NBT_Type::Compound &cpdV7, NBT_Type::Compound &cpdV6, HideFlag tag)
+{
+	if (auto *pShow = cpdV7.HasByte(MU8STRV("show_in_tooltip")); pShow != NULL && *pShow == 0)
+	{
+		auto &iHideFlags = cpdV6.TryPutInt(MU8STRV("HideFlags"), 0).first->second.GetInt();
+		iHideFlags |= std::underlying_type_t<HideFlag>(tag);
+	}
+}
 
+void ProcessModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+{
+	if (!nodeV7Tag.IsCompound())
+	{
+		nodeV6Tag = std::move(nodeV7Tag);
+		return;
+	}
 
+	auto &cpdV7 = nodeV7Tag.GetCompound();
+	auto &cpdV6 = nodeV6Tag.SetCompound();
 
+	
+	TryRenameMove(cpdV7, MU8STRV("name"), cpdV6, MU8STRV("Name"), NBT_TAG::String);
+	TryRenameMove(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"), NBT_TAG::Double);
 
+	TryRenameTransfer(cpdV7, MU8STRV("type"), cpdV6, MU8STRV("AttributeName"), 
+		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+		{
+			if (!v7Val.IsString())
+			{
+				return false;
+			}
 
+			v6Val.SetString(AttributeNameMap(v7Val.GetString()));
+			return true;
+		}
+	);
+	
+	TryRenameTransfer(cpdV7, MU8STRV("uuid"), cpdV6, MU8STRV("UUID"),
+		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+		{
+			if (v7Val.IsString())
+			{
+				NBT_Type::IntArray uuid{};
+				if (!String2Uuid(v7Val.GetString(), uuid))
+				{
+					return false;
+				}
+				v6Val.SetIntArray(std::move(uuid));
+			}
+			else if (v7Val.IsIntArray())
+			{
+				v6Val = std::move(v7Val);
+			}
+			else
+			{
+				return false;
+			}
 
+			return true;
+		}
+	);
 
+	TryRenameTransfer(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
+		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+		{
+			if (!v7Val.IsString())
+			{
+				return false;
+			}
+
+			v6Val.SetInt(AttributeOperationMap(v7Val.GetString()));
+			return true;
+		}
+	);
+
+	TryRenameTransfer(cpdV7, MU8STRV("slot"), cpdV6, MU8STRV("Slot"),
+		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+		{
+			if (!v7Val.IsString())
+			{
+				return false;
+			}
+
+			//1.20.4-中省略等同于any
+			if (v7Val.GetString() == MU8STRV("any"))
+			{
+				return false;//故意返回false让它不要插入，并非失败
+			}
+
+			v6Val = std::move(v7Val);
+			return true;
+		}
+	);
 
 }
 
+void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+{
+	//V6 Key = MU8STR("AttributeModifiers")
+	//TODO:TryRenameMove等辅助函数，减少代码
+	//TODO:std bind全改模板编译期绑定
+	//TODO:MUSTR尽量全改MU8STRV，NBT库全线支持透明查找
+	NBT_Type::List *pModifiers = NULL;
+
+	if (nodeV7TagVal.IsCompound())
+	{
+		auto &cpdV7 = nodeV7TagVal.GetCompound();
+		pModifiers = cpdV7.HasList(MU8STRV("modifiers"));
+		TrySetHideFlag(cpdV7, cpdV6TagData, HideFlag::MODIFIERS);//可能隐藏，尝试设置flag
+	}
+	else if (nodeV7TagVal.IsList())//列表show默认true，无需设置hide flag
+	{
+		pModifiers = &nodeV7TagVal.GetList();
+	}
+
+	if (pModifiers == NULL)
+	{
+		cpdV6TagData.Put(MU8STR("AttributeModifiers"), std::move(nodeV7TagVal));
+		return;
+	}
+
+	NBT_Type::List listV6Modifiers{};
+	for (auto &it : *pModifiers)
+	{
+		NBT_Node tmpV6Node{};
+		ProcessModifiers(it, tmpV6Node, iV7McDataVersion);
+		listV6Modifiers.AddBack(std::move(tmpV6Node));
+	}
+
+	if (!listV6Modifiers.Empty())
+	{
+		cpdV6TagData.PutList(MU8STR("AttributeModifiers"), std::move(listV6Modifiers));
+	}
+
+	return;
+}
+
+//TODO:改实体专用
+//TODO:nameUUIDFromBytes实现（需要MD5）
 void ProcessAttributes(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsList())
@@ -654,7 +841,7 @@ void ProcessAttributes(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 		{
 			if (strV7Key == MU8STRV("modifiers") && nodeV7Val.IsList())
 			{
-				ProcessAttributeModifiers(nodeV7Val.GetList(), listV6, iV7McDataVersion);
+				ProcessAttributeModifiers1(nodeV7Val.GetList(), listV6, iV7McDataVersion);
 				return;
 			}
 		}
@@ -693,7 +880,7 @@ void ProcessAttributes(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 		if (pModifiers != NULL)
 		{
 			NBT_Type::List listV6Modifiers;
-			ProcessAttributeModifiers(*pModifiers, listV6Modifiers, iV7McDataVersion);
+			ProcessAttributeModifiers1(*pModifiers, listV6Modifiers, iV7McDataVersion);
 			if (!listV6Modifiers.Empty())
 			{
 				cpdV6Entry.PutList(MU8STR("Modifiers"), std::move(listV6Modifiers));
