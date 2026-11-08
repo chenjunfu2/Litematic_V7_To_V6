@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <functional>
 #include <utility>
+#include <charconv>
 
 //定义
 #define MC_1_21_4_MINECRAFT_DATA_VERSION 4189
@@ -72,6 +73,102 @@ bool Uuid2String(NBT_Type::IntArray &iaUuidList, NBT_Type::String &strUuid)
 		"{:08x}-{:04x}-{:04x}-{:04x}-{:012x}",
 		time_low, time_mid, time_hi_and_version, clock_seq, node
 	);
+
+	return true;
+}
+
+bool String2Uuid(NBT_Type::String &strUuid, NBT_Type::IntArray &iaUuidList)
+{
+	if (strUuid.size() != (8 + 1 + (4 + 1) * 3 + 12))
+	{
+		return false;
+	}
+
+	//首先验证连字符
+	//8-4-4-4-12
+	//8 13 18 23
+	auto *pStrUuid = strUuid.data();//只取一次，减少string重复判断缓存模式开销
+	if (pStrUuid[ 8] != '-' ||
+		pStrUuid[13] != '-' ||
+		pStrUuid[18] != '-' ||
+		pStrUuid[23] != '-')
+	{
+		return false;
+	}
+
+	auto GetCharByte =
+	[](uint32_t &data, MUTF8_Char_Type ch, MUTF8_Char_Type cl) -> bool
+	{
+		static constinit auto charMap = //字符映射值
+		[]() -> auto
+		{
+			std::array<uint8_t, std::numeric_limits<MUTF8_Char_Type>::max() + 1> arr{};
+			std::ranges::fill(arr, (uint8_t)-1);
+
+			uint8_t u8Val = 0;
+			for (const auto &it : MU8STRV("0123456789ABCDEFabcdef"))
+			{
+				arr[it] = u8Val++;
+				if (it == 'F')
+				{
+					u8Val = 0x0A;
+				}
+			}
+
+			return arr;
+		}();
+
+		//校验，必须存在映射
+		if (charMap[ch] == (uint8_t)-1 || charMap[cl] == (uint8_t)-1)
+		{
+			return false;
+		}
+
+		//组合字节并放入低位
+		uint8_t byte =
+			charMap[ch] << 4 |//4h
+			charMap[cl] << 0;//4l
+
+		data <<= 8;
+		data |= (uint32_t)byte;
+
+		return true;
+	};
+
+	uint32_t u32Uuid[4]{};
+	static constinit auto indexMap = //索引映射
+	[]() -> auto
+	{
+		std::array<size_t, 32> arr{};
+
+		size_t idx = 0;
+		for (auto &it : arr)
+		{
+			switch (idx)
+			{
+			case 8: case 13:
+			case 18: case 23:
+				++idx;
+			}
+
+			it = idx++;
+		}
+
+		return arr;
+	}();
+
+	for (size_t i = 0; i < 4 * 4; ++i)//16->u32Uuid 通过/4赋值0~3，indexMap通过i*2+0与i*2+1映射索引跑全32字节（跳过'-'）
+	{
+		if (!GetCharByte(u32Uuid[i / 4], pStrUuid[indexMap[i * 2 + 0]], pStrUuid[indexMap[i * 2 + 1]]))
+		{
+			return false;
+		}
+	}
+	
+	//转换到nbt数组
+	iaUuidList.clear();
+	iaUuidList.reserve(4);
+	std::ranges::transform(u32Uuid, std::back_inserter(iaUuidList), [](const uint32_t &u) -> auto { return std::bit_cast<NBT_Type::Int>(u); });
 
 	return true;
 }
