@@ -620,6 +620,23 @@ void ProcessAttributeModifiers(NBT_Type::List &listV7Tag, NBT_Type::List &listV6
 	}
 }
 
+void ttt(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+{
+
+	//TODO
+	//TODO:std bind全改模板编译期绑定
+	//TODO:MUSTR尽量全改MU8STRV，NBT库全线支持透明查找
+
+
+
+
+
+
+
+
+
+}
+
 void ProcessAttributes(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsList())
