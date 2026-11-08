@@ -855,7 +855,6 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		V6Tag,
 		BlockEntityTag,
 		DisplayTag,
-		MergeDataTag,
 	};
 
 	struct MapVal_T
@@ -902,9 +901,9 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:bucket_entity_data"),		{ false,	UseTagType::V6Tag,			ProcessBucketEntityData } },
 
 
-		{ MU8STR("minecraft:tropical_fish/pattern"),	{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
-		{ MU8STR("minecraft:tropical_fish/base_color"),	{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
-		{ MU8STR("minecraft:tropical_fish/pattern_color"),{ false,	UseTagType::MergeDataTag,	ProcessTropicalFishData } },
+		{ MU8STR("minecraft:tropical_fish/pattern"),	{ false,	UseTagType::V6Tag,			ProcessTropicalFishData } },
+		{ MU8STR("minecraft:tropical_fish/base_color"),	{ false,	UseTagType::V6Tag,			ProcessTropicalFishData } },
+		{ MU8STR("minecraft:tropical_fish/pattern_color"),{ false,	UseTagType::V6Tag,			ProcessTropicalFishData } },
 
 		
 		{ MU8STR("minecraft:map_color"),				{ false,	UseTagType::DisplayTag,		std::bind(RenameProcess,	MU8STR("MapColor"),				_1, _2, _3, _4) } },
@@ -983,7 +982,6 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 
 	NBT_Type::Compound cpdBlockEntityTag;
 	NBT_Type::Compound cpdDisplayTag;
-	NBT_Type::Compound cpdMergeDataTag;
 
 	for (auto &[strV7Key, strV7Val] : cpdV7Tag)
 	{
@@ -1010,9 +1008,6 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		case UseTagType::DisplayTag:
 			mapVal.funcProcess(mapVal.bUseItemId ? strItemId : strV7Key, strV7Val, cpdDisplayTag, iV7McDataVersion);
 			break;
-		case UseTagType::MergeDataTag:
-			mapVal.funcProcess(mapVal.bUseItemId ? strItemId : strV7Key, strV7Val, cpdMergeDataTag, iV7McDataVersion);
-			break;
 		}
 	}
 
@@ -1024,11 +1019,6 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 	if (!cpdDisplayTag.Empty())
 	{
 		cpdV6Tag.PutCompound(MU8STR("display"), std::move(cpdDisplayTag));
-	}
-
-	if (!cpdMergeDataTag.Empty())
-	{
-		cpdV6Tag.Merge(std::move(cpdMergeDataTag));
 	}
 
 	return;
