@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <nbt_cpp/NBT_All.hpp>
+#include <util/MD5.hpp>
 #include "TagMappings.hpp"
 #include "ItemMappings.hpp"
 #include "JsonSerialize.hpp"
@@ -107,6 +108,36 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeTextConversion, const NBT_Type::Int iV7McDataVersion);
 NBT_Type::String MapEntityTypeIdForDisplay(NBT_Type::String &strId, const NBT_Type::Int iV7McDataVersion);
 
+
+//等价java.util.UUID.nameUUIDFromBytes
+void nameUuidFromBytes(const void *data, size_t len, NBT_Type::IntArray &iaUuidList)
+{
+	uint8_t digest[16];
+	MD5::FastMd5((const uint8_t *)data, len, digest);//这东西实现搞死我了
+	
+	digest[6] = (uint8_t)((digest[6] & 0x0F) | 0x30);//version = 3
+	digest[8] = (uint8_t)((digest[8] & 0x3F) | 0x80);//variant = IETF
+
+	//直接按大端把 16 字节拆成 4 个 int32（等价于原 msb/lsb 再拆分）
+	auto rd32 = [&](int i) -> int32_t
+	{
+		return 
+			((uint32_t)(digest[i + 0]) << 24) |
+			((uint32_t)(digest[i + 1]) << 16) |
+			((uint32_t)(digest[i + 2]) <<  8) |
+			((uint32_t)(digest[i + 3]) <<  0);
+	};
+
+	//清理预分配
+	iaUuidList.clear();
+	iaUuidList.reserve(4);
+	//插入
+	iaUuidList.push_back(rd32(0));	//msb >> 32
+	iaUuidList.push_back(rd32(4));	//msb
+	iaUuidList.push_back(rd32(8));	//lsb >> 32
+	iaUuidList.push_back(rd32(12));	//lsb
+
+}
 
 bool Uuid2String(NBT_Type::IntArray &iaUuidList, NBT_Type::String &strUuid)
 {
