@@ -110,7 +110,7 @@ NBT_Type::String MapEntityTypeIdForDisplay(NBT_Type::String &strId, const NBT_Ty
 
 
 //等价java.util.UUID.nameUUIDFromBytes
-void nameUuidFromBytes(const void *data, size_t len, NBT_Type::IntArray &iaUuidList)
+void NameUuidFromBytes(const void *data, size_t len, NBT_Type::IntArray &iaUuidList)
 {
 	uint8_t digest[16];
 	MD5::FastMd5((const uint8_t *)data, len, digest);//这东西实现搞死我了
