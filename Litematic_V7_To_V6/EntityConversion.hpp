@@ -218,15 +218,15 @@ bool ProcessBoatMappings(
 }
 
 //特殊，需要保住原始id不能被搞坏，并且在后面用到
-void ProcessIdMappings(const NBT_Type::String &strV7TagKey, const NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+void ProcessIdMappings(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsString())
 	{
-		cpdV6TagData.Put(strV7TagKey, nodeV7TagVal);//"id":nodeV7TagVal
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));//"id":nodeV7TagVal
 		return;
 	}
 
-	const auto &strEntityId = nodeV7TagVal.GetString();
+	auto &strEntityId = nodeV7TagVal.GetString();
 	NBT_Type::String strMappedId{};
 
 	//处理船、筏映射
@@ -260,7 +260,7 @@ void ProcessIdMappings(const NBT_Type::String &strV7TagKey, const NBT_Node &node
 	if (!EntityIdMap(strEntityId, strMappedId, iV7McDataVersion))
 	{
 		//失败直接拷贝
-		cpdV6TagData.Put(strV7TagKey, nodeV7TagVal);//"id":nodeV7TagVal
+		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));//"id":nodeV7TagVal
 		return;
 	}
 	else
@@ -330,11 +330,19 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 		{ MU8STR("HandItems"),			std::bind(DefaultProcess,			MU8STR("HandItems"),		(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 2),		_1, _2, _3, _4) },
 		{ MU8STR("Inventory"),			std::bind(DefaultProcess,			MU8STR("Inventory"),		(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 1),		_1, _2, _3, _4) },
 
-		{ MU8STR("id"),					ProcessIdMappings },
+		{ MU8STR("attributes"),		ProcessAttributes },
 		{ MU8STR("equipment"),			ProcessEntityEquipment },
 		{ MU8STR("drop_chances"),		ProcessEntityDropChances },
 	};
 
+
+	//首先处理id
+	auto *pEntityId = cpdV7EntityData.Has(MU8STR("id"));
+	if(pEntityId != NULL)
+	{
+		cpdV6EntityData.Put(MU8STR("id"), std::move(*pEntityId));//先移入V6以便其它处理例程使用
+		cpdV7EntityData.Remove(MU8STR("id"));//务必删除，防止下方重复使用
+	}
 
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7EntityData)
 	{
@@ -352,8 +360,13 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 		funcProcess(itV7TagKey, itV7TagVal, cpdV6EntityData, iV7McDataVersion);
 	}
 
-	//特殊处理，id已在ProcessIdMappings中保留完好
-	ProcessAttributes(cpdV7EntityData, cpdV6EntityData, iV7McDataVersion);
+
+	//最后处理id映射
+	pEntityId = cpdV6EntityData.Has(MU8STR("id"));
+	if (pEntityId != NULL)
+	{
+		ProcessIdMappings(MU8STR("id"), *pEntityId, cpdV6EntityData, iV7McDataVersion);
+	}
 
 	return;
 }

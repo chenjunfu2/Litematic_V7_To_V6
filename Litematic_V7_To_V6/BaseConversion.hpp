@@ -704,25 +704,19 @@ void ProcessEntityModifiers(NBT_Node &V7Tag, NBT_Node &V6Tag, const NBT_Type::St
 }
 
 void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::String &strEntityId, const NBT_Type::Int iV7McDataVersion);
-void ProcessAttributes(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData, const NBT_Type::Int iV7McDataVersion)
+void ProcessAttributes(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	//attributes -> Attributes
-	auto *pAttributes = cpdV7EntityData.Has(MU8STRV("attributes"));
-	if (pAttributes == NULL)
-	{
-		return;
-	}
-
 	NBT_Type::String strEmpty{};
-	auto *pEntityId = cpdV7EntityData.HasString(MU8STRV("id"));
+	auto *pEntityId = cpdV6TagData.HasString(MU8STRV("id"));
 	if (pEntityId == NULL)
 	{
 		pEntityId = &strEmpty;
 	}
 
 	NBT_Node nodeV6TagVal;
-	ProcessAttributesImpl(*pAttributes, nodeV6TagVal, *pEntityId, iV7McDataVersion);
-	cpdV6EntityData.Put(MU8STR("Attributes"), std::move(nodeV6TagVal));
+	ProcessAttributesImpl(nodeV7TagVal, nodeV6TagVal, *pEntityId, iV7McDataVersion);
+	cpdV6TagData.Put(MU8STR("Attributes"), std::move(nodeV6TagVal));
 };
 
 void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::String &strEntityId, const NBT_Type::Int iV7McDataVersion)
