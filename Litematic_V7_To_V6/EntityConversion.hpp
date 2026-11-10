@@ -185,7 +185,7 @@ void ProcessEntityDropChances(const NBT_Type::String &strV7TagKey, NBT_Node &nod
 }
 
 bool ProcessBoatMappings(
-	NBT_Type::String &strEntityId,
+	const NBT_Type::String &strEntityId,
 	NBT_Type::String &strMappedId,
 	NBT_Type::String::View &strvBoatType,
 	NBT_Type::String::View strvBoatSuffix,
@@ -217,15 +217,16 @@ bool ProcessBoatMappings(
 	return true;
 }
 
-void ProcessIdMappings(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+//特殊，需要保住原始id不能被搞坏，并且在后面用到
+void ProcessIdMappings(const NBT_Type::String &strV7TagKey, const NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsString())
 	{
-		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));//"id":nodeV7TagVal
+		cpdV6TagData.Put(strV7TagKey, nodeV7TagVal);//"id":nodeV7TagVal
 		return;
 	}
 
-	auto &strEntityId = nodeV7TagVal.GetString();
+	const auto &strEntityId = nodeV7TagVal.GetString();
 	NBT_Type::String strMappedId{};
 
 	//处理船、筏映射
@@ -258,13 +259,13 @@ void ProcessIdMappings(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagV
 	//处理其它映射
 	if (!EntityIdMap(strEntityId, strMappedId, iV7McDataVersion))
 	{
-		//失败直接移动
-		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));//"id":nodeV7TagVal
+		//失败直接拷贝
+		cpdV6TagData.Put(strV7TagKey, nodeV7TagVal);//"id":nodeV7TagVal
 		return;
 	}
 	else
 	{
-		//成功使用映射值
+		//成功使用映射值（移动）
 		cpdV6TagData.PutString(strV7TagKey, std::move(strMappedId));//"id":strMappedId
 		return;
 	}
@@ -320,7 +321,6 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 		{ MU8STR("home_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("HomePos"),			_1, _2, _3, _4) },
 		{ MU8STR("sleeping_pos"),		std::bind(ProcessBlockPosExternal,	MU8STR("Sleeping"),			_1, _2, _3, _4) },
 
-		{ MU8STR("attributes"),			std::bind(DefaultProcess,			MU8STR("Attributes"),		ProcessAttributes,	_1, _2, _3, _4) },
 		{ MU8STR("flower_pos"),			std::bind(DefaultProcess,			MU8STR("FlowerPos"),		ProcessBlockPos,	_1, _2, _3, _4) },
 		{ MU8STR("hive_pos"),			std::bind(DefaultProcess,			MU8STR("HivePos"),			ProcessBlockPos,	_1, _2, _3, _4) },
 		{ MU8STR("Item"),				std::bind(DefaultProcess,			MU8STR("Item"),				ProcessSingleItem,	_1, _2, _3, _4) },
@@ -351,6 +351,9 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 		auto &funcProcess = itFind->second;
 		funcProcess(itV7TagKey, itV7TagVal, cpdV6EntityData, iV7McDataVersion);
 	}
+
+	//特殊处理，id已在ProcessIdMappings中保留完好
+	ProcessAttributes(cpdV7EntityData, cpdV6EntityData, iV7McDataVersion);
 
 	return;
 }

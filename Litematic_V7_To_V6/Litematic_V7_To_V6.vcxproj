@@ -314,6 +314,7 @@
     <ClInclude Include="RegionConversion.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="TileEntityConversion.hpp" />
+    <ClInclude Include="UUID_Tools.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

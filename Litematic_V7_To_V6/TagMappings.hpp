@@ -2,6 +2,8 @@
 
 #include <nbt_cpp/NBT_All.hpp>
 #include <unordered_map>
+#include <memory>
+#include "UUID_Tools.hpp"
 
 NBT_Type::String AttributeNameMap(const NBT_Type::String &strAttrName)
 {
@@ -42,6 +44,160 @@ NBT_Type::String AttributeNameMap(const NBT_Type::String &strAttrName)
 
 	auto itFind = mapAttributeName.find(strAttrName);
 	return itFind != mapAttributeName.end() ? itFind->second : strAttrName;
+}
+
+
+struct AttributeInfo
+{
+public:
+	const bool bIsRandomUuid;
+	const union
+	{
+		UUID uuid;
+		NBT_Type::String name;
+	};
+public:
+	AttributeInfo(UUID _uuid)
+		: bIsRandomUuid(false), uuid(std::move(_uuid))
+	{}
+	AttributeInfo(NBT_Type::String _name)
+		: bIsRandomUuid(true), name(std::move(_name))
+	{}
+
+	AttributeInfo(const AttributeInfo &other)
+		: bIsRandomUuid(other.bIsRandomUuid)
+	{
+		if (bIsRandomUuid)
+		{
+			std::construct_at(&name, other.name);
+		}
+		else
+		{
+			std::construct_at(&uuid, other.uuid);
+		}
+	}
+
+	AttributeInfo(AttributeInfo &&other) noexcept
+		: bIsRandomUuid(other.bIsRandomUuid)
+	{
+		if (bIsRandomUuid)
+		{
+			std::construct_at(&name, std::move(other.name));
+		}
+		else
+		{
+			std::construct_at(&uuid, std::move(other.uuid));
+		}
+	}
+
+	AttributeInfo &operator=(const AttributeInfo &other) = delete;
+	AttributeInfo &operator=(AttributeInfo &&other) noexcept = delete;
+
+	~AttributeInfo(void)
+	{
+		if (bIsRandomUuid)
+		{
+			std::destroy_at(&name);
+		}
+		else
+		{
+			std::destroy_at(&uuid);
+		}
+	}
+};
+
+AttributeInfo AttributeInfoMap(const NBT_Type::String &strAttrId, const NBT_Type::String &strEntityId)
+{
+	const static std::unordered_map<NBT_Type::String, AttributeInfo> mapAttributeUUID =
+	{
+		//mapped uuid
+		{ MU8STR("minecraft:creative_mode_block_range"),			String2Uuid<"736565D2-E1A7-403D-A3F8-1AEB3E302542">() },
+		{ MU8STR("minecraft:creative_mode_entity_range"),			String2Uuid<"98491EF6-97B1-4584-AE82-71A8CC85CF73">() },
+		{ MU8STR("minecraft:effect.speed"),							String2Uuid<"91AEAA56-376B-4498-935B-2F7F68070635">() },
+		{ MU8STR("minecraft:effect.slowness"),						String2Uuid<"7107DE5E-7CE8-4030-940E-514C1F160890">() },
+		{ MU8STR("minecraft:effect.haste"),							String2Uuid<"AF8B6E3F-3328-4C0A-AA36-5BA2BB9DBEF3">() },
+		{ MU8STR("minecraft:effect.mining_fatigue"),				String2Uuid<"55FCED67-E92A-486E-9800-B47F202C4386">() },
+		{ MU8STR("minecraft:effect.strength"),						String2Uuid<"648D7064-6A60-4F59-8ABE-C2C23A6DD7A9">() },
+		{ MU8STR("minecraft:effect.jump_boost"),					String2Uuid<"C0105BF3-AEF8-46B0-9EBC-92943757CCBE">() },
+		{ MU8STR("minecraft:effect.weakness"),						String2Uuid<"22653B89-116E-49DC-9B6B-9971489B5BE5">() },
+		{ MU8STR("minecraft:effect.health_boost"),					String2Uuid<"5D6F0BA2-1186-46AC-B896-C61C5CEE99CC">() },
+		{ MU8STR("minecraft:effect.absorption"),					String2Uuid<"EAE29CF0-701E-4ED6-883A-96F798F3DAB5">() },
+		{ MU8STR("minecraft:effect.luck"),							String2Uuid<"03C3C89D-7037-4B42-869F-B146BCB64D2E">() },
+		{ MU8STR("minecraft:effect.unluck"),						String2Uuid<"CC5AF142-2BD2-4215-B636-2605AED11727">() },
+		{ MU8STR("minecraft:evil"),									String2Uuid<"6555BE74-63B3-41F1-A245-77833B3C2562">() },
+		{ MU8STR("minecraft:powder_snow"),							String2Uuid<"1EAF83FF-7207-4596-B37A-D7A07B3EC4CE">() },
+		{ MU8STR("minecraft:sprinting"),							String2Uuid<"662A6B8D-DA3E-4C1C-8813-96EA6097278D">() },
+		{ MU8STR("minecraft:covered"),								String2Uuid<"7E0292F2-9434-48D5-A29F-9583AF7DF27F">() },
+		{ MU8STR("minecraft:suffocating"),							String2Uuid<"9E362924-01DE-4DDD-A2B2-D0F7A405A174">() },
+		{ MU8STR("minecraft:drinking"),								String2Uuid<"5CD17E52-A79A-43D3-A529-90FDE04B181E">() },
+		{ MU8STR("minecraft:armor.boots"),							String2Uuid<"845DB27C-C624-495F-8C9F-6020A9A58B6B">() },
+		{ MU8STR("minecraft:armor.leggings"),						String2Uuid<"D8499B04-0E66-4726-AB29-64469D734E0D">() },
+		{ MU8STR("minecraft:armor.chestplate"),						String2Uuid<"9F3D476D-C118-4544-8365-64846904B48E">() },
+		{ MU8STR("minecraft:armor.helmet"),							String2Uuid<"2AD3F246-FEE1-4E67-B886-69FD380BB150">() },
+		{ MU8STR("minecraft:armor.body"),							String2Uuid<"C1C72771-8B8E-BA4A-ACE0-81A93C8928B2">() },
+		{ MU8STR("minecraft:enchantment.fire_protection"),			String2Uuid<"B572ECD2-AC0C-4071-ABDE-9594AF072A37">() },
+		{ MU8STR("minecraft:enchantment.blast_protection"),			String2Uuid<"40A9968F-5C66-4E2F-B7F4-2EC2F4B3E450">() },
+		{ MU8STR("minecraft:enchantment.respiration"),				String2Uuid<"07A65791-F64D-4E79-86C7-F83932F007EC">() },
+		{ MU8STR("minecraft:enchantment.aqua_affinity"),			String2Uuid<"60B1B7DB-FFFD-4AD0-817C-D6C6A93D8A45">() },
+		{ MU8STR("minecraft:enchantment.depth_strider"),			String2Uuid<"11DC269A-4476-46C0-AFF3-9E17D7EB6801">() },
+		{ MU8STR("minecraft:enchantment.soul_speed"),				String2Uuid<"87F46A96-686F-4796-B035-22E16EE9E038">() },
+		{ MU8STR("minecraft:enchantment.swift_sneak"),				String2Uuid<"92437D00-C3A7-4F2E-8F6C-1F21585D5DD0">() },
+		{ MU8STR("minecraft:enchantment.sweeping_edge"),			String2Uuid<"5D3D087B-DEBE-4037-B53E-D84F3FF51F17">() },
+		{ MU8STR("minecraft:enchantment.efficiency"),				String2Uuid<"3CEB37C0-DB62-46B5-BD02-785457B01D96">() },
+		{ MU8STR("minecraft:base_attack_damage"),					String2Uuid<"CB3F55D3-645C-4F38-A497-9C13A33DB5CF">() },
+		{ MU8STR("minecraft:base_attack_speed"),					String2Uuid<"FA233E1C-4180-4865-B01B-BCCE9785ACA3">() },
+		//{ MU8STR("minecraft:attacking"),							String2Uuid<"020E0DFB-87AE-4653-9556-831010E291A0">() },
+		//{ MU8STR("minecraft:attacking"),							String2Uuid<"49455A49-7EC5-45BA-B886-3B90B23A1718">() },
+		//{ MU8STR("minecraft:baby"),								String2Uuid<"B9766B59-9566-4402-BC1F-2EE2A276D836">() },
+		//{ MU8STR("minecraft:baby"),								String2Uuid<"766BFA64-11F3-11EA-8D71-362B9E155667">() },
+
+		//random uuid
+		{ MU8STR("minecraft:random_spawn_bonus"),					MU8STR("Random spawn bonus") },
+		{ MU8STR("minecraft:zombie_random_spawn_bonus"),			MU8STR("Random zombie-spawn bonus") },
+		{ MU8STR("minecraft:leader_zombie_bonus"),					MU8STR("Leader zombie bonus") },
+		{ MU8STR("minecraft:reinforcement_callee_charge"),			MU8STR("Zombie reinforcement callee charge") },
+		{ MU8STR("minecraft:reinforcement_caller_charge"),			MU8STR("Zombie reinforcement caller charge") },
+	};
+
+
+	auto itFind = mapAttributeUUID.find(strAttrId);
+	if (itFind != mapAttributeUUID.end())
+	{
+		return itFind->second;
+	}
+	
+	//没找到，处理特殊情况
+	if (strAttrId == MU8STR("minecraft:baby"))
+	{
+		const static std::unordered_map<NBT_Type::String, AttributeInfo> mapAttributeUUIDBaby =
+		{
+			{ MU8STR("minecraft:zombie"),			String2Uuid<"B9766B59-9566-4402-BC1F-2EE2A276D836">() },
+			{ MU8STR("minecraft:husk"),				String2Uuid<"B9766B59-9566-4402-BC1F-2EE2A276D836">() },
+			{ MU8STR("minecraft:drowned"),			String2Uuid<"B9766B59-9566-4402-BC1F-2EE2A276D836">() },
+			{ MU8STR("minecraft:zombie_villager"),	String2Uuid<"B9766B59-9566-4402-BC1F-2EE2A276D836">() },
+			{ MU8STR("minecraft:zombified_piglin"),	String2Uuid<"B9766B59-9566-4402-BC1F-2EE2A276D836">() },
+			{ MU8STR("minecraft:piglin"),			String2Uuid<"766BFA64-11F3-11EA-8D71-362B9E155667">() },
+		};
+
+		auto itFind = mapAttributeUUIDBaby.find(strEntityId);
+		return itFind != mapAttributeUUIDBaby.end() ? itFind->second : String2Uuid<"B9766B59-9566-4402-BC1F-2EE2A276D836">();//默认uuid
+	}
+	else if (strAttrId == MU8STR("minecraft:attacking"))
+	{
+		const static std::unordered_map<NBT_Type::String, AttributeInfo> mapAttributeUUIDAttacking =
+		{
+
+			{ MU8STR("minecraft:enderman"),			String2Uuid<"020E0DFB-87AE-4653-9556-831010E291A0">() },
+			{ MU8STR("minecraft:zombified_piglin"),	String2Uuid<"49455A49-7EC5-45BA-B886-3B90B23A1718">() },
+		};
+
+		auto itFind = mapAttributeUUIDAttacking.find(strEntityId);
+		return itFind != mapAttributeUUIDAttacking.end() ? itFind->second : String2Uuid<"020E0DFB-87AE-4653-9556-831010E291A0">();//默认uuid
+	}
+	else
+	{
+		return UUID{};//zero uuid
+	}
 }
 
 NBT_Type::Int AttributeOperationMap(const NBT_Type::String &strOperation)

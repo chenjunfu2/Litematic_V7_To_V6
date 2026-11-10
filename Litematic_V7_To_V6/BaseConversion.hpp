@@ -1,15 +1,14 @@
 ﻿#pragma once
 
 #include <nbt_cpp/NBT_All.hpp>
-#include <util/MD5.hpp>
 #include "TagMappings.hpp"
 #include "ItemMappings.hpp"
 #include "JsonSerialize.hpp"
+#include "UUID_Tools.hpp"
 
 #include <unordered_map>
 #include <functional>
 #include <utility>
-#include <charconv>
 #include <type_traits>
 
 //定义
@@ -107,156 +106,6 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag, const NBT_Type::Int iV7McDataVersion);
 void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeTextConversion, const NBT_Type::Int iV7McDataVersion);
 NBT_Type::String MapEntityTypeIdForDisplay(NBT_Type::String &strId, const NBT_Type::Int iV7McDataVersion);
-
-
-//等价java.util.UUID.nameUUIDFromBytes
-void NameUuidFromBytes(const void *data, size_t len, NBT_Type::IntArray &iaUuidList)
-{
-	uint8_t digest[16];
-	MD5::FastMd5((const uint8_t *)data, len, digest);//这东西实现搞死我了
-	
-	digest[6] = (uint8_t)((digest[6] & 0x0F) | 0x30);//version = 3
-	digest[8] = (uint8_t)((digest[8] & 0x3F) | 0x80);//variant = IETF
-
-	//直接按大端把 16 字节拆成 4 个 int32（等价于原 msb/lsb 再拆分）
-	auto rd32 = [&](int i) -> int32_t
-	{
-		return 
-			((uint32_t)(digest[i + 0]) << 24) |
-			((uint32_t)(digest[i + 1]) << 16) |
-			((uint32_t)(digest[i + 2]) <<  8) |
-			((uint32_t)(digest[i + 3]) <<  0);
-	};
-
-	//清理预分配
-	iaUuidList.clear();
-	iaUuidList.reserve(4);
-	//插入
-	iaUuidList.push_back(rd32(0));	//msb >> 32
-	iaUuidList.push_back(rd32(4));	//msb
-	iaUuidList.push_back(rd32(8));	//lsb >> 32
-	iaUuidList.push_back(rd32(12));	//lsb
-
-}
-
-bool Uuid2String(NBT_Type::IntArray &iaUuidList, NBT_Type::String &strUuid)
-{
-	if (iaUuidList.size() != 4)
-	{
-		return false;
-	}
-
-	uint32_t time_low = iaUuidList[0];
-	uint16_t time_mid = ((uint32_t)iaUuidList[1] >> 16) & 0xFFFFu;
-	uint16_t time_hi_and_version = (uint32_t)iaUuidList[1] & 0xFFFFu;
-	uint16_t clock_seq = ((uint32_t)iaUuidList[2] >> 16) & 0xFFFFu;
-	uint64_t node = (((uint64_t)((uint32_t)iaUuidList[2] & 0xFFFFu) << 32) | (uint64_t)(uint32_t)iaUuidList[3]) & 0xFFFFFFFFFFFFull;
-
-	strUuid = (NBT_Type::String)std::format(
-		"{:08x}-{:04x}-{:04x}-{:04x}-{:012x}",
-		time_low, time_mid, time_hi_and_version, clock_seq, node
-	);
-
-	return true;
-}
-
-bool String2Uuid(NBT_Type::String &strUuid, NBT_Type::IntArray &iaUuidList)
-{
-	if (strUuid.size() != (8 + 1 + (4 + 1) * 3 + 12))
-	{
-		return false;
-	}
-
-	//首先验证连字符
-	//8-4-4-4-12
-	//8 13 18 23
-	auto *pStrUuid = strUuid.data();//只取一次，减少string重复判断缓存模式开销
-	if (pStrUuid[ 8] != '-' ||
-		pStrUuid[13] != '-' ||
-		pStrUuid[18] != '-' ||
-		pStrUuid[23] != '-')
-	{
-		return false;
-	}
-
-	auto GetCharByte =
-	[](uint32_t &data, MUTF8_Char_Type ch, MUTF8_Char_Type cl) -> bool
-	{
-		static constexpr auto charMap = //字符映射值
-		[]() -> auto
-		{
-			std::array<uint8_t, std::numeric_limits<MUTF8_Char_Type>::max() + 1> arr{};
-			std::ranges::fill(arr, (uint8_t)-1);
-
-			uint8_t u8Val = 0;
-			for (const auto &it : MU8STRV("0123456789ABCDEFabcdef"))
-			{
-				arr[it] = u8Val++;
-				if (it == 'F')
-				{
-					u8Val = 0x0A;
-				}
-			}
-
-			return arr;
-		}();
-
-		//校验，必须存在映射
-		if (charMap[ch] == (uint8_t)-1 || charMap[cl] == (uint8_t)-1)
-		{
-			return false;
-		}
-
-		//组合字节并放入低位
-		uint8_t byte =
-			charMap[ch] << 4 |//4h
-			charMap[cl] << 0;//4l
-
-		data <<= 8;
-		data |= (uint32_t)byte;
-
-		return true;
-	};
-
-	uint32_t u32Uuid[4]{};
-	static constexpr auto indexMap = //索引映射
-	[]() -> auto
-	{
-		std::array<size_t, 32> arr{};
-
-		size_t idx = 0;
-		for (auto &it : arr)
-		{
-			switch (idx)
-			{
-			case 8: case 13:
-			case 18: case 23:
-				++idx;
-			}
-
-			it = idx++;
-		}
-
-		return arr;
-	}();
-
-	for (size_t i = 0; i < 4 * 4; ++i)//16->u32Uuid 通过/4赋值0~3，indexMap通过i*2+0与i*2+1映射索引跑全32字节（跳过'-'）
-	{
-		if (!GetCharByte(u32Uuid[i / 4], pStrUuid[indexMap[i * 2 + 0]], pStrUuid[indexMap[i * 2 + 1]]))
-		{
-			return false;
-		}
-	}
-	
-	//转换到nbt数组
-	iaUuidList.clear();
-	iaUuidList.reserve(4);
-	std::ranges::transform(u32Uuid, std::back_inserter(iaUuidList),
-		[](const uint32_t &u) -> auto { return std::bit_cast<NBT_Type::Int>(u); }
-	);
-
-	return true;
-}
 
 
 /*
@@ -481,12 +330,14 @@ void ProcessHoverEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 			else if (pUuid->IsIntArray())
 			{
 				NBT_Type::String strUuid{};
-				if (!Uuid2String(pUuid->GetIntArray(), strUuid))
+				UUID uuid{};
+				if (IntArray2UUID(pUuid->GetIntArray(), uuid))
 				{
 					nodeV6Tag = std::move(nodeV7Tag);
 					return;
 				}
-				cpdV6Contents.PutString(MU8STR("id"), std::move(strUuid));
+
+				cpdV6Contents.PutString(MU8STR("id"), Uuid2String(uuid));
 			}
 			else//必须要是至少一个正确类型，否则失败
 			{
@@ -655,54 +506,6 @@ bool ProcessTextComponent(NBT_Node &nodeTextComponent, NBT_Type::String &strRawJ
 	return true;
 }
 
-void ProcessAttributeModifiers1(NBT_Type::List &listV7Tag, NBT_Type::List &listV6Tag, const NBT_Type::Int iV7McDataVersion)
-{
-	for (auto &itV7Entry : listV7Tag)
-	{
-		if (!itV7Entry.IsCompound())
-		{
-			continue;
-		}
-
-		auto &cpdV7Entry = itV7Entry.GetCompound();
-		NBT_Type::Compound cpdV6Entry;
-
-		if (cpdV7Entry.Contains(MU8STR("type")))
-		{
-			auto *pType = cpdV7Entry.HasString(MU8STR("type"));
-			cpdV6Entry.PutString(MU8STR("Name"), AttributeNameMap(pType != NULL ? *pType : MU8STR("")));
-			cpdV6Entry.PutDouble(MU8STR("Base"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("amount")), 0.0));
-		}
-		else
-		{
-			auto *pId = cpdV7Entry.HasString(MU8STR("id"));
-			if (pId != NULL && *pId == MU8STRV("minecraft:random_spawn_bonus"))
-			{
-				cpdV6Entry.PutString(MU8STR("Name"), MU8STR("Random spawn bonus"));
-			}
-			else
-			{
-				cpdV6Entry.PutString(MU8STR("Name"), MU8STR(""));
-			}
-			cpdV6Entry.PutDouble(MU8STR("Amount"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("amount")), 0.0));
-		}
-
-		NBT_Type::Int iOperation = 0;//default
-		if (auto *pOperation = cpdV7Entry.HasString(MU8STR("operation")); pOperation != NULL)
-		{
-			iOperation = AttributeOperationMap(*pOperation);
-		}
-		cpdV6Entry.PutInt(MU8STR("Operation"), iOperation);
-
-		if (auto *pUUID = cpdV7Entry.HasIntArray(MU8STR("UUID")); pUUID != NULL)
-		{
-			cpdV6Entry.PutIntArray(MU8STR("UUID"), std::move(*pUUID));
-		}
-
-		listV6Tag.AddBack(std::move(cpdV6Entry));
-	}
-}
-
 enum class HideFlag : NBT_Type::Int
 {
 	ENCHANTMENTS	= 1 << 0,	//附魔名
@@ -725,7 +528,7 @@ void TrySetHideFlag(NBT_Type::Compound &cpdV7, NBT_Type::Compound &cpdV6, HideFl
 	}
 }
 
-void ProcessModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsCompound())
 	{
@@ -841,7 +644,7 @@ void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &no
 	for (auto &it : *pModifiers)
 	{
 		NBT_Node tmpV6Node{};
-		ProcessModifiers(it, tmpV6Node, iV7McDataVersion);
+		ProcessItemModifiers(it, tmpV6Node, iV7McDataVersion);
 		listV6Modifiers.AddBack(std::move(tmpV6Node));
 	}
 
@@ -853,30 +656,80 @@ void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &no
 	return;
 }
 
+void ProcessEntityModifiers(NBT_Node &V7Tag, NBT_Node &V6Tag, const NBT_Type::String &strEntityId, const NBT_Type::Int iV7McDataVersion)
+{
+	if (!V7Tag.IsCompound())
+	{
+		V6Tag = std::move(V7Tag);
+		return;
+	}
+
+	auto &cpdV7 = V7Tag.GetCompound();
+	auto &cpdV6 = V6Tag.SetCompound();
+
+	if (auto *pId = cpdV7.HasString(MU8STRV("id")); pId != NULL)
+	{
+		AttributeInfo info = AttributeInfoMap(*pId, strEntityId);//顺手的事
+
+		if (info.bIsRandomUuid)
+		{
+			cpdV6.PutString(MU8STRV("Name"), std::move(info.name));//name被映射，uuid随机生成
+			UUID uuid = NameUuidFromBytes(pId->data(), pId->size());//从原始id生成uuid，确定值
+			cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(uuid));//放入uuid
+		}
+		else
+		{
+			cpdV6.PutString(MU8STRV("Name"), std::move(*pId));//uuid被映射，name直接消费
+			cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(info.uuid));//放入映射uuid
+		}
+	}
+
+	TryRenameMove(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"), NBT_TAG::Double);
+
+	TryRenameTransfer(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
+		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+		{
+			if (!v7Val.IsString())
+			{
+				return false;
+			}
+
+			v6Val.SetInt(AttributeOperationMap(v7Val.GetString()));
+			return true;
+		}
+	);
+
+	return;
+}
+
 //TODO:改实体专用
-//TODO:nameUUIDFromBytes实现（需要MD5）
-void ProcessAttributes(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
+void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::String &strEntityId, const NBT_Type::Int iV7McDataVersion);
+void ProcessAttributes(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData, const NBT_Type::Int iV7McDataVersion)
+{
+	//attributes -> Attributes
+	auto *pAttributes = cpdV7EntityData.Has(MU8STRV("attributes"));
+	if (pAttributes == NULL)
+	{
+		return;
+	}
+
+	NBT_Type::String strEmpty{};
+	auto *pEntityId = cpdV7EntityData.HasString(MU8STRV("id"));
+	if (pEntityId == NULL)
+	{
+		pEntityId = &strEmpty;
+	}
+
+	NBT_Node nodeV6TagVal;
+	ProcessAttributesImpl(*pAttributes, nodeV6TagVal, *pEntityId, iV7McDataVersion);
+	cpdV6EntityData.Put(MU8STR("Attributes"), std::move(nodeV6TagVal));
+};
+
+void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::String &strEntityId, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsList())
 	{
-		if (!nodeV7Tag.IsCompound())//如果不是列表也不是集合，那么跳过
-		{
-			nodeV6Tag = std::move(nodeV7Tag);
-			return;
-		}
-
-		auto &cpdV7 = nodeV7Tag.GetCompound();
-		auto &listV6 = nodeV6Tag.SetList();
-
-		for (auto &[strV7Key, nodeV7Val] : cpdV7)
-		{
-			if (strV7Key == MU8STRV("modifiers") && nodeV7Val.IsList())
-			{
-				ProcessAttributeModifiers1(nodeV7Val.GetList(), listV6, iV7McDataVersion);
-				return;
-			}
-		}
-
+		nodeV6Tag = std::move(nodeV7Tag);
 		return;
 	}
 
@@ -893,30 +746,41 @@ void ProcessAttributes(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 		auto &cpdV7Entry = itV7Entry.GetCompound();
 		NBT_Type::Compound cpdV6Entry;
 
-		if (cpdV7Entry.Contains(MU8STR("type")))
-		{
-			auto *pType = cpdV7Entry.HasString(MU8STR("type"));
-			cpdV6Entry.PutString(MU8STR("Name"), AttributeNameMap(pType != NULL ? *pType : MU8STR("")));
-			cpdV6Entry.PutDouble(MU8STR("Base"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("amount")), 0.0));
-		}
-		else
-		{
-			auto *pId = cpdV7Entry.HasString(MU8STR("id"));
-			cpdV6Entry.PutString(MU8STR("Name"), AttributeNameMap(pId != NULL ? *pId : MU8STR("")));
-			cpdV6Entry.PutDouble(MU8STR("Base"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("base")), 0.0));
-		}
-
-
-		auto *pModifiers = cpdV7Entry.HasList(MU8STR("modifiers"));
-		if (pModifiers != NULL)
-		{
-			NBT_Type::List listV6Modifiers;
-			ProcessAttributeModifiers1(*pModifiers, listV6Modifiers, iV7McDataVersion);
-			if (!listV6Modifiers.Empty())
+		TryRenameTransfer(cpdV7Entry, MU8STRV("id"), cpdV6Entry, MU8STRV("Name"),
+			[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
 			{
-				cpdV6Entry.PutList(MU8STR("Modifiers"), std::move(listV6Modifiers));
+				if (!v7Val.IsString())
+				{
+					return false;
+				}
+
+				v6Val.SetString(AttributeNameMap(v7Val.GetString()));
+				return true;
 			}
-		}
+		);
+
+		cpdV6Entry.PutDouble(MU8STR("Base"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("base")), 0.0));
+
+
+		TryRenameTransfer(cpdV7Entry, MU8STRV("modifiers"), cpdV6Entry, MU8STR("Modifiers"),
+			[&strEntityId, iV7McDataVersion](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+			{
+				if (!v7Val.IsList())
+				{
+					return false;
+				}
+
+				NBT_Type::List &listV6Modifiers = v6Val.SetList();
+				for (auto &v7It : v7Val.GetList())
+				{
+					NBT_Node v6Tmp{};
+					ProcessEntityModifiers(v7It, v6Tmp, strEntityId ,iV7McDataVersion);
+					listV6Modifiers.AddBack(std::move(v6Tmp));
+				}
+
+				return !listV6Modifiers.Empty();//非空返回true被插入，否则丢弃
+			}
+		);
 
 		listV6.AddBackCompound(std::move(cpdV6Entry));
 	}

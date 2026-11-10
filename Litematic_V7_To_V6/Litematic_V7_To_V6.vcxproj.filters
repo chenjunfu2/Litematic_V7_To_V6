@@ -65,6 +65,9 @@
     <ClInclude Include="JsonSerialize.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="UUID_Tools.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt">
