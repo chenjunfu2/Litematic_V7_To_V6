@@ -41,24 +41,24 @@ public:
 	};
 
 	template<size_t i>
-	static inline consteval uint32_t K(void)
+	static inline consteval uint32_t K(void) noexcept
 	{
 		return KVal[i];
 	}
 
 	template<size_t i>
-	static inline consteval uint8_t S(void)
+	static inline consteval uint8_t S(void) noexcept
 	{
 		return SVal[i];
 	}
 
-	static inline constexpr uint32_t ROTL32(uint32_t v, uint8_t c)
+	static inline constexpr uint32_t ROTL32(uint32_t v, uint8_t c) noexcept
 	{
 		return (v << c) | (v >> (32 - c));
 	};
 
 	template<size_t i>
-	static inline constexpr uint32_t Md5RFSwitch(const uint32_t &b, const uint32_t &c, const uint32_t &d)
+	static inline constexpr uint32_t Md5RFSwitch(const uint32_t &b, const uint32_t &c, const uint32_t &d) noexcept
 	{
 		if constexpr (i >= 0 && i < 16)
 		{
@@ -83,7 +83,7 @@ public:
 	}
 
 	template<size_t i>
-	static inline consteval uint32_t Md5MISwitch(void)
+	static inline consteval uint32_t Md5MISwitch(void) noexcept
 	{
 		if constexpr (i >= 0 && i < 16)
 		{
@@ -109,7 +109,7 @@ public:
 
 
 	template<size_t i>
-	static inline constexpr void Md5CompressImpl(uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, const uint32_t(&M)[16])
+	static inline constexpr void Md5CompressImpl(uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, const uint32_t(&M)[16]) noexcept
 	{
 		uint32_t old_b = b;
 		b += ROTL32(a + Md5RFSwitch<i>(b, c, d) + K<i>() + M[Md5MISwitch<i>()], S<i>());
@@ -119,12 +119,12 @@ public:
 	}
 
 	template<std::size_t... i>
-	static inline constexpr void MakeMd5Compress(uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, const uint32_t(&M)[16], std::index_sequence<i...>)
+	static inline constexpr void MakeMd5Compress(uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, const uint32_t(&M)[16], std::index_sequence<i...>) noexcept
 	{
 		(Md5CompressImpl<i>(a, b, c, d, M), ...);
 	}
 
-	static inline constexpr void Md5Compress(uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, const uint32_t(&M)[16])
+	static inline constexpr void Md5Compress(uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d, const uint32_t(&M)[16]) noexcept
 	{
 		uint32_t calc_a = a;
 		uint32_t calc_b = b;
@@ -142,7 +142,7 @@ public:
 
 	template<size_t i, typename T>
 	requires(sizeof(T) == 1)
-	static inline constexpr uint32_t MakeM(T pData[64])
+	static inline constexpr uint32_t MakeM(T pData[64]) noexcept
 	{
 		static_assert(i >= 0 && i < 16, "?");
 
@@ -155,42 +155,42 @@ public:
 
 	template<typename T, std::size_t... i>
 	requires(sizeof(T) == 1)
-	static inline constexpr void MakeMArr(uint32_t(&M)[16], T pData[64], std::index_sequence<i...>)
+	static inline constexpr void MakeMArr(uint32_t(&M)[16], T pData[64], std::index_sequence<i...>) noexcept
 	{
 		((M[i] = MakeM<i>(pData)), ...);
 	}
 
 	template<typename T>
 	requires(sizeof(T) == 1)
-	static inline constexpr void Md5Message(uint32_t(&M)[16], T pData[64])
+	static inline constexpr void Md5Message(uint32_t(&M)[16], T pData[64]) noexcept
 	{
 		MakeMArr(M, pData, std::make_index_sequence<16>{});
 	}
 
 	template<typename T>
 	requires(sizeof(T) == 1)
-	static inline constexpr void Md5Step(T pData[64], uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d)
+	static inline constexpr void Md5Step(T pData[64], uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d) noexcept
 	{
 		uint32_t M[16];
 		Md5Message(M, pData);
 		Md5Compress(a, b, c, d, M);
 	}
 
-	static inline constexpr size_t Md5PaddedLength(size_t len)//对齐到64
+	static inline constexpr size_t Md5PaddedLength(size_t len) noexcept//对齐到64
 	{
 		return (((len + 1ull + 8ull) + 63ull) / 64ull) * 64ull;
 	}
 
 	template<typename T>
 	requires(sizeof(T) == 1)
-	static inline constexpr void Md5AppendPaddingByte(T pData[1])
+	static inline constexpr void Md5AppendPaddingByte(T pData[1]) noexcept
 	{
 		pData[0] = 0x80;
 	}
 
 	template<typename T>
 	requires(sizeof(T) == 1)
-	static inline constexpr void Md5AppendBitLength(T pData[8], uint64_t len)
+	static inline constexpr void Md5AppendBitLength(T pData[8], uint64_t len) noexcept
 	{
 		len *= 8;//to bit len
 
@@ -207,7 +207,7 @@ public:
 
 	template<typename T>
 	requires(sizeof(T) == 1)
-	static inline constexpr void Md5OutputImpl(T md5[4], const uint32_t &v)
+	static inline constexpr void Md5OutputImpl(T md5[4], const uint32_t &v) noexcept
 	{
 		md5[0] = std::bit_cast<T>((uint8_t)(v >> (8 * 0)));
 		md5[1] = std::bit_cast<T>((uint8_t)(v >> (8 * 1)));
@@ -217,7 +217,7 @@ public:
 
 	template<typename T>
 	requires(sizeof(T) == 1)
-	static inline constexpr void Md5Output(T md5[16], const uint32_t &a, const uint32_t &b, const uint32_t &c, const uint32_t &d)
+	static inline constexpr void Md5Output(T md5[16], const uint32_t &a, const uint32_t &b, const uint32_t &c, const uint32_t &d) noexcept
 	{
 		Md5OutputImpl(&md5[0], a);
 		Md5OutputImpl(&md5[4], b);
@@ -225,7 +225,7 @@ public:
 		Md5OutputImpl(&md5[12], d);
 	}
 
-	static inline constexpr void Md5Init(uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d)
+	static inline constexpr void Md5Init(uint32_t &a, uint32_t &b, uint32_t &c, uint32_t &d) noexcept
 	{
 		a = 0X67452301u;
 		b = 0XEFCDAB89u;
@@ -237,7 +237,7 @@ public:
 	//512bit = 64byte
 	template<typename T>
 	requires(sizeof(T) == 1)
-	static inline constexpr void FastMd5(const T *data, size_t len, uint8_t out[16])
+	static inline constexpr void FastMd5(const T *data, size_t len, uint8_t out[16]) noexcept
 	{
 		uint32_t a, b, c, d;
 		Md5Init(a, b, c, d);
@@ -278,14 +278,14 @@ public:
 
 	template<typename T, size_t N>
 	requires(sizeof(T) == 1)
-	static inline constexpr void FastMd5(const T(&data)[N], uint8_t out[16])
+	static inline constexpr void FastMd5(const T(&data)[N], uint8_t out[16]) noexcept
 	{
 		FastMd5(+data, N, out);
 	}
 
 	template<typename T, size_t N>
 	requires(sizeof(T) == 1)
-	static inline constexpr void FastMd5(const std::array<T, N> data, uint8_t out[16])
+	static inline constexpr void FastMd5(const std::array<T, N> &data, uint8_t out[16]) noexcept
 	{
 		FastMd5(data.data(), data.size(), out);
 	}
@@ -303,7 +303,7 @@ namespace MD5Test
 	};
 
 	template<FixedString str>
-	consteval std::array<uint8_t, 16> HexStringToMd5Bytes(void)
+	consteval std::array<uint8_t, 16> HexStringToMd5Bytes(void) noexcept
 	{
 		std::array<uint8_t, 16> md5{};
 
@@ -348,7 +348,7 @@ namespace MD5Test
 	}
 
 	template<FixedString str, FixedString md5>
-	consteval bool VerifyMd5(void)
+	consteval bool VerifyMd5(void) noexcept
 	{
 		std::array<uint8_t, 16> out{};
 		MD5::FastMd5(str.data(), str.size() - 1, out.data());
@@ -360,4 +360,5 @@ namespace MD5Test
 	static_assert(VerifyMd5<"abc", "900150983cd24fb0d6963f7d28e17f72">(), "fail2");
 	static_assert(VerifyMd5<"message digest", "f96b697d7cb7938d525a2f31aaf161d0">(), "fail3");
 	static_assert(VerifyMd5<"abcdefghijklmnopqrstuvwxyz", "c3fcd3d76192e4007dfb496cca67e13b">(), "fail4");
+	static_assert(VerifyMd5<"The quick brown fox jumps over the lazy dog", "9e107d9d372bb6826bd81d3542a419d6">(), "fail5");
 }
