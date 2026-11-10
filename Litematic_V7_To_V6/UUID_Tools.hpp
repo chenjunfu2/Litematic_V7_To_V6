@@ -186,7 +186,7 @@ bool String2Uuid(NBT_Type::String &strUuid, NBT_Type::IntArray &iaUuidList)
 	}
 	
 	//转换到nbt数组
-	UUID2IntArray(uuid, iaUuidList);
+	iaUuidList = UUID2IntArray(uuid);
 	return true;
 }
 
