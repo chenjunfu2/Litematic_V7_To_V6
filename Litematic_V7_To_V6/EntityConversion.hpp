@@ -218,58 +218,27 @@ bool ProcessBoatMappings(
 }
 
 //特殊，需要保住原始id不能被搞坏，并且在后面用到
-void ProcessIdMappings(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+void ProcessIdMappings(NBT_Type::String &strIdVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
-	if (!nodeV7TagVal.IsString())
-	{
-		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));//"id":nodeV7TagVal
-		return;
-	}
-
-	auto &strEntityId = nodeV7TagVal.GetString();
-	NBT_Type::String strMappedId{};
-
 	//处理船、筏映射
 	do
 	{
-		static constexpr auto strvBoatSuffix = MU8STRV("_boat");
-		static constexpr auto strvRaftSuffix = MU8STRV("_raft");
-
-		static constexpr auto strvChestBoatSuffix = MU8STRV("_chest_boat");
-		static constexpr auto strvChestRaftSuffix = MU8STRV("_chest_raft");
-
 		NBT_Type::String::View strvBoatType;
-		if (!ProcessBoatMappings(strEntityId, strMappedId, strvBoatType, strvBoatSuffix, strvChestBoatSuffix) &&
-			!ProcessBoatMappings(strEntityId, strMappedId, strvBoatType, strvRaftSuffix, strvChestRaftSuffix))
+		if (!ProcessBoatMappings(strIdVal, strIdVal, strvBoatType, MU8STRV("_boat"), MU8STRV("_chest_boat")) &&
+			!ProcessBoatMappings(strIdVal, strIdVal, strvBoatType, MU8STRV("_raft"), MU8STRV("_chest_raft")))
 		{
 			break;
 		}
 
 		//至少有一个映射成功
-
 		//插入"Type":strvBoatType
 		cpdV6TagData.PutString(MU8STR("Type"), strvBoatType);
-
-		//插入映射过的"id":strMappedId
-		cpdV6TagData.PutString(strV7TagKey, std::move(strMappedId));
 
 		return;
 	} while (false);
 
 	//处理其它映射
-	if (!EntityIdMap(strEntityId, strMappedId, iV7McDataVersion))
-	{
-		//失败直接拷贝
-		cpdV6TagData.Put(strV7TagKey, std::move(nodeV7TagVal));//"id":nodeV7TagVal
-		return;
-	}
-	else
-	{
-		//成功使用映射值（移动）
-		cpdV6TagData.PutString(strV7TagKey, std::move(strMappedId));//"id":strMappedId
-		return;
-	}
-
+	EntityIdMap(strIdVal, strIdVal, iV7McDataVersion);
 	return;
 }
 
@@ -337,8 +306,7 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 
 
 	//首先处理id
-	auto *pEntityId = cpdV7EntityData.Has(MU8STR("id"));
-	if(pEntityId != NULL)
+	if(auto *pEntityId = cpdV7EntityData.Has(MU8STR("id")); pEntityId != NULL)
 	{
 		cpdV6EntityData.Put(MU8STR("id"), std::move(*pEntityId));//先移入V6以便其它处理例程使用
 		cpdV7EntityData.Remove(MU8STR("id"));//务必删除，防止下方重复使用
@@ -360,12 +328,10 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 		funcProcess(itV7TagKey, itV7TagVal, cpdV6EntityData, iV7McDataVersion);
 	}
 
-
 	//最后处理id映射
-	pEntityId = cpdV6EntityData.Has(MU8STR("id"));
-	if (pEntityId != NULL)
+	if (auto *pEntityId = cpdV6EntityData.HasString(MU8STR("id")); pEntityId != NULL)
 	{
-		ProcessIdMappings(MU8STR("id"), *pEntityId, cpdV6EntityData, iV7McDataVersion);
+		ProcessIdMappings(*pEntityId, cpdV6EntityData, iV7McDataVersion);
 	}
 
 	return;
