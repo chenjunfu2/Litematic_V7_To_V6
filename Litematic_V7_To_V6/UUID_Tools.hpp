@@ -3,6 +3,7 @@
 #include <nbt_cpp/NBT_Node.hpp>
 #include <util/MD5.hpp>
 
+#include <exception>
 #include <format>
 #include <ranges>
 #include <utility>
@@ -101,10 +102,10 @@ constexpr bool String2UuidImpl(UUID &uuid, const C *pStrUuid, size_t szStringLen
 		return false;
 	}
 
-	static const auto GetCharByte =
+	const auto GetCharByte =
 	[](uint32_t &data, MUTF8_Char_Type ch, MUTF8_Char_Type cl) constexpr -> bool
 	{
-		static constexpr auto charMap = //字符映射值
+		constexpr auto charMap = //字符映射值
 		[]() constexpr -> auto
 		{
 			std::array<uint8_t, std::numeric_limits<MUTF8_Char_Type>::max() + 1> arr{};
@@ -140,7 +141,7 @@ constexpr bool String2UuidImpl(UUID &uuid, const C *pStrUuid, size_t szStringLen
 		return true;
 	};
 
-	static constexpr auto indexMap = //索引映射
+	constexpr auto indexMap = //索引映射
 	[]() constexpr -> auto
 	{
 		std::array<size_t, 32> arr{};
@@ -191,12 +192,13 @@ bool String2Uuid(NBT_Type::String &strUuid, NBT_Type::IntArray &iaUuidList)
 }
 
 template<MUTF8_Tool_Internal::StringLiteral strUUID>
-constexpr UUID String2Uuid(void)//编译期生成使用
+consteval UUID String2Uuid(void)//编译期生成使用
 {
 	UUID uuid{};
-	if (!String2UuidImpl(uuid, strUUID.data(), strUUID.size()))
+	bool bIsZeroEnd = strUUID[strUUID.size() - 1] == '\0';
+	if (!String2UuidImpl(uuid, strUUID.data(), strUUID.size() - (size_t)bIsZeroEnd))
 	{
-		throw "Invalid UUID string format";
+		throw std::invalid_argument("Invalid UUID string format");
 	}
 	
 	return uuid;
