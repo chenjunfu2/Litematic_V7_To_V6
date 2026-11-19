@@ -414,18 +414,13 @@ void ProcessHoverEvent(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 //进行映射，因为所有文本注解都从这里转换，MC WIKI已经无法提供更多信息，从Java多版本源代码分析格式变动
 void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeTextConversion, const NBT_Type::Int iV7McDataVersion)
 {
-	using std::placeholders::_1;
-	using std::placeholders::_2;
-	using std::placeholders::_3;
-	using std::placeholders::_4;
-
 	static const std::unordered_map<NBT_Type::String, MapProcessFunc_P> mapProcess =
 	{
-		{ MU8STR("click_event"),	RenameAndProcess<U8STR("clickEvent"), ProcessClickEvent>	},
-		{ MU8STR("hover_event"),	RenameAndProcess<U8STR("hoverEvent"), ProcessHoverEvent>	},
-		{ MU8STR("extra"),			RenameAndProcess<U8STR("extra"), ProcessTextComponentConversion>	},//此处递归，因为extra是递归结构，内部可以继续存储TextComponentTag
-		{ MU8STR("with"),			RenameAndProcess<U8STR("with"), ProcessTextComponentConversion>	},//此处递归，因为with是递归结构，内部可以继续存储TextComponentTag
-		{ MU8STR("separator"),		RenameAndProcess<U8STR("separator"), ProcessTextComponentConversion>	},//此处递归，因为separator是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("click_event"),	RenameAndProcess<U8STR("clickEvent"),	ProcessClickEvent> },
+		{ MU8STR("hover_event"),	RenameAndProcess<U8STR("hoverEvent"),	ProcessHoverEvent> },
+		{ MU8STR("extra"),			RenameAndProcess<U8STR("extra"),		ProcessTextComponentConversion> },//此处递归，因为extra是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("with"),			RenameAndProcess<U8STR("with"),			ProcessTextComponentConversion> },//此处递归，因为with是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("separator"),		RenameAndProcess<U8STR("separator"),	ProcessTextComponentConversion> },//此处递归，因为separator是递归结构，内部可以继续存储TextComponentTag
 	};
 
 	auto *ProcessAll =//使用+退化为函数指针

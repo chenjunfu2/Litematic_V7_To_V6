@@ -204,33 +204,28 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 {
 	FixTileEntityId(cpdV7TileEntityData, iV7McDataVersion);
 
-	using std::placeholders::_1;
-	using std::placeholders::_2;
-	using std::placeholders::_3;
-	using std::placeholders::_4;
-
 	const static std::unordered_map<NBT_Type::String, MapProcessFunc_P> mapProcess =
 	{
-		{ MU8STR("custom_name"),				RenameAndProcess<U8STR("CustomName"), ProcessTextComponentTag> },
-		{ MU8STR("CustomName"),					RenameAndProcess<U8STR("CustomName"), ProcessTextComponentTag> },//高版本仍有麻将忘记改名的遗留物
+		{ MU8STR("custom_name"),				RenameAndProcess<U8STR("CustomName"),	ProcessTextComponentTag> },
+		{ MU8STR("CustomName"),					RenameAndProcess<U8STR("CustomName"),	ProcessTextComponentTag> },//高版本仍有麻将忘记改名的遗留物
 
 		{ MU8STR("ticks_since_song_started"),	ProcessJukebox }, //唱片机特殊处理
 
-		{ MU8STR("Items"),						RenameAndProcess<U8STR("Items"), ProcessItems> },
-		{ MU8STR("patterns"),					RenameAndProcess<U8STR("Patterns"), ProcessPatterns> },
-		{ MU8STR("profile"),					RenameAndProcess<U8STR("SkullOwner"), ProcessSkullProfile> },
-		{ MU8STR("flower_pos"),					RenameAndProcess<U8STR("FlowerPos"), ProcessBlockPos> },
-		{ MU8STR("exit_portal"),				RenameAndProcess<U8STR("ExitPortal"), ProcessBlockPos> },
-		{ MU8STR("bees"),						RenameAndProcess<U8STR("Bees"), ProcessBees> },
-		{ MU8STR("item"),						RenameAndProcess<U8STR("item"), ProcessSingleItem> },
-		{ MU8STR("RecordItem"),					RenameAndProcess<U8STR("RecordItem"), ProcessSingleItem> },
-		{ MU8STR("Book"),						RenameAndProcess<U8STR("Book"), ProcessSingleItem> },
+		{ MU8STR("Items"),						RenameAndProcess<U8STR("Items"),		ProcessItems> },
+		{ MU8STR("patterns"),					RenameAndProcess<U8STR("Patterns"),		ProcessPatterns> },
+		{ MU8STR("profile"),					RenameAndProcess<U8STR("SkullOwner"),	ProcessSkullProfile> },
+		{ MU8STR("flower_pos"),					RenameAndProcess<U8STR("FlowerPos"),	ProcessBlockPos> },
+		{ MU8STR("exit_portal"),				RenameAndProcess<U8STR("ExitPortal"),	ProcessBlockPos> },
+		{ MU8STR("bees"),						RenameAndProcess<U8STR("Bees"),			ProcessBees> },
+		{ MU8STR("item"),						RenameAndProcess<U8STR("item"),			ProcessSingleItem> },
+		{ MU8STR("RecordItem"),					RenameAndProcess<U8STR("RecordItem"),	ProcessSingleItem> },
+		{ MU8STR("Book"),						RenameAndProcess<U8STR("Book"),			ProcessSingleItem> },
 
-		{ MU8STR("front_text"),					RenameAndProcess<U8STR("front_text"), ProcessSignText> },
-		{ MU8STR("back_text"),					RenameAndProcess<U8STR("back_text"), ProcessSignText> },
+		{ MU8STR("front_text"),					RenameAndProcess<U8STR("front_text"),	ProcessSignText> },
+		{ MU8STR("back_text"),					RenameAndProcess<U8STR("back_text"),	ProcessSignText> },
 
-		{ MU8STR("primary_effect"),				RenameAndProcess<U8STR("Primary"), ProcessBeaconEffect> },
-		{ MU8STR("secondary_effect"),			RenameAndProcess<U8STR("Secondary"), ProcessBeaconEffect> },
+		{ MU8STR("primary_effect"),				RenameAndProcess<U8STR("Primary"),		ProcessBeaconEffect> },
+		{ MU8STR("secondary_effect"),			RenameAndProcess<U8STR("Secondary"),	ProcessBeaconEffect> },
 	};
 
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)

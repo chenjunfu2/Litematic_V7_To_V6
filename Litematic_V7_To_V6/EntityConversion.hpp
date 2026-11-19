@@ -297,15 +297,10 @@ NBT_Type::String MapEntityTypeIdForDisplay(NBT_Type::String &strId, const NBT_Ty
 
 void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV6EntityData, const NBT_Type::Int iV7McDataVersion)
 {
-	using std::placeholders::_1;
-	using std::placeholders::_2;
-	using std::placeholders::_3;
-	using std::placeholders::_4;
-
 	const static std::unordered_map<NBT_Type::String, MapProcessFunc_P> mapProccess =
 	{
-		{ MU8STR("custom_name"),		RenameAndProcess<U8STR("CustomName"), ProcessTextComponentTag> },
-		{ MU8STR("CustomName"),			RenameAndProcess<U8STR("CustomName"), ProcessTextComponentTag> },
+		{ MU8STR("custom_name"),		RenameAndProcess<U8STR("CustomName"),	ProcessTextComponentTag> },
+		{ MU8STR("CustomName"),			RenameAndProcess<U8STR("CustomName"),	ProcessTextComponentTag> },
 
 		{ MU8STR("has_egg"),			RenameOnly<U8STR("HasEgg")> },
 		{ MU8STR("life_ticks"),			RenameOnly<U8STR("LifeTicks")> },
@@ -318,14 +313,14 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 		{ MU8STR("home_pos"),			ProcessBlockPosExternal<U8STR("HomePos")> },
 		{ MU8STR("sleeping_pos"),		ProcessBlockPosExternal<U8STR("Sleeping")> },
 
-		{ MU8STR("flower_pos"),			RenameAndProcess<U8STR("FlowerPos"), ProcessBlockPos> },
-		{ MU8STR("hive_pos"),			RenameAndProcess<U8STR("HivePos"), ProcessBlockPos> },
-		{ MU8STR("Item"),				RenameAndProcess<U8STR("Item"), ProcessSingleItem> },
-		{ MU8STR("Items"),				RenameAndProcess<U8STR("Items"), ProcessItems> },
+		{ MU8STR("flower_pos"),			RenameAndProcess<U8STR("FlowerPos"),	ProcessBlockPos> },
+		{ MU8STR("hive_pos"),			RenameAndProcess<U8STR("HivePos"),		ProcessBlockPos> },
+		{ MU8STR("Item"),				RenameAndProcess<U8STR("Item"),			ProcessSingleItem> },
+		{ MU8STR("Items"),				RenameAndProcess<U8STR("Items"),		ProcessItems> },
 
-		{ MU8STR("ArmorItems"),			RenameAndProcess<U8STR("ArmorItems"), ProcessEntityItems<4>> },
-		{ MU8STR("HandItems"),			RenameAndProcess<U8STR("HandItems"), ProcessEntityItems<2>> },
-		{ MU8STR("Inventory"),			RenameAndProcess<U8STR("Inventory"), ProcessEntityItems<1>> },
+		{ MU8STR("ArmorItems"),			RenameAndProcess<U8STR("ArmorItems"),	ProcessEntityItems<4>> },
+		{ MU8STR("HandItems"),			RenameAndProcess<U8STR("HandItems"),	ProcessEntityItems<2>> },
+		{ MU8STR("Inventory"),			RenameAndProcess<U8STR("Inventory"),	ProcessEntityItems<1>> },
 
 		{ MU8STR("attributes"),			ProcessAttributes },
 		{ MU8STR("equipment"),			ProcessEntityEquipment },

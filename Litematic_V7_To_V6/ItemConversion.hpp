@@ -845,11 +845,6 @@ void ProcessSingleItemNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT
 //物品Tag处理
 void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
-	using std::placeholders::_1;
-	using std::placeholders::_2;
-	using std::placeholders::_3;
-	using std::placeholders::_4;
-
 	enum class UseTagType
 	{
 		V6Tag,
@@ -881,16 +876,16 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:note_block_sound"),			{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("note_block_sound")> } },
 		{ MU8STR("minecraft:repair_cost"),				{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("RepairCost")> } },
 
-		{ MU8STR("minecraft:bundle_contents"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Items"), ProcessItems> } },
-		{ MU8STR("minecraft:enchantments"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Enchantments"), ProcessEnchantments> } },
-		{ MU8STR("minecraft:stored_enchantments"),		{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("StoredEnchantments"), ProcessEnchantments> } },
-		{ MU8STR("minecraft:entity_data"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("EntityTag"), ProcessEntityTag> } },
-		{ MU8STR("minecraft:firework_explosion"),		{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Explosion"), ProcessFireworkExplosion> } },
-		{ MU8STR("minecraft:fireworks"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Fireworks"), ProcessFireworks> } },
-		{ MU8STR("minecraft:map_decorations"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Decorations"), ProcessMapDecorations> } },
-		{ MU8STR("minecraft:profile"),					{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("SkullOwner"), ProcessSkullProfile> } },
-		{ MU8STR("minecraft:unbreakable"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Unbreakable"), ProcessUnbreakable> } },
-		{ MU8STR("minecraft:axolotl/variant"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Variant"), ProcessAxolotlVariant> } },
+		{ MU8STR("minecraft:bundle_contents"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Items"),				ProcessItems> } },
+		{ MU8STR("minecraft:enchantments"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Enchantments"),			ProcessEnchantments> } },
+		{ MU8STR("minecraft:stored_enchantments"),		{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("StoredEnchantments"),	ProcessEnchantments> } },
+		{ MU8STR("minecraft:entity_data"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("EntityTag"),			ProcessEntityTag> } },
+		{ MU8STR("minecraft:firework_explosion"),		{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Explosion"),			ProcessFireworkExplosion> } },
+		{ MU8STR("minecraft:fireworks"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Fireworks"),			ProcessFireworks> } },
+		{ MU8STR("minecraft:map_decorations"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Decorations"),			ProcessMapDecorations> } },
+		{ MU8STR("minecraft:profile"),					{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("SkullOwner"),			ProcessSkullProfile> } },
+		{ MU8STR("minecraft:unbreakable"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Unbreakable"),			ProcessUnbreakable> } },
+		{ MU8STR("minecraft:axolotl/variant"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Variant"),				ProcessAxolotlVariant> } },
 
 		{ MU8STR("minecraft:attribute_modifiers"),		{ false,	UseTagType::V6Tag,			ProcessAttributeModifiers } },
 		{ MU8STR("minecraft:custom_data"),				{ false,	UseTagType::V6Tag,			ProcessCustomData } },
@@ -907,10 +902,10 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 
 		
 		{ MU8STR("minecraft:map_color"),				{ false,	UseTagType::DisplayTag,		RenameOnly<U8STR("MapColor")> } },
-		{ MU8STR("minecraft:dyed_color"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("color"), ProcessDyedColor> } },
-		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("Lore"), ProcessTextComponentListTag> } },
-		{ MU8STR("minecraft:custom_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("Name"), ProcessTextComponentTag> } },
-		//{ MU8STR("minecraft:item_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("Name"), ProcessTextComponentTag> } },
+		{ MU8STR("minecraft:dyed_color"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("color"),	ProcessDyedColor> } },
+		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("Lore"),		ProcessTextComponentListTag> } },
+		{ MU8STR("minecraft:custom_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("Name"),		ProcessTextComponentTag> } },
+		//{ MU8STR("minecraft:item_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("Name"),		ProcessTextComponentTag> } },
 
 
 		{ MU8STR("minecraft:block_entity_data"),		{ false,	UseTagType::BlockEntityTag,	ProcessBlockEntityData } },
