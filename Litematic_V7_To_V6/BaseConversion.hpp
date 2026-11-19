@@ -10,6 +10,7 @@
 #include <functional>
 #include <utility>
 #include <type_traits>
+#include <concepts>
 
 //定义
 #define MC_1_21_4_MINECRAFT_DATA_VERSION 4189
@@ -79,22 +80,40 @@ bool TryRenameTransfer(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::
 	}
 }
 
-//实际转换
-using TagProcessFunc_T = std::function<void(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)>;
-//用于Map值
-using MapValFunc_T = std::function<void(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)>;
+#define U8STR(charLiteralString) (u8##charLiteralString)
 
-//通用处理
-void DefaultProcess(const NBT_Type::String &strNewKey, TagProcessFunc_T funcTagProcess, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+template<typename SL>
+concept IsU8StringLiteral = std::same_as<typename std::remove_cvref_t<SL>::Super::value_type, char8_t>;
+
+template <typename F>
+concept IsProcessFunc =
+requires(F &func, NBT_Node &nodeV7, NBT_Node &nodeV6, NBT_Type::Int iV7McDataVersion)
 {
-	NBT_Node nodeV6TagVal;
-	funcTagProcess(nodeV7TagVal, nodeV6TagVal, iV7McDataVersion);
-	cpdV6TagData.Put(strNewKey, std::move(nodeV6TagVal));
+	{
+		func(nodeV7, nodeV6, iV7McDataVersion)
+	} -> std::same_as<void>;
 };
 
-//重命名处理
-void RenameProcess(const NBT_Type::String &strNewKey, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+//用于Map值
+using MapProcessFunc_T = void(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion);
+using MapProcessFunc_P = MapProcessFunc_T *;
+
+//重命名并转换处理
+template<MUTF8_Tool_Internal::StringLiteral NewKey, IsProcessFunc auto ProcessFunc>
+void RenameAndProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
+	constexpr auto strNewKey = U8TOMU8STR(NewKey);
+	NBT_Node nodeV6TagVal;
+	ProcessFunc(nodeV7TagVal, nodeV6TagVal, iV7McDataVersion);
+	cpdV6TagData.Put(strNewKey, std::move(nodeV6TagVal));
+}
+
+//重命名处理
+template<MUTF8_Tool_Internal::StringLiteral NewKey>
+requires(IsU8StringLiteral<decltype(NewKey)>)
+void RenameOnly(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+{
+	constexpr auto strNewKey = U8TOMU8STR(NewKey);
 	cpdV6TagData.Put(strNewKey, std::move(nodeV7TagVal));
 }
 
@@ -400,13 +419,13 @@ void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeT
 	using std::placeholders::_3;
 	using std::placeholders::_4;
 
-	static const std::unordered_map<NBT_Type::String, MapValFunc_T> mapProcess =
+	static const std::unordered_map<NBT_Type::String, MapProcessFunc_P> mapProcess =
 	{
-		{ MU8STR("click_event"),	std::bind(DefaultProcess,	MU8STR("clickEvent"),		ProcessClickEvent,					_1, _2, _3, _4)	},
-		{ MU8STR("hover_event"),	std::bind(DefaultProcess,	MU8STR("hoverEvent"),		ProcessHoverEvent,					_1, _2, _3, _4)	},
-		{ MU8STR("extra"),			std::bind(DefaultProcess,	MU8STR("extra"),			ProcessTextComponentConversion,		_1, _2, _3, _4)	},//此处递归，因为extra是递归结构，内部可以继续存储TextComponentTag
-		{ MU8STR("with"),			std::bind(DefaultProcess,	MU8STR("with"),				ProcessTextComponentConversion,		_1, _2, _3, _4)	},//此处递归，因为with是递归结构，内部可以继续存储TextComponentTag
-		{ MU8STR("separator"),		std::bind(DefaultProcess,	MU8STR("separator"),		ProcessTextComponentConversion,		_1, _2, _3, _4)	},//此处递归，因为separator是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("click_event"),	RenameAndProcess<U8STR("clickEvent"), ProcessClickEvent>	},
+		{ MU8STR("hover_event"),	RenameAndProcess<U8STR("hoverEvent"), ProcessHoverEvent>	},
+		{ MU8STR("extra"),			RenameAndProcess<U8STR("extra"), ProcessTextComponentConversion>	},//此处递归，因为extra是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("with"),			RenameAndProcess<U8STR("with"), ProcessTextComponentConversion>	},//此处递归，因为with是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("separator"),		RenameAndProcess<U8STR("separator"), ProcessTextComponentConversion>	},//此处递归，因为separator是递归结构，内部可以继续存储TextComponentTag
 	};
 
 	auto *ProcessAll =//使用+退化为函数指针
@@ -616,7 +635,6 @@ void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 }
 
 //TODO:TryRenameMove等辅助函数，减少代码
-//TODO:std bind全改模板编译期绑定
 //TODO:MUSTR尽量全改MU8STRV，NBT库全线支持透明查找
 //TODO:AttributeModifiers完善，目前还不完整
 //TODO:物品不同版本的HideFlag还有组件转换也要做

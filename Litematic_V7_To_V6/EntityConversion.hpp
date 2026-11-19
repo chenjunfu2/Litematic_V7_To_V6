@@ -3,7 +3,33 @@
 #include "BaseConversion.hpp"
 #include "EntityMappings.hpp"
 
-void ProcessBlockPosExternal(const NBT_Type::String &strPosPerfix, const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+#include <algorithm>
+
+template<MUTF8_Tool_Internal::StringLiteral PosPerfix, uint8_t u8PosTypeIndex>
+requires(IsU8StringLiteral<decltype(PosPerfix)>)
+consteval NBT_Type::String::View MakePosStr(void)
+{
+	if (u8PosTypeIndex >= 3)
+	{
+		throw std::out_of_range("u8PosTypeIndex out of range");
+	}
+
+	return MUTF8_Tool<>::U8ToMU8<
+		[]() consteval -> auto
+		{
+			constexpr size_t szNewSize = PosPerfix.size();//PosPerfix size包含末尾0
+			char8_t strRet[szNewSize + 1]{};//末尾加0
+			std::ranges::copy(PosPerfix, &strRet[0]);
+			strRet[szNewSize - 1] = U8STR("XYZ")[u8PosTypeIndex];//覆盖拷贝来的末尾0（有预留空间）
+			return MUTF8_Tool_Internal::StringLiteral{strRet};
+		}()
+	>();
+}
+
+
+template<MUTF8_Tool_Internal::StringLiteral PosPerfix>
+requires(IsU8StringLiteral<decltype(PosPerfix)>)
+void ProcessBlockPosExternal(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsIntArray())
 	{
@@ -17,14 +43,15 @@ void ProcessBlockPosExternal(const NBT_Type::String &strPosPerfix, const NBT_Typ
 		return;
 	}
 
-	cpdV6TagData.PutInt(strPosPerfix + MU8STR("X"), iarrBlockPos[0]);
-	cpdV6TagData.PutInt(strPosPerfix + MU8STR("Y"), iarrBlockPos[1]);
-	cpdV6TagData.PutInt(strPosPerfix + MU8STR("Z"), iarrBlockPos[2]);
+	cpdV6TagData.PutInt(MakePosStr<PosPerfix, 0>(), iarrBlockPos[0]);
+	cpdV6TagData.PutInt(MakePosStr<PosPerfix, 1>(), iarrBlockPos[1]);
+	cpdV6TagData.PutInt(MakePosStr<PosPerfix, 2>(), iarrBlockPos[2]);
 
 	return;
 }
 
-void ProcessEntityItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion, size_t szSlotSize)
+template<size_t SlotSize>
+void ProcessEntityItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7Tag.IsList())
 	{
@@ -52,6 +79,7 @@ void ProcessEntityItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type
 		listV6.AddBack(std::move(nodeV6Entry));
 	}
 
+	size_t szSlotSize = SlotSize;
 	if (listV6.Size() < szSlotSize)
 	{
 		szSlotSize -= listV6.Size();
@@ -274,32 +302,32 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 	using std::placeholders::_3;
 	using std::placeholders::_4;
 
-	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProccess =
+	const static std::unordered_map<NBT_Type::String, MapProcessFunc_P> mapProccess =
 	{
-		{ MU8STR("custom_name"),		std::bind(DefaultProcess,			MU8STR("CustomName"),		ProcessTextComponentTag,	_1, _2, _3, _4) },
-		{ MU8STR("CustomName"),			std::bind(DefaultProcess,			MU8STR("CustomName"),		ProcessTextComponentTag,	_1, _2, _3, _4) },
+		{ MU8STR("custom_name"),		RenameAndProcess<U8STR("CustomName"), ProcessTextComponentTag> },
+		{ MU8STR("CustomName"),			RenameAndProcess<U8STR("CustomName"), ProcessTextComponentTag> },
 
-		{ MU8STR("has_egg"),			std::bind(RenameProcess,			MU8STR("HasEgg"),			_1, _2, _3, _4) },
-		{ MU8STR("life_ticks"),			std::bind(RenameProcess,			MU8STR("LifeTicks"),		_1, _2, _3, _4) },
-		{ MU8STR("size"),				std::bind(RenameProcess,			MU8STR("Size"),				_1, _2, _3, _4) },
-		{ MU8STR("fall_distance"),		std::bind(RenameProcess,			MU8STR("FallDistance"),		_1, _2, _3, _4) },
+		{ MU8STR("has_egg"),			RenameOnly<U8STR("HasEgg")> },
+		{ MU8STR("life_ticks"),			RenameOnly<U8STR("LifeTicks")> },
+		{ MU8STR("size"),				RenameOnly<U8STR("Size")> },
+		{ MU8STR("fall_distance"),		RenameOnly<U8STR("FallDistance")> },
 
-		{ MU8STR("anchor_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("A"),				_1, _2, _3, _4) },
-		{ MU8STR("block_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("Tile"),				_1, _2, _3, _4) },
-		{ MU8STR("bound_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("Bound"),			_1, _2, _3, _4) },
-		{ MU8STR("home_pos"),			std::bind(ProcessBlockPosExternal,	MU8STR("HomePos"),			_1, _2, _3, _4) },
-		{ MU8STR("sleeping_pos"),		std::bind(ProcessBlockPosExternal,	MU8STR("Sleeping"),			_1, _2, _3, _4) },
+		{ MU8STR("anchor_pos"),			ProcessBlockPosExternal<U8STR("A")> },
+		{ MU8STR("block_pos"),			ProcessBlockPosExternal<U8STR("Tile")> },
+		{ MU8STR("bound_pos"),			ProcessBlockPosExternal<U8STR("Bound")> },
+		{ MU8STR("home_pos"),			ProcessBlockPosExternal<U8STR("HomePos")> },
+		{ MU8STR("sleeping_pos"),		ProcessBlockPosExternal<U8STR("Sleeping")> },
 
-		{ MU8STR("flower_pos"),			std::bind(DefaultProcess,			MU8STR("FlowerPos"),		ProcessBlockPos,	_1, _2, _3, _4) },
-		{ MU8STR("hive_pos"),			std::bind(DefaultProcess,			MU8STR("HivePos"),			ProcessBlockPos,	_1, _2, _3, _4) },
-		{ MU8STR("Item"),				std::bind(DefaultProcess,			MU8STR("Item"),				ProcessSingleItem,	_1, _2, _3, _4) },
-		{ MU8STR("Items"),				std::bind(DefaultProcess,			MU8STR("Items"),			ProcessItems,		_1, _2, _3, _4) },
+		{ MU8STR("flower_pos"),			RenameAndProcess<U8STR("FlowerPos"), ProcessBlockPos> },
+		{ MU8STR("hive_pos"),			RenameAndProcess<U8STR("HivePos"), ProcessBlockPos> },
+		{ MU8STR("Item"),				RenameAndProcess<U8STR("Item"), ProcessSingleItem> },
+		{ MU8STR("Items"),				RenameAndProcess<U8STR("Items"), ProcessItems> },
 
-		{ MU8STR("ArmorItems"),			std::bind(DefaultProcess,			MU8STR("ArmorItems"),		(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 4),		_1, _2, _3, _4) },
-		{ MU8STR("HandItems"),			std::bind(DefaultProcess,			MU8STR("HandItems"),		(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 2),		_1, _2, _3, _4) },
-		{ MU8STR("Inventory"),			std::bind(DefaultProcess,			MU8STR("Inventory"),		(TagProcessFunc_T)std::bind(ProcessEntityItems, _1, _2, _3, 1),		_1, _2, _3, _4) },
+		{ MU8STR("ArmorItems"),			RenameAndProcess<U8STR("ArmorItems"), ProcessEntityItems<4>> },
+		{ MU8STR("HandItems"),			RenameAndProcess<U8STR("HandItems"), ProcessEntityItems<2>> },
+		{ MU8STR("Inventory"),			RenameAndProcess<U8STR("Inventory"), ProcessEntityItems<1>> },
 
-		{ MU8STR("attributes"),		ProcessAttributes },
+		{ MU8STR("attributes"),			ProcessAttributes },
 		{ MU8STR("equipment"),			ProcessEntityEquipment },
 		{ MU8STR("drop_chances"),		ProcessEntityDropChances },
 	};

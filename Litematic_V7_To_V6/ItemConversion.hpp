@@ -861,36 +861,36 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 	{
 		bool bUseItemId;
 		UseTagType enUseTagType;
-		MapValFunc_T funcProcess;
+		MapProcessFunc_P funcProcess;
 	};
 
 	const static std::unordered_map<NBT_Type::String, MapVal_T> mapProcess =
 	{
-		{ MU8STR("minecraft:block_state"),				{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("BlockStateTag"),		_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:instrument"),				{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("instrument"),			_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:map_id"),					{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("map"),					_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:recipes"),					{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("Recipes"),				_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:suspicious_stew_effects"),	{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("effects"),				_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:trim"),						{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("Trim"),					_1, _2, _3, _4) } },
+		{ MU8STR("minecraft:block_state"),				{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("BlockStateTag")> } },
+		{ MU8STR("minecraft:instrument"),				{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("instrument")> } },
+		{ MU8STR("minecraft:map_id"),					{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("map")> } },
+		{ MU8STR("minecraft:recipes"),					{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("Recipes")> } },
+		{ MU8STR("minecraft:suspicious_stew_effects"),	{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("effects")> } },
+		{ MU8STR("minecraft:trim"),						{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("Trim")> } },
 
-		{ MU8STR("minecraft:can_break"),				{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("CanDestroy"),			_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:can_place_on"),				{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("CanPlaceOn"),			_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:custom_model_data"),		{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("CustomModelData"),		_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:damage"),					{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("Damage"),				_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:debug_stick_state"),		{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("DebugProperty"),		_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:note_block_sound"),			{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("note_block_sound"),		_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:repair_cost"),				{ false,	UseTagType::V6Tag,			std::bind(RenameProcess,	MU8STR("RepairCost"),			_1, _2, _3, _4) } },
+		{ MU8STR("minecraft:can_break"),				{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("CanDestroy")> } },
+		{ MU8STR("minecraft:can_place_on"),				{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("CanPlaceOn")> } },
+		{ MU8STR("minecraft:custom_model_data"),		{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("CustomModelData")> } },
+		{ MU8STR("minecraft:damage"),					{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("Damage")> } },
+		{ MU8STR("minecraft:debug_stick_state"),		{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("DebugProperty")> } },
+		{ MU8STR("minecraft:note_block_sound"),			{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("note_block_sound")> } },
+		{ MU8STR("minecraft:repair_cost"),				{ false,	UseTagType::V6Tag,			RenameOnly<U8STR("RepairCost")> } },
 
-		{ MU8STR("minecraft:bundle_contents"),			{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Items"),				ProcessItems,					_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:enchantments"),				{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Enchantments"),			ProcessEnchantments,			_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:stored_enchantments"),		{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("StoredEnchantments"),	ProcessEnchantments,			_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:entity_data"),				{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("EntityTag"),			ProcessEntityTag,				_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:firework_explosion"),		{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Explosion"),			ProcessFireworkExplosion,		_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:fireworks"),				{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Fireworks"),			ProcessFireworks,				_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:map_decorations"),			{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Decorations"),			ProcessMapDecorations,			_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:profile"),					{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("SkullOwner"),			ProcessSkullProfile,			_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:unbreakable"),				{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Unbreakable"),			ProcessUnbreakable,				_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:axolotl/variant"),			{ false,	UseTagType::V6Tag,			std::bind(DefaultProcess,	MU8STR("Variant"),				ProcessAxolotlVariant,			_1, _2, _3, _4) } },
+		{ MU8STR("minecraft:bundle_contents"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Items"), ProcessItems> } },
+		{ MU8STR("minecraft:enchantments"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Enchantments"), ProcessEnchantments> } },
+		{ MU8STR("minecraft:stored_enchantments"),		{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("StoredEnchantments"), ProcessEnchantments> } },
+		{ MU8STR("minecraft:entity_data"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("EntityTag"), ProcessEntityTag> } },
+		{ MU8STR("minecraft:firework_explosion"),		{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Explosion"), ProcessFireworkExplosion> } },
+		{ MU8STR("minecraft:fireworks"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Fireworks"), ProcessFireworks> } },
+		{ MU8STR("minecraft:map_decorations"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Decorations"), ProcessMapDecorations> } },
+		{ MU8STR("minecraft:profile"),					{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("SkullOwner"), ProcessSkullProfile> } },
+		{ MU8STR("minecraft:unbreakable"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Unbreakable"), ProcessUnbreakable> } },
+		{ MU8STR("minecraft:axolotl/variant"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<U8STR("Variant"), ProcessAxolotlVariant> } },
 
 		{ MU8STR("minecraft:attribute_modifiers"),		{ false,	UseTagType::V6Tag,			ProcessAttributeModifiers } },
 		{ MU8STR("minecraft:custom_data"),				{ false,	UseTagType::V6Tag,			ProcessCustomData } },
@@ -906,11 +906,11 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:tropical_fish/pattern_color"),{ false,	UseTagType::V6Tag,			ProcessTropicalFishData } },
 
 		
-		{ MU8STR("minecraft:map_color"),				{ false,	UseTagType::DisplayTag,		std::bind(RenameProcess,	MU8STR("MapColor"),				_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:dyed_color"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("color"),				ProcessDyedColor,				_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Lore"),					ProcessTextComponentListTag,	_1, _2, _3, _4) } },
-		{ MU8STR("minecraft:custom_name"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Name"),					ProcessTextComponentTag,		_1, _2, _3, _4) } },
-		//{ MU8STR("minecraft:item_name"),				{ false,	UseTagType::DisplayTag,		std::bind(DefaultProcess,	MU8STR("Name"),					ProcessTextComponentTag,		_1, _2, _3, _4) } },
+		{ MU8STR("minecraft:map_color"),				{ false,	UseTagType::DisplayTag,		RenameOnly<U8STR("MapColor")> } },
+		{ MU8STR("minecraft:dyed_color"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("color"), ProcessDyedColor> } },
+		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("Lore"), ProcessTextComponentListTag> } },
+		{ MU8STR("minecraft:custom_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("Name"), ProcessTextComponentTag> } },
+		//{ MU8STR("minecraft:item_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<U8STR("Name"), ProcessTextComponentTag> } },
 
 
 		{ MU8STR("minecraft:block_entity_data"),		{ false,	UseTagType::BlockEntityTag,	ProcessBlockEntityData } },
@@ -918,39 +918,39 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 
 
 		{ MU8STR("minecraft:charged_projectiles"),		{ false,	UseTagType::V6Tag,
-			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
+			+[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
 			{
 				cpdV6TagData.PutByte(MU8STR("Charged"), 1);//boolean=true
-				DefaultProcess(MU8STR("ChargedProjectiles"), ProcessChargedProjectile, strV7TagKey, nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
+				RenameAndProcess<U8STR("ChargedProjectiles"), ProcessChargedProjectile>(strV7TagKey, nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
 			}}
 		},
 
 
 
 		{ MU8STR("minecraft:banner_patterns"),			{ false,	UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
+			+[](const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
 			{
 				cpdV6TagData.PutString(MU8STR("id"), MU8STR("minecraft:banner"));
-				DefaultProcess(MU8STR("Patterns"), ProcessPatterns, strV7TagKey, nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
+				RenameAndProcess<U8STR("Patterns"), ProcessPatterns>(strV7TagKey, nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
 			}}
 		},
 		{ MU8STR("minecraft:bees"),						{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
+			+[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
 			{
 				cpdV6TagData.PutString(MU8STR("id"), strItemId);
-				DefaultProcess(MU8STR("Bees"), ProcessBees, MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
+				RenameAndProcess<U8STR("Bees"), ProcessBees>(MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
 			}}
 		},
 		{ MU8STR("minecraft:container"),				{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
+			+[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
 			{
 				if (strItemId.find(MU8STR("decorated_pot")) != strItemId.npos)
 				{
-					DefaultProcess(MU8STR("item"), ProcessSingleItemNested, MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
+					RenameAndProcess<U8STR("item"), ProcessSingleItemNested>(MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
 				}
 				else
 				{
-					DefaultProcess(MU8STR("Items"), ProcessItemsNested, MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
+					RenameAndProcess<U8STR("Items"), ProcessItemsNested>(MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
 				}
 
 				bool bShulker = strItemId.find(MU8STR("shulker")) != strItemId.npos;
@@ -958,24 +958,24 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 			}}
 		},
 		{ MU8STR("minecraft:container_loot"),			{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
+			+[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
 			{
 				cpdV6TagData.PutString(MU8STR("id"), strItemId);
-				DefaultProcess(MU8STR("LootTable"), ProcessLootTable, MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
+				RenameAndProcess<U8STR("LootTable"), ProcessLootTable>(MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
 			}}
 		},
 		{ MU8STR("minecraft:lock"),						{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
+			+[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
 			{
 				cpdV6TagData.PutString(MU8STR("id"), strItemId);
 				cpdV6TagData.Put(MU8STR("Lock"), std::move(nodeV7TagVal));
 			}}
 		},
 		{ MU8STR("minecraft:pot_decorations"),			{ true,		UseTagType::BlockEntityTag,
-			[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
+			+[](const NBT_Type::String &strItemId, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion) -> void
 			{
 				cpdV6TagData.PutString(MU8STR("id"), strItemId);
-				RenameProcess(MU8STR("sherds"), MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
+				RenameOnly<U8STR("sherds")>(MU8STR(""), nodeV7TagVal, cpdV6TagData, iV7McDataVersion);
 			}}
 		},
 	};

@@ -209,28 +209,28 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 	using std::placeholders::_3;
 	using std::placeholders::_4;
 
-	const static std::unordered_map<NBT_Type::String, MapValFunc_T> mapProcess =
+	const static std::unordered_map<NBT_Type::String, MapProcessFunc_P> mapProcess =
 	{
-		{ MU8STR("custom_name"),				std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessTextComponentTag,	_1, _2, _3, _4) },
-		{ MU8STR("CustomName"),					std::bind(DefaultProcess,	MU8STR("CustomName"),	ProcessTextComponentTag,	_1, _2, _3, _4) },//高版本仍有麻将忘记改名的遗留物
+		{ MU8STR("custom_name"),				RenameAndProcess<U8STR("CustomName"), ProcessTextComponentTag> },
+		{ MU8STR("CustomName"),					RenameAndProcess<U8STR("CustomName"), ProcessTextComponentTag> },//高版本仍有麻将忘记改名的遗留物
 
 		{ MU8STR("ticks_since_song_started"),	ProcessJukebox }, //唱片机特殊处理
 
-		{ MU8STR("Items"),						std::bind(DefaultProcess,	MU8STR("Items"),		ProcessItems,			_1, _2, _3, _4) },
-		{ MU8STR("patterns"),					std::bind(DefaultProcess,	MU8STR("Patterns"),		ProcessPatterns,		_1, _2, _3, _4) },
-		{ MU8STR("profile"),					std::bind(DefaultProcess,	MU8STR("SkullOwner"),	ProcessSkullProfile,	_1, _2, _3, _4) },
-		{ MU8STR("flower_pos"),					std::bind(DefaultProcess,	MU8STR("FlowerPos"),	ProcessBlockPos,		_1, _2, _3, _4) },
-		{ MU8STR("exit_portal"),				std::bind(DefaultProcess,	MU8STR("ExitPortal"),	ProcessBlockPos,		_1, _2, _3, _4) },
-		{ MU8STR("bees"),						std::bind(DefaultProcess,	MU8STR("Bees"),			ProcessBees,			_1, _2, _3, _4) },
-		{ MU8STR("item"),						std::bind(DefaultProcess,	MU8STR("item"),			ProcessSingleItem,		_1, _2, _3, _4) },
-		{ MU8STR("RecordItem"),					std::bind(DefaultProcess,	MU8STR("RecordItem"),	ProcessSingleItem,		_1, _2, _3, _4) },
-		{ MU8STR("Book"),						std::bind(DefaultProcess,	MU8STR("Book"),			ProcessSingleItem,		_1, _2, _3, _4) },
+		{ MU8STR("Items"),						RenameAndProcess<U8STR("Items"), ProcessItems> },
+		{ MU8STR("patterns"),					RenameAndProcess<U8STR("Patterns"), ProcessPatterns> },
+		{ MU8STR("profile"),					RenameAndProcess<U8STR("SkullOwner"), ProcessSkullProfile> },
+		{ MU8STR("flower_pos"),					RenameAndProcess<U8STR("FlowerPos"), ProcessBlockPos> },
+		{ MU8STR("exit_portal"),				RenameAndProcess<U8STR("ExitPortal"), ProcessBlockPos> },
+		{ MU8STR("bees"),						RenameAndProcess<U8STR("Bees"), ProcessBees> },
+		{ MU8STR("item"),						RenameAndProcess<U8STR("item"), ProcessSingleItem> },
+		{ MU8STR("RecordItem"),					RenameAndProcess<U8STR("RecordItem"), ProcessSingleItem> },
+		{ MU8STR("Book"),						RenameAndProcess<U8STR("Book"), ProcessSingleItem> },
 
-		{ MU8STR("front_text"),					std::bind(DefaultProcess,	MU8STR("front_text"),	ProcessSignText,		_1, _2, _3, _4) },
-		{ MU8STR("back_text"),					std::bind(DefaultProcess,	MU8STR("back_text"),	ProcessSignText,		_1, _2, _3, _4) },
+		{ MU8STR("front_text"),					RenameAndProcess<U8STR("front_text"), ProcessSignText> },
+		{ MU8STR("back_text"),					RenameAndProcess<U8STR("back_text"), ProcessSignText> },
 
-		{ MU8STR("primary_effect"),				std::bind(DefaultProcess,	MU8STR("Primary"),		ProcessBeaconEffect,	_1, _2, _3, _4) },
-		{ MU8STR("secondary_effect"),			std::bind(DefaultProcess,	MU8STR("Secondary"),	ProcessBeaconEffect,	_1, _2, _3, _4) },
+		{ MU8STR("primary_effect"),				RenameAndProcess<U8STR("Primary"), ProcessBeaconEffect> },
+		{ MU8STR("secondary_effect"),			RenameAndProcess<U8STR("Secondary"), ProcessBeaconEffect> },
 	};
 
 	for (auto &[itV7TagKey, itV7TagVal] : cpdV7TileEntityData)
