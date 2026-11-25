@@ -319,7 +319,7 @@ private:
 			szCounter += 1;
 		}
 
-		constexpr const size_t GetData(void) const noexcept
+		constexpr size_t GetData(void) const noexcept
 		{
 			return szCounter;
 		}
@@ -1135,6 +1135,21 @@ public:
 		>();
 	}
 
+	/// @brief 通过UTF-16字符串字面量，直接获得编译期的M-UTF-8静态字符串数组
+	/// @tparam u16String UTF-16字符串字面量，用于构造MUTF8_Tool_Internal::StringLiteral
+	/// @return 一个由std::array存储的编译期静态字符串数组，可直接作为NTTP使用等
+	/// @note 此函数仅能在编译期使用，内部通过StaticString生成数组并直接返回其数据，
+	/// 由于返回值本身即为编译期常量对象，可用作非类型模板参数（NTTP）进行传递
+	template<MUTF8_Tool_Internal::StringLiteral u16String>
+	requires std::is_same_v<typename decltype(u16String)::value_type, U16T>//限定类型
+	static consteval auto U16ToMU8Raw(void)
+	{
+		constexpr size_t szStringLength = ContentLength(u16String);
+		constexpr size_t szNewLength = U16ToMU8Impl<FakeStringCounter<MU8T>>(u16String.data(), szStringLength).GetData();
+
+		return U16ToMU8Impl<StaticString<MU8T, szNewLength>>(u16String.data(), szStringLength).GetData();
+	}
+
 	//---------------------------------------------------------------------------------------------//
 
 	/// @brief 精确计算UTF-8转换到M-UTF-8所需的M-UTF-8字符串的长度
@@ -1189,11 +1204,26 @@ public:
 		constexpr size_t szStringLength = ContentLength(u8String);
 		constexpr size_t szNewLength = U8ToMU8Impl<FakeStringCounter<MU8T>>(u8String.data(), szStringLength).GetData();
 
-		return MUTF8_Tool_Internal::ToStringView<U8ToMU8Impl
+		return MUTF8_Tool_Internal::ToStringView
 		<
-			StaticString<MU8T, szNewLength>>(u8String.data(), szStringLength).GetData(),
+			U8ToMU8Impl<StaticString<MU8T, szNewLength>>(u8String.data(), szStringLength).GetData(),
 			MU8_String_View
 		>();
+	}
+
+	/// @brief 通过UTF-8字符串字面量，直接获得编译期的M-UTF-8静态字符串数组
+	/// @tparam u8String UTF-8字符串字面量，用于构造MUTF8_Tool_Internal::StringLiteral
+	/// @return 一个由std::array存储的编译期静态字符串数组，可直接作为NTTP使用等
+	/// @note 此函数仅能在编译期使用，内部通过StaticString生成数组并直接返回其数据，
+	/// 由于返回值本身即为编译期常量对象，可用作非类型模板参数（NTTP）进行传递
+	template<MUTF8_Tool_Internal::StringLiteral u8String>
+	requires std::is_same_v<typename decltype(u8String)::value_type, U8T>//限定类型
+	static consteval MU8_String_View U8ToMU8Raw(void)
+	{
+		constexpr size_t szStringLength = ContentLength(u8String);
+		constexpr size_t szNewLength = U8ToMU8Impl<FakeStringCounter<MU8T>>(u8String.data(), szStringLength).GetData();
+
+		return U8ToMU8Impl<StaticString<MU8T, szNewLength>>(u8String.data(), szStringLength).GetData();
 	}
 
 	//---------------------------------------------------------------------------------------------//
@@ -1311,17 +1341,29 @@ public:
 //静态转换
 //在mutf-8中，任何字符串结尾\0都会被映射成0xC0 0x80，且保证串中不包含\0，所以一定程度上可以和c-str（以\0结尾）兼容
 
-/// @brief UTF-16字符串字面量到M-UTF-8静态字符串数组的编译期转换宏
+/// @brief UTF-16字符串字面量到M-UTF-8静态字符串视图的编译期转换宏
 /// @param u16LiteralString UTF-16字符串字面量
-/// @return 编译期生成的std::array存储的静态字符串数组
+/// @return 编译期生成的std::array存储的静态字符串数组组固化后转化为的StringView（仅字符串视图，数据固化在全局常量区）
 /// @note 在M-UTF-8中，任何字符串结尾\\0都会被映射成0xC0 0x80，且保证串中不包含\\0，所以一定程度上可以和C字符串（以\\0结尾）兼容
 #define U16TOMU8STR(u16LiteralString) (MUTF8_Tool<>::U16ToMU8<u16LiteralString>())
 
-/// @brief UTF-8字符串字面量到M-UTF-8静态字符串数组的编译期转换宏
+/// @brief UTF-8字符串字面量到M-UTF-8静态字符串视图的编译期转换宏
 /// @param u8LiteralString UTF-8字符串字面量
-/// @return 编译期生成的std::array存储的静态字符串数组
+/// @return 编译期生成的std::array存储的静态字符串数组固化后转化为的StringView（仅字符串视图，数据固化在全局常量区）
 /// @note 在M-UTF-8中，任何字符串结尾\\0都会被映射成0xC0 0x80，且保证串中不包含\\0，所以一定程度上可以和C字符串（以\\0结尾）兼容
 #define U8TOMU8STR(u8LiteralString) (MUTF8_Tool<>::U8ToMU8<u8LiteralString>())
+
+/// @brief UTF-16字符串字面量到M-UTF-8静态字符串数组的编译期转换宏
+/// @param u16LiteralString UTF-16字符串字面量
+/// @return 编译期生成的std::array存储的静态字符串数组，可直接作为NTTP使用（裸字符串数组，持有指针引用等情况请注意固化，否则悬空）
+/// @note 在M-UTF-8中，任何字符串结尾\\0都会被映射成0xC0 0x80，且保证串中不包含\\0，所以一定程度上可以和C字符串（以\\0结尾）兼容
+#define U16TOMU8RAW(u16LiteralString) (MUTF8_Tool<>::U16ToMU8Raw<u16LiteralString>())
+
+/// @brief UTF-8字符串字面量到M-UTF-8静态字符串数组的编译期转换宏
+/// @param u8LiteralString UTF-8字符串字面量
+/// @return 编译期生成的std::array存储的静态字符串数组，可直接作为NTTP使用（裸字符串数组，持有指针引用等情况请注意固化，否则选课）
+/// @note 在M-UTF-8中，任何字符串结尾\\0都会被映射成0xC0 0x80，且保证串中不包含\\0，所以一定程度上可以和C字符串（以\\0结尾）兼容
+#define U8TOMU8RAW(u8LiteralString) (MUTF8_Tool<>::U8ToMU8Raw<u8LiteralString>())
 
 //---------------------------------------------------------------------------------------------//
 
