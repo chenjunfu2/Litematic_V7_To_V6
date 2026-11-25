@@ -698,6 +698,8 @@ void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 //TODO:AttributeModifiers（物品相关）完善
 //TODO:HideFlags晚上（物品相关）
 //TODO:组件转换
+//TODO:方块替换功能（配置文件与LUA脚本支持）
+//TODO:方块实体替换功能（仅LUA脚本支持）
 void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	//V6 Key = MU8STR("AttributeModifiers")
