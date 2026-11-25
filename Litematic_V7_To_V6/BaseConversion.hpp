@@ -15,41 +15,93 @@
 //定义
 #define MC_1_21_4_MINECRAFT_DATA_VERSION 4189
 
-template<typename T, typename V>
-requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructible_v<T, V>)
-T CopyOrElse(const T *p, V &&d)
-{
-	return p != NULL ? *p : std::forward<V>(d);
-}
+struct NoneValue//空值占位符
+{};
 
-template<typename T, typename V>
-requires(std::is_same_v<std::decay_t<T>, std::decay_t<V>> || std::is_constructible_v<T, V>)
-T MoveOrElse(T *p, V &&d)
-{
-	return p != NULL ? std::move(*p) : std::forward<V>(d);
-}
-
-template<typename SS, typename ST>
+template<NBT_TAG tagType = NBT_TAG::ENUM_END, typename DV = NoneValue, typename SS, typename ST>
 requires
 (
 	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<SS>> &&
-	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<ST>>
+	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<ST>> &&
+	(
+		std::is_same_v<std::remove_cvref_t<DV>, NoneValue> ||
+		tagType == NBT_TAG::ENUM_END ||
+		std::is_constructible_v<NBT_Type::TagToType_T<tagType>, DV>
+	)
 )
-bool TryRenameMove(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Compound &cpdTarget, ST &&strTarget, NBT_TAG tagType = NBT_TAG::ENUM_END)
+bool TryRenameMove(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Compound &cpdTarget, ST &&strTarget, DV &&defaultVal = NoneValue{})
 {
-	if (NBT_Node *pSources = cpdSource.Has(std::forward<SS>(strSource)); pSources != NULL)
-	{
-		if (tagType != NBT_TAG::ENUM_END && pSources->GetTag() != tagType)
-		{
-			return false;
-		}
+	using Type_T = NBT_Type::TagToType_T<tagType>;
 
-		cpdTarget.Put(std::forward<ST>(strTarget), std::move(*pSources));
+	if (NBT_Node *pSources = cpdSource.Has(std::forward<SS>(strSource));
+		pSources != NULL && (tagType == NBT_TAG::ENUM_END || pSources->GetTag() == tagType))
+	{
+		cpdTarget.Put(std::forward<ST>(strTarget), std::move(*pSources));//always no cast, is same type, move nbt_node pack
 		return true;
 	}
 	else
 	{
-		return false;
+		if constexpr (!std::same_as<std::remove_cvref_t<DV>, NoneValue>)
+		{
+			if constexpr (std::same_as<std::remove_cvref_t<DV>, Type_T>)
+			{
+				cpdTarget.Put(std::forward<ST>(strTarget), std::forward<DV>(defaultVal));//no cast
+			}
+			else//requires DV constructible to Target_T
+			{
+				cpdTarget.Put(std::forward<ST>(strTarget), (Type_T)std::forward<DV>(defaultVal));//cast
+			}
+			
+			return true;
+		}
+		else
+		{
+			return false;
+		}	
+	}
+}
+
+template<NBT_TAG tagSourceType, NBT_TAG tagTargetType, typename DV = NoneValue, typename SS, typename ST>
+requires
+(
+	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<SS>> &&
+	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<ST>> &&
+	tagSourceType != tagTargetType &&
+	std::is_constructible_v<NBT_Type::TagToType_T<tagTargetType>, NBT_Type::TagToType_T<tagSourceType> &&> &&
+	(
+		std::is_same_v<std::remove_cvref_t<DV>, NoneValue> ||
+		std::is_constructible_v<NBT_Type::TagToType_T<tagTargetType>, DV>
+	)
+)
+bool TryRenameCast(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Compound &cpdTarget, ST &&strTarget, DV &&defaultVal = NoneValue{})
+{
+	using Source_T = NBT_Type::TagToType_T<tagSourceType>;
+	using Target_T = NBT_Type::TagToType_T<tagTargetType>;
+
+	if (NBT_Node *pSources = cpdSource.Has(std::forward<SS>(strSource));
+		pSources != NULL && pSources->GetTag() == tagSourceType)
+	{
+		cpdTarget.Put(std::forward<ST>(strTarget), (Target_T)std::move(pSources->Get<Source_T>()));//always cast
+		return true;
+	}
+	else
+	{
+		if constexpr (!std::same_as<std::remove_cvref_t<DV>, NoneValue>)
+		{
+			if constexpr (std::same_as<std::remove_cvref_t<DV>, Target_T>)
+			{
+				cpdTarget.Put(std::forward<ST>(strTarget), std::forward<DV>(defaultVal));//no cast
+			}
+			else//requires DV constructible to Target_T
+			{
+				cpdTarget.Put(std::forward<ST>(strTarget), (Target_T)std::forward<DV>(defaultVal));//cast
+			}
+			return true;
+		}
+		else
+		{
+			return false;
+		}	
 	}
 }
 
@@ -767,8 +819,7 @@ void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_T
 			}
 		);
 
-		cpdV6Entry.PutDouble(MU8STR("Base"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("base")), 0.0));
-
+		TryRenameMove(cpdV7Entry, MU8STR("base"), cpdV6Entry, MU8STR("Base"), NBT_TAG::Double, 0.0);
 
 		TryRenameTransfer(cpdV7Entry, MU8STRV("modifiers"), cpdV6Entry, MU8STR("Modifiers"),
 			[&strEntityId, iV7McDataVersion](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
@@ -843,8 +894,8 @@ void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int i
 		auto &cpdV7Entry = itV7Entry.GetCompound();
 		auto &cpdV6Entry = listV6.AddBackCompound({}).GetCompound();
 
-		cpdV6Entry.PutInt(MU8STR("TicksInHive"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("ticks_in_hive")), 0));
-		cpdV6Entry.PutInt(MU8STR("MinOccupationTicks"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("min_ticks_in_hive")), 0));
+		TryRenameMove(cpdV7Entry, MU8STR("ticks_in_hive"), cpdV6Entry, MU8STR("TicksInHive"), NBT_TAG::Int, 0);
+		TryRenameMove(cpdV7Entry, MU8STR("min_ticks_in_hive"), cpdV6Entry, MU8STR("MinOccupationTicks"), NBT_TAG::Int, 0);
 
 		//处理实体数据转换
 		auto *pFind = cpdV7Entry.HasCompound(MU8STR("entity_data"));

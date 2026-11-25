@@ -124,7 +124,7 @@ void ProcessFireworks(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::
 	auto &cpdV7 = nodeV7Tag.GetCompound();
 	auto &cpdV6 = nodeV6Tag.SetCompound();
 
-	cpdV6.PutByte(MU8STR("Flight"), CopyOrElse(cpdV7.HasByte(MU8STR("flight_duration")), 1));
+	TryRenameMove(cpdV7, MU8STR("flight_duration"), cpdV6, MU8STR("Flight"), NBT_TAG::Byte, 1);
 
 	auto *pExplosions = cpdV7.HasList(MU8STR("explosions"));
 	if (pExplosions != NULL)
@@ -172,9 +172,9 @@ void ProcessMapDecorations(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_T
 		NBT_Type::Compound cpdV6Entry;
 
 		cpdV6Entry.PutString(MU8STR("id"), strV7Key);
-		cpdV6Entry.PutDouble(MU8STR("x"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("x")), 0.0));
-		cpdV6Entry.PutDouble(MU8STR("z"), CopyOrElse(cpdV7Entry.HasDouble(MU8STR("z")), 0.0));
-		cpdV6Entry.PutDouble(MU8STR("rot"), (NBT_Type::Double)CopyOrElse(cpdV7Entry.HasFloat(MU8STR("rotation")), 0.0f));
+		TryRenameMove(cpdV7Entry, MU8STR("x"), cpdV6Entry, MU8STR("x"), NBT_TAG::Double, 0.0);
+		TryRenameMove(cpdV7Entry, MU8STR("z"), cpdV6Entry, MU8STR("z"), NBT_TAG::Double, 0.0);
+		TryRenameCast<NBT_TAG::Float, NBT_TAG::Double>(cpdV7Entry, MU8STR("rotation"), cpdV6Entry, MU8STR("rot"), 0.0);
 
 		NBT_Type::Byte bType = 0;//default
 		if (auto *pType = cpdV7Entry.HasString(MU8STR("type")); pType != NULL)
@@ -361,7 +361,7 @@ void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &no
 		if (pTitle->IsCompound())
 		{
 			auto &cpdTitle = pTitle->GetCompound();
-			cpdV6TagData.PutString(MU8STR("title"), MoveOrElse(cpdTitle.HasString(MU8STR("raw")), MU8STR("")));//必选段
+			TryRenameMove(cpdTitle, MU8STR("raw"), cpdV6TagData, MU8STR("title"), NBT_TAG::String, MU8STR(""));//必选段
 			if (auto *pFilteredTitle = cpdTitle.HasString(MU8STR("filtered")); pFilteredTitle != NULL)//可选段
 			{
 				cpdV6TagData.PutString(MU8STR("filtered_title"), *pFilteredTitle);
@@ -646,7 +646,7 @@ void ProcessChargedProjectile(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NB
 		}
 
 		auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-		cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
+		TryRenameCast<NBT_TAG::Int, NBT_TAG::Byte>(cpdV7Entry, MU8STR("count"), cpdV6Item, MU8STR("Count"), 1);
 
 		ProcessItemComponentsAndMappingItemId(cpdV7Entry, cpdV6Item, strItemId, iV7McDataVersion);
 
@@ -712,8 +712,8 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int 
 		}
 
 		auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-		cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Entry.HasInt(MU8STR("count")), 1));
-		cpdV6Item.PutByte(MU8STR("Slot"), CopyOrElse(cpdV7Entry.HasByte(MU8STR("Slot")), bSlot));
+		TryRenameCast<NBT_TAG::Int, NBT_TAG::Byte>(cpdV7Entry, MU8STR("count"), cpdV6Item, MU8STR("Count"), 1);
+		TryRenameMove(cpdV7Entry, MU8STR("Slot"), cpdV6Item, MU8STR("Slot"), NBT_TAG::Byte, bSlot);
 
 		ProcessItemComponentsAndMappingItemId(cpdV7Entry, cpdV6Item, strItemId, iV7McDataVersion);
 
@@ -767,8 +767,8 @@ void ProcessItemsNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type
 
 		//依次插入Id，Count和Slot
 		auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-		cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));//至少要有1个
-		cpdV6Item.PutByte(MU8STR("Slot"), (NBT_Type::Byte)CopyOrElse(cpdV7Entry.HasInt(MU8STR("slot")), bSlot));//获取外层槽位，如果不存在则使用修复值
+		TryRenameCast<NBT_TAG::Int, NBT_TAG::Byte>(cpdV7Item, MU8STR("count"), cpdV6Item, MU8STR("Count"), 1);//至少要有1个
+		TryRenameCast<NBT_TAG::Int, NBT_TAG::Byte>(cpdV7Entry, MU8STR("slot"), cpdV6Item, MU8STR("Slot"), bSlot);//获取外层槽位，如果不存在则使用修复值
 
 		//递归转换tag
 		ProcessItemComponentsAndMappingItemId(cpdV7Item, cpdV6Item, strItemId, iV7McDataVersion);
@@ -797,7 +797,7 @@ void ProcessSingleItem(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type:
 
 	auto &cpdV6Item = nodeV6Tag.SetCompound();
 	auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
-	cpdV6Item.PutByte(MU8STR("Count"), CopyOrElse(cpdV7Item.HasInt(MU8STR("count")), 1));
+	TryRenameCast<NBT_TAG::Int, NBT_TAG::Byte>(cpdV7Item, MU8STR("count"), cpdV6Item, MU8STR("Count"), 1);
 
 	ProcessItemComponentsAndMappingItemId(cpdV7Item, cpdV6Item, strItemId, iV7McDataVersion);
 
@@ -829,7 +829,7 @@ void ProcessSingleItemNested(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT
 
 
 	//低版本不存在，无用
-	//auto iSlot = CopyOrElse(pV7Entry->HasInt(MU8STR("slot")), 0);//理论上必须存在且为0，不做验证
+	//auto iSlot = CopyOrElse(pV7Entry->HasInt(MU8STR("slot")), 0);//理论上必须存在且为0，不做验证，注释中的CopyOrElse已被删除，等效于判断NULL则替换为0，否则返回原始值
 	auto *pV7Item = pV7Entry->Has(MU8STR("item"));
 	if (pV7Item == NULL)
 	{
