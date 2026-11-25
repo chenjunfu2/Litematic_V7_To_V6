@@ -693,10 +693,11 @@ void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 
 }
 
-//TODO:TryRenameMove等辅助函数，减少代码
+//TODO:大量重构复杂重复逻辑为TryRenameMove等辅助函数，减少代码
 //TODO:MUSTR尽量全改MU8STRV，NBT库全线支持透明查找
-//TODO:AttributeModifiers完善，目前还不完整
-//TODO:物品不同版本的HideFlag还有组件转换也要做
+//TODO:AttributeModifiers（物品相关）完善
+//TODO:HideFlags晚上（物品相关）
+//TODO:组件转换
 void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	//V6 Key = MU8STR("AttributeModifiers")
