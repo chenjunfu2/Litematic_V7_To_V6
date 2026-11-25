@@ -606,8 +606,8 @@ void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 	auto &cpdV6 = nodeV6Tag.SetCompound();
 
 	
-	TryRenameMove(cpdV7, MU8STRV("name"), cpdV6, MU8STRV("Name"), NBT_TAG::String);
-	TryRenameMove(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"), NBT_TAG::Double);
+	TryRenameMove<NBT_TAG::String>(cpdV7, MU8STRV("name"), cpdV6, MU8STRV("Name"));
+	TryRenameMove<NBT_TAG::Double>(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"));
 
 	TryRenameTransfer(cpdV7, MU8STRV("type"), cpdV6, MU8STRV("AttributeName"), 
 		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
@@ -751,7 +751,7 @@ void ProcessEntityModifiers(NBT_Node &V7Tag, NBT_Node &V6Tag, const NBT_Type::St
 		}
 	}
 
-	TryRenameMove(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"), NBT_TAG::Double);
+	TryRenameMove<NBT_TAG::Double>(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"));
 
 	TryRenameTransfer(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
 		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
@@ -819,7 +819,7 @@ void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_T
 			}
 		);
 
-		TryRenameMove(cpdV7Entry, MU8STR("base"), cpdV6Entry, MU8STR("Base"), NBT_TAG::Double, 0.0);
+		TryRenameMove<NBT_TAG::Double>(cpdV7Entry, MU8STR("base"), cpdV6Entry, MU8STR("Base"), 0.0);
 
 		TryRenameTransfer(cpdV7Entry, MU8STRV("modifiers"), cpdV6Entry, MU8STR("Modifiers"),
 			[&strEntityId, iV7McDataVersion](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
@@ -894,8 +894,8 @@ void ProcessBees(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int i
 		auto &cpdV7Entry = itV7Entry.GetCompound();
 		auto &cpdV6Entry = listV6.AddBackCompound({}).GetCompound();
 
-		TryRenameMove(cpdV7Entry, MU8STR("ticks_in_hive"), cpdV6Entry, MU8STR("TicksInHive"), NBT_TAG::Int, 0);
-		TryRenameMove(cpdV7Entry, MU8STR("min_ticks_in_hive"), cpdV6Entry, MU8STR("MinOccupationTicks"), NBT_TAG::Int, 0);
+		TryRenameMove<NBT_TAG::Int>(cpdV7Entry, MU8STR("ticks_in_hive"), cpdV6Entry, MU8STR("TicksInHive"), 0);
+		TryRenameMove<NBT_TAG::Int>(cpdV7Entry, MU8STR("min_ticks_in_hive"), cpdV6Entry, MU8STR("MinOccupationTicks"), 0);
 
 		//处理实体数据转换
 		auto *pFind = cpdV7Entry.HasCompound(MU8STR("entity_data"));

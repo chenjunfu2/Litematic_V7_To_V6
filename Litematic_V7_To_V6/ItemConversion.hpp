@@ -124,7 +124,7 @@ void ProcessFireworks(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::
 	auto &cpdV7 = nodeV7Tag.GetCompound();
 	auto &cpdV6 = nodeV6Tag.SetCompound();
 
-	TryRenameMove(cpdV7, MU8STR("flight_duration"), cpdV6, MU8STR("Flight"), NBT_TAG::Byte, 1);
+	TryRenameMove<NBT_TAG::Byte>(cpdV7, MU8STR("flight_duration"), cpdV6, MU8STR("Flight"), 1);
 
 	auto *pExplosions = cpdV7.HasList(MU8STR("explosions"));
 	if (pExplosions != NULL)
@@ -172,8 +172,8 @@ void ProcessMapDecorations(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_T
 		NBT_Type::Compound cpdV6Entry;
 
 		cpdV6Entry.PutString(MU8STR("id"), strV7Key);
-		TryRenameMove(cpdV7Entry, MU8STR("x"), cpdV6Entry, MU8STR("x"), NBT_TAG::Double, 0.0);
-		TryRenameMove(cpdV7Entry, MU8STR("z"), cpdV6Entry, MU8STR("z"), NBT_TAG::Double, 0.0);
+		TryRenameMove<NBT_TAG::Double>(cpdV7Entry, MU8STR("x"), cpdV6Entry, MU8STR("x"), 0.0);
+		TryRenameMove<NBT_TAG::Double>(cpdV7Entry, MU8STR("z"), cpdV6Entry, MU8STR("z"), 0.0);
 		TryRenameCast<NBT_TAG::Float, NBT_TAG::Double>(cpdV7Entry, MU8STR("rotation"), cpdV6Entry, MU8STR("rot"), 0.0);
 
 		NBT_Type::Byte bType = 0;//default
@@ -361,7 +361,7 @@ void ProcessWrittenBookContent(const NBT_Type::String &strV7TagKey, NBT_Node &no
 		if (pTitle->IsCompound())
 		{
 			auto &cpdTitle = pTitle->GetCompound();
-			TryRenameMove(cpdTitle, MU8STR("raw"), cpdV6TagData, MU8STR("title"), NBT_TAG::String, MU8STR(""));//必选段
+			TryRenameMove<NBT_TAG::String>(cpdTitle, MU8STR("raw"), cpdV6TagData, MU8STR("title"), MU8STR(""));//必选段
 			if (auto *pFilteredTitle = cpdTitle.HasString(MU8STR("filtered")); pFilteredTitle != NULL)//可选段
 			{
 				cpdV6TagData.PutString(MU8STR("filtered_title"), *pFilteredTitle);
@@ -713,7 +713,7 @@ void ProcessItems(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int 
 
 		auto &strItemId = cpdV6Item.PutString(MU8STR("id"), std::move(*pId)).first->second.GetString();
 		TryRenameCast<NBT_TAG::Int, NBT_TAG::Byte>(cpdV7Entry, MU8STR("count"), cpdV6Item, MU8STR("Count"), 1);
-		TryRenameMove(cpdV7Entry, MU8STR("Slot"), cpdV6Item, MU8STR("Slot"), NBT_TAG::Byte, bSlot);
+		TryRenameMove<NBT_TAG::Byte>(cpdV7Entry, MU8STR("Slot"), cpdV6Item, MU8STR("Slot"), bSlot);
 
 		ProcessItemComponentsAndMappingItemId(cpdV7Entry, cpdV6Item, strItemId, iV7McDataVersion);
 
