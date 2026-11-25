@@ -1218,7 +1218,7 @@ public:
 	/// 由于返回值本身即为编译期常量对象，可用作非类型模板参数（NTTP）进行传递
 	template<MUTF8_Tool_Internal::StringLiteral u8String>
 	requires std::is_same_v<typename decltype(u8String)::value_type, U8T>//限定类型
-	static consteval MU8_String_View U8ToMU8Raw(void)
+	static consteval auto U8ToMU8Raw(void)
 	{
 		constexpr size_t szStringLength = ContentLength(u8String);
 		constexpr size_t szNewLength = U8ToMU8Impl<FakeStringCounter<MU8T>>(u8String.data(), szStringLength).GetData();

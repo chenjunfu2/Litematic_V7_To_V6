@@ -132,10 +132,22 @@ bool TryRenameTransfer(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::
 	}
 }
 
-#define U8STR(charLiteralString) (u8##charLiteralString)
+#define MU8RAW(charLiteralString) U8TOMU8RAW(u8##charLiteralString)
+#define RAWARR2STR(MUTF8RawArray) NBT_Type::String::View{ MUTF8RawArray.data(), MUTF8RawArray.size() }
+
+template <class T>
+struct IsStdArrayImpl : std::false_type
+{};
+
+template <class T, std::size_t N>
+struct IsStdArrayImpl<std::array<T, N>> : std::true_type
+{};
+
+template <class T>
+concept IsStdArray = IsStdArrayImpl<std::remove_cvref_t<T>>::value;
 
 template<typename SL>
-concept IsU8StringLiteral = std::same_as<typename std::remove_cvref_t<SL>::Super::value_type, char8_t>;
+concept IsMU8StringArray = IsStdArray<SL> && std::same_as<typename std::remove_cvref_t<SL>::value_type, MUTF8_Char_Type>;
 
 template <typename F>
 concept IsProcessFunc =
@@ -151,21 +163,21 @@ using MapProcessFunc_T = void(const NBT_Type::String &strV7TagKey, NBT_Node &nod
 using MapProcessFunc_P = MapProcessFunc_T *;
 
 //重命名并转换处理
-template<MUTF8_Tool_Internal::StringLiteral NewKey, IsProcessFunc auto ProcessFunc>
+template<auto NewKey, IsProcessFunc auto ProcessFunc>
 void RenameAndProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
-	constexpr auto strNewKey = U8TOMU8STR(NewKey);
+	constexpr auto strNewKey = RAWARR2STR(NewKey);
 	NBT_Node nodeV6TagVal;
 	ProcessFunc(nodeV7TagVal, nodeV6TagVal, iV7McDataVersion);
 	cpdV6TagData.Put(strNewKey, std::move(nodeV6TagVal));
 }
 
 //重命名处理
-template<MUTF8_Tool_Internal::StringLiteral NewKey>
-requires(IsU8StringLiteral<decltype(NewKey)>)
+template<auto NewKey>
+requires(IsMU8StringArray<decltype(NewKey)>)
 void RenameOnly(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
-	constexpr auto strNewKey = U8TOMU8STR(NewKey);
+	constexpr auto strNewKey = RAWARR2STR(NewKey);
 	cpdV6TagData.Put(strNewKey, std::move(nodeV7TagVal));
 }
 
@@ -468,11 +480,11 @@ void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeT
 {
 	static const std::unordered_map<NBT_Type::String, MapProcessFunc_P> mapProcess =
 	{
-		{ MU8STR("click_event"),	RenameAndProcess<U8STR("clickEvent"),	ProcessClickEvent> },
-		{ MU8STR("hover_event"),	RenameAndProcess<U8STR("hoverEvent"),	ProcessHoverEvent> },
-		{ MU8STR("extra"),			RenameAndProcess<U8STR("extra"),		ProcessTextComponentConversion> },//此处递归，因为extra是递归结构，内部可以继续存储TextComponentTag
-		{ MU8STR("with"),			RenameAndProcess<U8STR("with"),			ProcessTextComponentConversion> },//此处递归，因为with是递归结构，内部可以继续存储TextComponentTag
-		{ MU8STR("separator"),		RenameAndProcess<U8STR("separator"),	ProcessTextComponentConversion> },//此处递归，因为separator是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("click_event"),	RenameAndProcess<MU8RAW("clickEvent"),	ProcessClickEvent> },
+		{ MU8STR("hover_event"),	RenameAndProcess<MU8RAW("hoverEvent"),	ProcessHoverEvent> },
+		{ MU8STR("extra"),			RenameAndProcess<MU8RAW("extra"),		ProcessTextComponentConversion> },//此处递归，因为extra是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("with"),			RenameAndProcess<MU8RAW("with"),			ProcessTextComponentConversion> },//此处递归，因为with是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("separator"),		RenameAndProcess<MU8RAW("separator"),	ProcessTextComponentConversion> },//此处递归，因为separator是递归结构，内部可以继续存储TextComponentTag
 	};
 
 	auto *ProcessAll =//使用+退化为函数指针

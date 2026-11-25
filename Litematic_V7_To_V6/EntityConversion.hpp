@@ -5,8 +5,8 @@
 
 #include <algorithm>
 
-template<MUTF8_Tool_Internal::StringLiteral PosPerfix, uint8_t u8PosTypeIndex>
-requires(IsU8StringLiteral<decltype(PosPerfix)>)
+template<auto PosPerfix, uint8_t u8PosTypeIndex>
+requires(IsMU8StringArray<decltype(PosPerfix)>)
 consteval NBT_Type::String::View MakePosStr(void)
 {
 	if (u8PosTypeIndex >= 3)
@@ -14,21 +14,23 @@ consteval NBT_Type::String::View MakePosStr(void)
 		throw std::out_of_range("u8PosTypeIndex out of range");
 	}
 
-	return MUTF8_Tool<>::U8ToMU8<
+	return MUTF8_Tool_Internal::ToStringView
+	<
 		[]() consteval -> auto
 		{
-			constexpr size_t szNewSize = PosPerfix.size();//PosPerfix size包含末尾0
-			char8_t strRet[szNewSize + 1]{};//末尾加0
-			std::ranges::copy(PosPerfix, &strRet[0]);
-			strRet[szNewSize - 1] = U8STR("XYZ")[u8PosTypeIndex];//覆盖拷贝来的末尾0（有预留空间）
-			return MUTF8_Tool_Internal::StringLiteral{strRet};
-		}()
+			constexpr size_t szNewSize = PosPerfix.size() + 1;//PosPerfix 无0结尾字符串，加1预留
+			std::array<MUTF8_Char_Type, szNewSize> strRet{};//0初始化
+			std::ranges::copy(PosPerfix, &strRet[0]);//拷贝前面的部分
+			strRet[szNewSize - 1] = MU8RAW("XYZ")[u8PosTypeIndex];//添加末尾值
+			return strRet;
+		}(),
+		NBT_Type::String::View
 	>();
 }
 
 
-template<MUTF8_Tool_Internal::StringLiteral PosPerfix>
-requires(IsU8StringLiteral<decltype(PosPerfix)>)
+template<auto PosPerfix>
+requires(IsMU8StringArray<decltype(PosPerfix)>)
 void ProcessBlockPosExternal(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	if (!nodeV7TagVal.IsIntArray())
@@ -299,28 +301,28 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 {
 	const static std::unordered_map<NBT_Type::String, MapProcessFunc_P> mapProccess =
 	{
-		{ MU8STR("custom_name"),		RenameAndProcess<U8STR("CustomName"),	ProcessTextComponentTag> },
-		{ MU8STR("CustomName"),			RenameAndProcess<U8STR("CustomName"),	ProcessTextComponentTag> },
+		{ MU8STR("custom_name"),		RenameAndProcess<MU8RAW("CustomName"),	ProcessTextComponentTag> },
+		{ MU8STR("CustomName"),			RenameAndProcess<MU8RAW("CustomName"),	ProcessTextComponentTag> },
 
-		{ MU8STR("has_egg"),			RenameOnly<U8STR("HasEgg")> },
-		{ MU8STR("life_ticks"),			RenameOnly<U8STR("LifeTicks")> },
-		{ MU8STR("size"),				RenameOnly<U8STR("Size")> },
-		{ MU8STR("fall_distance"),		RenameOnly<U8STR("FallDistance")> },
+		{ MU8STR("has_egg"),			RenameOnly<MU8RAW("HasEgg")> },
+		{ MU8STR("life_ticks"),			RenameOnly<MU8RAW("LifeTicks")> },
+		{ MU8STR("size"),				RenameOnly<MU8RAW("Size")> },
+		{ MU8STR("fall_distance"),		RenameOnly<MU8RAW("FallDistance")> },
 
-		{ MU8STR("anchor_pos"),			ProcessBlockPosExternal<U8STR("A")> },
-		{ MU8STR("block_pos"),			ProcessBlockPosExternal<U8STR("Tile")> },
-		{ MU8STR("bound_pos"),			ProcessBlockPosExternal<U8STR("Bound")> },
-		{ MU8STR("home_pos"),			ProcessBlockPosExternal<U8STR("HomePos")> },
-		{ MU8STR("sleeping_pos"),		ProcessBlockPosExternal<U8STR("Sleeping")> },
+		{ MU8STR("anchor_pos"),			ProcessBlockPosExternal<MU8RAW("A")> },
+		{ MU8STR("block_pos"),			ProcessBlockPosExternal<MU8RAW("Tile")> },
+		{ MU8STR("bound_pos"),			ProcessBlockPosExternal<MU8RAW("Bound")> },
+		{ MU8STR("home_pos"),			ProcessBlockPosExternal<MU8RAW("HomePos")> },
+		{ MU8STR("sleeping_pos"),		ProcessBlockPosExternal<MU8RAW("Sleeping")> },
 
-		{ MU8STR("flower_pos"),			RenameAndProcess<U8STR("FlowerPos"),	ProcessBlockPos> },
-		{ MU8STR("hive_pos"),			RenameAndProcess<U8STR("HivePos"),		ProcessBlockPos> },
-		{ MU8STR("Item"),				RenameAndProcess<U8STR("Item"),			ProcessSingleItem> },
-		{ MU8STR("Items"),				RenameAndProcess<U8STR("Items"),		ProcessItems> },
+		{ MU8STR("flower_pos"),			RenameAndProcess<MU8RAW("FlowerPos"),	ProcessBlockPos> },
+		{ MU8STR("hive_pos"),			RenameAndProcess<MU8RAW("HivePos"),		ProcessBlockPos> },
+		{ MU8STR("Item"),				RenameAndProcess<MU8RAW("Item"),			ProcessSingleItem> },
+		{ MU8STR("Items"),				RenameAndProcess<MU8RAW("Items"),		ProcessItems> },
 
-		{ MU8STR("ArmorItems"),			RenameAndProcess<U8STR("ArmorItems"),	ProcessEntityItems<4>> },
-		{ MU8STR("HandItems"),			RenameAndProcess<U8STR("HandItems"),	ProcessEntityItems<2>> },
-		{ MU8STR("Inventory"),			RenameAndProcess<U8STR("Inventory"),	ProcessEntityItems<1>> },
+		{ MU8STR("ArmorItems"),			RenameAndProcess<MU8RAW("ArmorItems"),	ProcessEntityItems<4>> },
+		{ MU8STR("HandItems"),			RenameAndProcess<MU8RAW("HandItems"),	ProcessEntityItems<2>> },
+		{ MU8STR("Inventory"),			RenameAndProcess<MU8RAW("Inventory"),	ProcessEntityItems<1>> },
 
 		{ MU8STR("attributes"),			ProcessAttributes },
 		{ MU8STR("equipment"),			ProcessEntityEquipment },
