@@ -18,6 +18,20 @@
 struct NoneValue//空值占位符
 {};
 
+template<NBT_TAG tagType>
+requires(tagType <= NBT_TAG::ENUM_END)
+struct TagToTypeSafe
+{
+	using type = NBT_Type::TagToType_T<tagType>;
+};
+
+template<>
+struct TagToTypeSafe<NBT_TAG::ENUM_END>
+{
+	using type = NBT_Node;
+};
+
+
 template<NBT_TAG tagType = NBT_TAG::ENUM_END, typename DV = NoneValue, typename SS, typename ST>
 requires
 (
@@ -25,14 +39,12 @@ requires
 	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<ST>> &&
 	(
 		std::is_same_v<std::remove_cvref_t<DV>, NoneValue> ||
-		tagType == NBT_TAG::ENUM_END ||
+		tagType == NBT_TAG::ENUM_END ||//短路求值保护TagToType_T
 		std::is_constructible_v<NBT_Type::TagToType_T<tagType>, DV>
 	)
 )
 bool TryRenameMove(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Compound &cpdTarget, ST &&strTarget, DV &&defaultVal = NoneValue{})
 {
-	using Type_T = NBT_Type::TagToType_T<tagType>;
-
 	if (NBT_Node *pSources = cpdSource.Has(std::forward<SS>(strSource));
 		pSources != NULL && (tagType == NBT_TAG::ENUM_END || pSources->GetTag() == tagType))
 	{
@@ -43,6 +55,7 @@ bool TryRenameMove(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Comp
 	{
 		if constexpr (!std::same_as<std::remove_cvref_t<DV>, NoneValue>)
 		{
+			using Type_T = TagToTypeSafe<tagType>;//NBT_TAG::ENUM_END -> NBT_NODE
 			if constexpr (std::same_as<std::remove_cvref_t<DV>, Type_T>)
 			{
 				cpdTarget.Put(std::forward<ST>(strTarget), std::forward<DV>(defaultVal));//no cast
@@ -67,6 +80,8 @@ requires
 	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<SS>> &&
 	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<ST>> &&
 	tagSourceType != tagTargetType &&
+	tagSourceType != NBT_TAG::ENUM_END &&
+	tagTargetType != NBT_TAG::ENUM_END &&
 	std::is_constructible_v<NBT_Type::TagToType_T<tagTargetType>, NBT_Type::TagToType_T<tagSourceType> &&> &&
 	(
 		std::is_same_v<std::remove_cvref_t<DV>, NoneValue> ||
@@ -105,22 +120,42 @@ bool TryRenameCast(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Comp
 	}
 }
 
-template<typename SS, typename ST, typename F>
+template<NBT_TAG tagType = NBT_TAG::ENUM_END, typename SS, typename ST, typename F>
 requires
 (
 	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<SS>> &&
 	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<ST>> &&
-	std::is_invocable_v<F, NBT_Node &, NBT_Node &> &&
-	std::same_as<std::invoke_result_t<F, NBT_Node &, NBT_Node &>, bool>
-)// use: [](NBT_Node &v7Val, NBT_Node &v6Val) -> bool {};
+	(
+		(
+			tagType == NBT_TAG::ENUM_END &&
+			std::same_as<std::invoke_result_t<F, NBT_Node &, NBT_Node &>, bool>//invoke_result_t失败良定义：原子约束满足性检查时，如果替换导致立即上下文中的类型或表达式无效，则约束不满足。
+		) ||
+		(
+			tagType != NBT_TAG::ENUM_END &&//短路求值保护NBT_Type::TagToType_T<tagType>中的requires，否则硬错误
+			std::same_as<std::invoke_result_t<F, NBT_Type::TagToType_T<tagType> &, NBT_Node &>, bool>//invoke_result_t失败良定义：原子约束满足性检查时，如果替换导致立即上下文中的类型或表达式无效，则约束不满足。
+		)
+	)
+)// use: [](NBT_Node/NBT_Type::xxx &v7Val, NBT_Node &v6Val) -> bool {};
 bool TryRenameTransfer(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Compound &cpdTarget, ST &&strTarget, F &&funcTransfer)
 {
 	if (NBT_Node *pSources = cpdSource.Has(std::forward<SS>(strSource)); pSources != NULL)
 	{
 		NBT_Node tmpTarget{};
-		if (!std::invoke(funcTransfer, *pSources, tmpTarget))
+		if constexpr (tagType == NBT_TAG::ENUM_END)//不解包
 		{
-			return false;
+			if (!std::invoke(funcTransfer, *pSources, tmpTarget))
+			{
+				return false;
+			}
+		}
+		else//constexpr
+		{
+			using Type_T = NBT_Type::TagToType_T<tagType>;//必不可能为NBT_TAG::ENUM_END
+			if (pSources->GetTag() != tagType ||//短路求值保护Get<Type_T>()
+				!std::invoke(funcTransfer, pSources->Get<Type_T>(), tmpTarget))
+			{
+				return false;
+			}
 		}
 
 		cpdTarget.Put(std::forward<ST>(strTarget), std::move(tmpTarget));
@@ -696,7 +731,7 @@ void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 //TODO:大量重构复杂重复逻辑为TryRenameMove等辅助函数，减少代码
 //TODO:MUSTR尽量全改MU8STRV，NBT库全线支持透明查找
 //TODO:AttributeModifiers（物品相关）完善
-//TODO:HideFlags晚上（物品相关）
+//TODO:HideFlags完善（物品相关）
 //TODO:组件转换
 //TODO:方块替换功能（配置文件与LUA脚本支持）
 //TODO:方块实体替换功能（仅LUA脚本支持）
@@ -713,7 +748,7 @@ void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &no
 	}
 	else if (nodeV7TagVal.IsList())//列表show默认true，无需设置hide flag
 	{
-		pModifiers = &nodeV7TagVal.GetList();
+		pModifiers = &nodeV7TagVal.GetList();//直接list相当于modifiers直接挂在attribute_modifiers下，并且总是no hide
 	}
 
 	if (pModifiers == NULL)
