@@ -75,7 +75,7 @@ bool TryRenameMove(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Comp
 		else
 		{
 			return false;
-		}	
+		}
 	}
 }
 
@@ -758,115 +758,6 @@ void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &no
 	if (!listV6Modifiers.Empty())
 	{
 		cpdV6TagData.PutList(MU8STR("AttributeModifiers"), std::move(listV6Modifiers));
-	}
-
-	return;
-}
-
-void ProcessEntityModifiers(NBT_Node &V7Tag, NBT_Node &V6Tag, const NBT_Type::String &strEntityId, const NBT_Type::Int iV7McDataVersion)
-{
-	if (!V7Tag.IsCompound())
-	{
-		V6Tag = std::move(V7Tag);
-		return;
-	}
-
-	auto &cpdV7 = V7Tag.GetCompound();
-	auto &cpdV6 = V6Tag.SetCompound();
-
-	if (auto *pId = cpdV7.HasString(MU8STRV("id")); pId != NULL)
-	{
-		AttributeInfo info = AttributeInfoMap(*pId, strEntityId);//顺手的事
-
-		if (info.bIsRandomUuid)
-		{
-			cpdV6.PutString(MU8STRV("Name"), std::move(info.name));//name被映射，uuid随机生成
-			UUID uuid = NameUuidFromBytes(pId->data(), pId->size());//从原始id生成uuid，确定值
-			cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(uuid));//放入uuid
-		}
-		else
-		{
-			cpdV6.PutString(MU8STRV("Name"), std::move(*pId));//uuid被映射，name直接消费
-			cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(info.uuid));//放入映射uuid
-		}
-	}
-
-	TryRenameMove<NBT_TAG::Double>(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"));
-
-	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
-		[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
-		{
-			v6Val.SetInt(AttributeOperationMap(v7Val));
-			return true;
-		}
-	);
-
-	return;
-}
-
-void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::String &strEntityId, const NBT_Type::Int iV7McDataVersion);
-void ProcessAttributes(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
-{
-	//attributes -> Attributes
-	NBT_Type::String strEmpty{};
-	auto *pEntityId = cpdV6TagData.HasString(MU8STRV("id"));
-	if (pEntityId == NULL)
-	{
-		pEntityId = &strEmpty;
-	}
-
-	NBT_Node nodeV6TagVal;
-	ProcessAttributesImpl(nodeV7TagVal, nodeV6TagVal, *pEntityId, iV7McDataVersion);
-	cpdV6TagData.Put(MU8STR("Attributes"), std::move(nodeV6TagVal));
-};
-
-void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::String &strEntityId, const NBT_Type::Int iV7McDataVersion)
-{
-	if (!nodeV7Tag.IsList())
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &listV7 = nodeV7Tag.GetList();
-	auto &listV6 = nodeV6Tag.SetList();
-
-	for (auto &itV7Entry : listV7)
-	{
-		if (!itV7Entry.IsCompound())
-		{
-			continue;
-		}
-
-		auto &cpdV7Entry = itV7Entry.GetCompound();
-		NBT_Type::Compound cpdV6Entry;
-
-		TryRenameTransfer<NBT_TAG::String>(cpdV7Entry, MU8STRV("id"), cpdV6Entry, MU8STRV("Name"),
-			[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
-			{
-				v6Val.SetString(AttributeNameMap(v7Val));
-				return true;
-			}
-		);
-
-		TryRenameMove<NBT_TAG::Double>(cpdV7Entry, MU8STR("base"), cpdV6Entry, MU8STR("Base"), 0.0);
-
-		TryRenameTransfer<NBT_TAG::List>(cpdV7Entry, MU8STRV("modifiers"), cpdV6Entry, MU8STR("Modifiers"),
-			[&strEntityId, iV7McDataVersion](NBT_Type::List &v7Val, NBT_Node &v6Val) -> bool
-			{
-				NBT_Type::List &listV6Modifiers = v6Val.SetList();
-				for (auto &v7It : v7Val)
-				{
-					NBT_Node v6Tmp{};
-					ProcessEntityModifiers(v7It, v6Tmp, strEntityId ,iV7McDataVersion);
-					listV6Modifiers.AddBack(std::move(v6Tmp));
-				}
-
-				return !listV6Modifiers.Empty();//非空返回true被插入，否则丢弃
-			}
-		);
-
-		listV6.AddBackCompound(std::move(cpdV6Entry));
 	}
 
 	return;
