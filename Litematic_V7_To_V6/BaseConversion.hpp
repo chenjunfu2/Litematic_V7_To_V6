@@ -13,7 +13,10 @@
 #include <concepts>
 
 //定义
-#define MC_1_21_4_MINECRAFT_DATA_VERSION 4189
+#define MC_1_21_4_MINECRAFT_DATA_VERSION 4189//文本组件修改关键版本
+#define MC_1_21_2_MINECRAFT_DATA_VERSION 4080//属性ID修改关键版本
+#define MC_1_21_0_MINECRAFT_DATA_VERSION 3953//属性uuid+name → id关键版本
+
 
 struct NoneValue//空值占位符
 {};
@@ -658,42 +661,49 @@ void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 	auto &cpdV6 = nodeV6Tag.SetCompound();
 
 	
-	TryRenameMove<NBT_TAG::String>(cpdV7, MU8STRV("name"), cpdV6, MU8STRV("Name"));
 	TryRenameMove<NBT_TAG::Double>(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"));
 
 	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("type"), cpdV6, MU8STRV("AttributeName"), 
-		[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
+		[iV7McDataVersion](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
 		{
-			v6Val.SetString(AttributeNameMap(v7Val));
-			return true;
-		}
-	);
-	
-	TryRenameTransfer(cpdV7, MU8STRV("uuid"), cpdV6, MU8STRV("UUID"),
-		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
-		{
-			if (v7Val.IsString())
+			if (iV7McDataVersion >= MC_1_21_2_MINECRAFT_DATA_VERSION)
 			{
-				NBT_Type::IntArray uuid{};
-				if (!String2Uuid(v7Val.GetString(), uuid))
-				{
-					return false;
-				}
-				v6Val.SetIntArray(std::move(uuid));
-			}
-			else if (v7Val.IsIntArray())
-			{
-				v6Val = std::move(v7Val);
+				v6Val.SetString(AttributeNameMap(v7Val));
 			}
 			else
 			{
-				return false;
+				v6Val.SetString(std::move(v7Val));//老版本无需映射（1.21.2前无修改）
 			}
-
 			return true;
 		}
 	);
 
+	if (iV7McDataVersion >= MC_1_21_0_MINECRAFT_DATA_VERSION)
+	{
+		if (auto *pId = cpdV7.HasString(MU8STRV("id")); pId != NULL)
+		{
+			static const NBT_Type::String strEmpty = MU8STR("");//空str占位符，全局静态减少重复构建开销，复用Entity的转换
+			AttributeInfo info = AttributeInfoMap(*pId, strEmpty);
+
+			if (info.bIsRandomUuid)
+			{
+				cpdV6.PutString(MU8STRV("Name"), std::move(info.name));//name被映射，uuid随机生成
+				UUID uuid = NameUuidFromBytes(pId->data(), pId->size());//从原始id生成uuid，确定值
+				cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(uuid));//放入uuid
+			}
+			else
+			{
+				cpdV6.PutString(MU8STRV("Name"), std::move(*pId));//uuid被映射，name直接消费
+				cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(info.uuid));//放入映射uuid
+			}
+		}
+	}
+	else
+	{
+		TryRenameMove<NBT_TAG::String>(cpdV7, MU8STRV("name"), cpdV6, MU8STRV("Name"));
+		TryRenameMove<NBT_TAG::IntArray>(cpdV7, MU8STRV("uuid"), cpdV6, MU8STRV("UUID"));
+	}
+	
 	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
 		[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
 		{
@@ -715,14 +725,14 @@ void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 			return true;
 		}
 	);
-
 }
 
 //TODO:大量重构复杂重复逻辑为TryRenameMove等辅助函数，减少代码
 //TODO:MUSTR尽量全改MU8STRV，NBT库全线支持透明查找
 //TODO:AttributeModifiers（物品相关）完善
 //TODO:HideFlags完善（物品相关）
-//TODO:组件转换
+//TODO:CanPlace、CanBreak等物品其它属性转换，方块状态谓词转换
+//TODO:其它组件转换
 //TODO:方块替换功能（配置文件与LUA脚本支持）
 //TODO:方块实体替换功能（仅LUA脚本支持）
 void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)

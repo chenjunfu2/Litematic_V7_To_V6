@@ -307,21 +307,29 @@ void ProcessEntityModifiers(NBT_Node &V7Tag, NBT_Node &V6Tag, const NBT_Type::St
 	auto &cpdV7 = V7Tag.GetCompound();
 	auto &cpdV6 = V6Tag.SetCompound();
 
-	if (auto *pId = cpdV7.HasString(MU8STRV("id")); pId != NULL)
+	if (iV7McDataVersion >= MC_1_21_0_MINECRAFT_DATA_VERSION)
 	{
-		AttributeInfo info = AttributeInfoMap(*pId, strEntityId);//顺手的事
+		if (auto *pId = cpdV7.HasString(MU8STRV("id")); pId != NULL)
+		{
+			AttributeInfo info = AttributeInfoMap(*pId, strEntityId);//顺手的事
 
-		if (info.bIsRandomUuid)
-		{
-			cpdV6.PutString(MU8STRV("Name"), std::move(info.name));//name被映射，uuid随机生成
-			UUID uuid = NameUuidFromBytes(pId->data(), pId->size());//从原始id生成uuid，确定值
-			cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(uuid));//放入uuid
+			if (info.bIsRandomUuid)
+			{
+				cpdV6.PutString(MU8STRV("Name"), std::move(info.name));//name被映射，uuid随机生成
+				UUID uuid = NameUuidFromBytes(pId->data(), pId->size());//从原始id生成uuid，确定值
+				cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(uuid));//放入uuid
+			}
+			else
+			{
+				cpdV6.PutString(MU8STRV("Name"), std::move(*pId));//uuid被映射，name直接消费
+				cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(info.uuid));//放入映射uuid
+			}
 		}
-		else
-		{
-			cpdV6.PutString(MU8STRV("Name"), std::move(*pId));//uuid被映射，name直接消费
-			cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(info.uuid));//放入映射uuid
-		}
+	}
+	else//实体侧Ojang忘记改名了，就物品侧改了，原始映射即可
+	{
+		TryRenameMove<NBT_TAG::String>(cpdV7, MU8STRV("Name"), cpdV6, MU8STRV("Name"));
+		TryRenameMove<NBT_TAG::IntArray>(cpdV7, MU8STRV("UUID"), cpdV6, MU8STRV("UUID"));
 	}
 
 	TryRenameMove<NBT_TAG::Double>(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"));
@@ -359,9 +367,16 @@ void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_T
 		NBT_Type::Compound cpdV6Entry;
 
 		TryRenameTransfer<NBT_TAG::String>(cpdV7Entry, MU8STRV("id"), cpdV6Entry, MU8STRV("Name"),
-			[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
+			[iV7McDataVersion](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
 			{
-				v6Val.SetString(AttributeNameMap(v7Val));
+				if (iV7McDataVersion >= MC_1_21_2_MINECRAFT_DATA_VERSION)
+				{
+					v6Val.SetString(AttributeNameMap(v7Val));
+				}
+				else
+				{
+					v6Val.SetString(std::move(v7Val));//老版本无需映射（1.21.2前无修改）
+				}
 				return true;
 			}
 		);
