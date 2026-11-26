@@ -31,6 +31,11 @@ struct TagToTypeSafe<NBT_TAG::ENUM_END>
 	using type = NBT_Node;
 };
 
+static_assert(std::same_as<typename TagToTypeSafe<NBT_TAG::ENUM_END>::type, NBT_Node>);
+
+template<NBT_TAG tagType>
+using TagToTypeSafe_T = TagToTypeSafe<tagType>::type;
+
 
 template<NBT_TAG tagType = NBT_TAG::ENUM_END, typename DV = NoneValue, typename SS, typename ST>
 requires
@@ -55,7 +60,7 @@ bool TryRenameMove(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Comp
 	{
 		if constexpr (!std::same_as<std::remove_cvref_t<DV>, NoneValue>)
 		{
-			using Type_T = TagToTypeSafe<tagType>;//NBT_TAG::ENUM_END -> NBT_NODE
+			using Type_T = TagToTypeSafe_T<tagType>;//NBT_TAG::ENUM_END -> NBT_NODE
 			if constexpr (std::same_as<std::remove_cvref_t<DV>, Type_T>)
 			{
 				cpdTarget.Put(std::forward<ST>(strTarget), std::forward<DV>(defaultVal));//no cast
@@ -656,15 +661,10 @@ void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 	TryRenameMove<NBT_TAG::String>(cpdV7, MU8STRV("name"), cpdV6, MU8STRV("Name"));
 	TryRenameMove<NBT_TAG::Double>(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"));
 
-	TryRenameTransfer(cpdV7, MU8STRV("type"), cpdV6, MU8STRV("AttributeName"), 
-		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("type"), cpdV6, MU8STRV("AttributeName"), 
+		[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
 		{
-			if (!v7Val.IsString())
-			{
-				return false;
-			}
-
-			v6Val.SetString(AttributeNameMap(v7Val.GetString()));
+			v6Val.SetString(AttributeNameMap(v7Val));
 			return true;
 		}
 	);
@@ -694,34 +694,24 @@ void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Ty
 		}
 	);
 
-	TryRenameTransfer(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
-		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
+		[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
 		{
-			if (!v7Val.IsString())
-			{
-				return false;
-			}
-
-			v6Val.SetInt(AttributeOperationMap(v7Val.GetString()));
+			v6Val.SetInt(AttributeOperationMap(v7Val));
 			return true;
 		}
 	);
 
-	TryRenameTransfer(cpdV7, MU8STRV("slot"), cpdV6, MU8STRV("Slot"),
-		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("slot"), cpdV6, MU8STRV("Slot"),
+		[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
 		{
-			if (!v7Val.IsString())
-			{
-				return false;
-			}
-
 			//1.20.4-中省略等同于any
-			if (v7Val.GetString() == MU8STRV("any"))
+			if (v7Val == MU8STRV("any"))
 			{
 				return false;//故意返回false让它不要插入，并非失败
 			}
 
-			v6Val = std::move(v7Val);
+			v6Val.SetString(std::move(v7Val));
 			return true;
 		}
 	);
@@ -803,15 +793,10 @@ void ProcessEntityModifiers(NBT_Node &V7Tag, NBT_Node &V6Tag, const NBT_Type::St
 
 	TryRenameMove<NBT_TAG::Double>(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"));
 
-	TryRenameTransfer(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
-		[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
+		[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
 		{
-			if (!v7Val.IsString())
-			{
-				return false;
-			}
-
-			v6Val.SetInt(AttributeOperationMap(v7Val.GetString()));
+			v6Val.SetInt(AttributeOperationMap(v7Val));
 			return true;
 		}
 	);
@@ -856,31 +841,21 @@ void ProcessAttributesImpl(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_T
 		auto &cpdV7Entry = itV7Entry.GetCompound();
 		NBT_Type::Compound cpdV6Entry;
 
-		TryRenameTransfer(cpdV7Entry, MU8STRV("id"), cpdV6Entry, MU8STRV("Name"),
-			[](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+		TryRenameTransfer<NBT_TAG::String>(cpdV7Entry, MU8STRV("id"), cpdV6Entry, MU8STRV("Name"),
+			[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
 			{
-				if (!v7Val.IsString())
-				{
-					return false;
-				}
-
-				v6Val.SetString(AttributeNameMap(v7Val.GetString()));
+				v6Val.SetString(AttributeNameMap(v7Val));
 				return true;
 			}
 		);
 
 		TryRenameMove<NBT_TAG::Double>(cpdV7Entry, MU8STR("base"), cpdV6Entry, MU8STR("Base"), 0.0);
 
-		TryRenameTransfer(cpdV7Entry, MU8STRV("modifiers"), cpdV6Entry, MU8STR("Modifiers"),
-			[&strEntityId, iV7McDataVersion](NBT_Node &v7Val, NBT_Node &v6Val) -> bool
+		TryRenameTransfer<NBT_TAG::List>(cpdV7Entry, MU8STRV("modifiers"), cpdV6Entry, MU8STR("Modifiers"),
+			[&strEntityId, iV7McDataVersion](NBT_Type::List &v7Val, NBT_Node &v6Val) -> bool
 			{
-				if (!v7Val.IsList())
-				{
-					return false;
-				}
-
 				NBT_Type::List &listV6Modifiers = v6Val.SetList();
-				for (auto &v7It : v7Val.GetList())
+				for (auto &v7It : v7Val)
 				{
 					NBT_Node v6Tmp{};
 					ProcessEntityModifiers(v7It, v6Tmp, strEntityId ,iV7McDataVersion);
