@@ -440,7 +440,7 @@ void ProcessEntity(NBT_Type::Compound &cpdV7EntityData, NBT_Type::Compound &cpdV
 
 		{ MU8STR("flower_pos"),			RenameAndProcess<MU8RAW("FlowerPos"),	ProcessBlockPos> },
 		{ MU8STR("hive_pos"),			RenameAndProcess<MU8RAW("HivePos"),		ProcessBlockPos> },
-		{ MU8STR("Item"),				RenameAndProcess<MU8RAW("Item"),			ProcessSingleItem> },
+		{ MU8STR("Item"),				RenameAndProcess<MU8RAW("Item"),		ProcessSingleItem> },
 		{ MU8STR("Items"),				RenameAndProcess<MU8RAW("Items"),		ProcessItems> },
 
 		{ MU8STR("ArmorItems"),			RenameAndProcess<MU8RAW("ArmorItems"),	ProcessEntityItems<4>> },

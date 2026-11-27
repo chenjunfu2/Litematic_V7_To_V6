@@ -526,7 +526,7 @@ void ProcessTextComponentConversion(NBT_Node &nodeTextComponent, NBT_Node &nodeT
 		{ MU8STR("click_event"),	RenameAndProcess<MU8RAW("clickEvent"),	ProcessClickEvent> },
 		{ MU8STR("hover_event"),	RenameAndProcess<MU8RAW("hoverEvent"),	ProcessHoverEvent> },
 		{ MU8STR("extra"),			RenameAndProcess<MU8RAW("extra"),		ProcessTextComponentConversion> },//此处递归，因为extra是递归结构，内部可以继续存储TextComponentTag
-		{ MU8STR("with"),			RenameAndProcess<MU8RAW("with"),			ProcessTextComponentConversion> },//此处递归，因为with是递归结构，内部可以继续存储TextComponentTag
+		{ MU8STR("with"),			RenameAndProcess<MU8RAW("with"),		ProcessTextComponentConversion> },//此处递归，因为with是递归结构，内部可以继续存储TextComponentTag
 		{ MU8STR("separator"),		RenameAndProcess<MU8RAW("separator"),	ProcessTextComponentConversion> },//此处递归，因为separator是递归结构，内部可以继续存储TextComponentTag
 	};
 

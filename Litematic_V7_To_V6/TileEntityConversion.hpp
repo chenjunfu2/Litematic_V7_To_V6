@@ -212,14 +212,14 @@ void ProcessTileEntity(NBT_Type::Compound &cpdV7TileEntityData, NBT_Type::Compou
 		{ MU8STR("ticks_since_song_started"),	ProcessJukebox }, //唱片机特殊处理
 
 		{ MU8STR("Items"),						RenameAndProcess<MU8RAW("Items"),		ProcessItems> },
-		{ MU8STR("patterns"),					RenameAndProcess<MU8RAW("Patterns"),		ProcessPatterns> },
+		{ MU8STR("patterns"),					RenameAndProcess<MU8RAW("Patterns"),	ProcessPatterns> },
 		{ MU8STR("profile"),					RenameAndProcess<MU8RAW("SkullOwner"),	ProcessSkullProfile> },
 		{ MU8STR("flower_pos"),					RenameAndProcess<MU8RAW("FlowerPos"),	ProcessBlockPos> },
 		{ MU8STR("exit_portal"),				RenameAndProcess<MU8RAW("ExitPortal"),	ProcessBlockPos> },
-		{ MU8STR("bees"),						RenameAndProcess<MU8RAW("Bees"),			ProcessBees> },
-		{ MU8STR("item"),						RenameAndProcess<MU8RAW("item"),			ProcessSingleItem> },
+		{ MU8STR("bees"),						RenameAndProcess<MU8RAW("Bees"),		ProcessBees> },
+		{ MU8STR("item"),						RenameAndProcess<MU8RAW("item"),		ProcessSingleItem> },
 		{ MU8STR("RecordItem"),					RenameAndProcess<MU8RAW("RecordItem"),	ProcessSingleItem> },
-		{ MU8STR("Book"),						RenameAndProcess<MU8RAW("Book"),			ProcessSingleItem> },
+		{ MU8STR("Book"),						RenameAndProcess<MU8RAW("Book"),		ProcessSingleItem> },
 
 		{ MU8STR("front_text"),					RenameAndProcess<MU8RAW("front_text"),	ProcessSignText> },
 		{ MU8STR("back_text"),					RenameAndProcess<MU8RAW("back_text"),	ProcessSignText> },

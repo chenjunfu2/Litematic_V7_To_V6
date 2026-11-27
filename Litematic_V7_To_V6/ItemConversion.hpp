@@ -993,7 +993,7 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:repair_cost"),				{ false,	UseTagType::V6Tag,			RenameOnly<MU8RAW("RepairCost")> } },
 
 		{ MU8STR("minecraft:bundle_contents"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<MU8RAW("Items"),				ProcessItems> } },
-		{ MU8STR("minecraft:enchantments"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<MU8RAW("Enchantments"),			ProcessEnchantments> } },
+		{ MU8STR("minecraft:enchantments"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<MU8RAW("Enchantments"),		ProcessEnchantments> } },
 		{ MU8STR("minecraft:stored_enchantments"),		{ false,	UseTagType::V6Tag,			RenameAndProcess<MU8RAW("StoredEnchantments"),	ProcessEnchantments> } },
 		{ MU8STR("minecraft:entity_data"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<MU8RAW("EntityTag"),			ProcessEntityTag> } },
 		{ MU8STR("minecraft:firework_explosion"),		{ false,	UseTagType::V6Tag,			RenameAndProcess<MU8RAW("Explosion"),			ProcessFireworkExplosion> } },
@@ -1019,9 +1019,9 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		
 		{ MU8STR("minecraft:map_color"),				{ false,	UseTagType::DisplayTag,		RenameOnly<MU8RAW("MapColor")> } },
 		{ MU8STR("minecraft:dyed_color"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<MU8RAW("color"),	ProcessDyedColor> } },
-		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		RenameAndProcess<MU8RAW("Lore"),		ProcessTextComponentListTag> } },
-		{ MU8STR("minecraft:custom_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<MU8RAW("Name"),		ProcessTextComponentTag> } },
-		//{ MU8STR("minecraft:item_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<MU8RAW("Name"),		ProcessTextComponentTag> } },
+		{ MU8STR("minecraft:lore"),						{ false,	UseTagType::DisplayTag,		RenameAndProcess<MU8RAW("Lore"),	ProcessTextComponentListTag> } },
+		{ MU8STR("minecraft:custom_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<MU8RAW("Name"),	ProcessTextComponentTag> } },
+		//{ MU8STR("minecraft:item_name"),				{ false,	UseTagType::DisplayTag,		RenameAndProcess<MU8RAW("Name"),	ProcessTextComponentTag> } },
 
 
 		{ MU8STR("minecraft:block_entity_data"),		{ false,	UseTagType::BlockEntityTag,	ProcessBlockEntityData } },
