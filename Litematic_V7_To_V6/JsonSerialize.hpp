@@ -29,7 +29,7 @@ public:
 
 
 	template<auto IsBoolKey, typename SortPolicy = DefaultCompoundSort<true>>
-	requires(std::is_function_v<std::remove_cvref_t<decltype(IsBoolKey)>>)
+	requires(std::is_same_v<std::invoke_result_t<std::remove_cvref_t<decltype(IsBoolKey)>, const NBT_Type::String &>, bool>)
 	static NBT_Type::String JsonSerialize(const NBT_Node_View<true> nRoot)
 	{
 		NBT_Type::String sRet{};
