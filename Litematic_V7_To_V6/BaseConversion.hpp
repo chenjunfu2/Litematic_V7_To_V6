@@ -639,7 +639,6 @@ enum class HideFlag : NBT_Type::Int
 	UPGRADES		= 1 << 7,	//盔甲纹饰
 };
 
-
 void TrySetHideFlag(NBT_Type::Compound &cpdV7, NBT_Type::Compound &cpdV6, HideFlag tag)
 {
 	if (auto *pShow = cpdV7.HasByte(MU8STRV("show_in_tooltip")); pShow != NULL && *pShow == 0)
@@ -649,129 +648,13 @@ void TrySetHideFlag(NBT_Type::Compound &cpdV7, NBT_Type::Compound &cpdV6, HideFl
 	}
 }
 
-void ProcessItemModifiers(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
-{
-	if (!nodeV7Tag.IsCompound())
-	{
-		nodeV6Tag = std::move(nodeV7Tag);
-		return;
-	}
-
-	auto &cpdV7 = nodeV7Tag.GetCompound();
-	auto &cpdV6 = nodeV6Tag.SetCompound();
-
-	
-	TryRenameMove<NBT_TAG::Double>(cpdV7, MU8STRV("amount"), cpdV6, MU8STRV("Amount"));
-
-	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("type"), cpdV6, MU8STRV("AttributeName"), 
-		[iV7McDataVersion](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
-		{
-			if (iV7McDataVersion >= MC_1_21_2_MINECRAFT_DATA_VERSION)
-			{
-				v6Val.SetString(AttributeNameMap(v7Val));
-			}
-			else
-			{
-				v6Val.SetString(std::move(v7Val));//老版本无需映射（1.21.2前无修改）
-			}
-			return true;
-		}
-	);
-
-	if (iV7McDataVersion >= MC_1_21_0_MINECRAFT_DATA_VERSION)
-	{
-		if (auto *pId = cpdV7.HasString(MU8STRV("id")); pId != NULL)
-		{
-			static const NBT_Type::String strEmpty = MU8STR("");//空str占位符，全局静态减少重复构建开销，复用Entity的转换
-			AttributeInfo info = AttributeInfoMap(*pId, strEmpty);
-
-			if (info.bIsRandomUuid)
-			{
-				cpdV6.PutString(MU8STRV("Name"), std::move(info.name));//name被映射，uuid随机生成
-				UUID uuid = NameUuidFromBytes(pId->data(), pId->size());//从原始id生成uuid，确定值
-				cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(uuid));//放入uuid
-			}
-			else
-			{
-				cpdV6.PutString(MU8STRV("Name"), std::move(*pId));//uuid被映射，name直接消费
-				cpdV6.PutIntArray(MU8STRV("UUID"), UUID2IntArray(info.uuid));//放入映射uuid
-			}
-		}
-	}
-	else
-	{
-		TryRenameMove<NBT_TAG::String>(cpdV7, MU8STRV("name"), cpdV6, MU8STRV("Name"));
-		TryRenameMove<NBT_TAG::IntArray>(cpdV7, MU8STRV("uuid"), cpdV6, MU8STRV("UUID"));
-	}
-	
-	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("operation"), cpdV6, MU8STRV("Operation"),
-		[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
-		{
-			v6Val.SetInt(AttributeOperationMap(v7Val));
-			return true;
-		}
-	);
-
-	TryRenameTransfer<NBT_TAG::String>(cpdV7, MU8STRV("slot"), cpdV6, MU8STRV("Slot"),
-		[](NBT_Type::String &v7Val, NBT_Node &v6Val) -> bool
-		{
-			//1.20.4-中省略等同于any
-			if (v7Val == MU8STRV("any"))
-			{
-				return false;//故意返回false让它不要插入，并非失败
-			}
-
-			v6Val.SetString(std::move(v7Val));
-			return true;
-		}
-	);
-}
-
 //TODO:大量重构复杂重复逻辑为TryRenameMove等辅助函数，减少代码
 //TODO:MUSTR尽量全改MU8STRV，NBT库全线支持透明查找
-//TODO:AttributeModifiers（物品相关）完善
 //TODO:HideFlags完善（物品相关）
 //TODO:CanPlace、CanBreak等物品其它属性转换，方块状态谓词转换
 //TODO:其它组件转换
 //TODO:方块替换功能（配置文件与LUA脚本支持）
 //TODO:方块实体替换功能（仅LUA脚本支持）
-void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
-{
-	//V6 Key = MU8STR("AttributeModifiers")
-	NBT_Type::List *pModifiers = NULL;
-
-	if (nodeV7TagVal.IsCompound())
-	{
-		auto &cpdV7 = nodeV7TagVal.GetCompound();
-		pModifiers = cpdV7.HasList(MU8STRV("modifiers"));
-		TrySetHideFlag(cpdV7, cpdV6TagData, HideFlag::MODIFIERS);//可能隐藏，尝试设置flag
-	}
-	else if (nodeV7TagVal.IsList())//列表show默认true，无需设置hide flag
-	{
-		pModifiers = &nodeV7TagVal.GetList();//直接list相当于modifiers直接挂在attribute_modifiers下，并且总是no hide
-	}
-
-	if (pModifiers == NULL)
-	{
-		cpdV6TagData.Put(MU8STR("AttributeModifiers"), std::move(nodeV7TagVal));
-		return;
-	}
-
-	NBT_Type::List listV6Modifiers{};
-	for (auto &it : *pModifiers)
-	{
-		NBT_Node tmpV6Node{};
-		ProcessItemModifiers(it, tmpV6Node, iV7McDataVersion);
-		listV6Modifiers.AddBack(std::move(tmpV6Node));
-	}
-
-	if (!listV6Modifiers.Empty())
-	{
-		cpdV6TagData.PutList(MU8STR("AttributeModifiers"), std::move(listV6Modifiers));
-	}
-
-	return;
-}
 
 void ProcessBlockPos(NBT_Node &nodeV7Tag, NBT_Node &nodeV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
