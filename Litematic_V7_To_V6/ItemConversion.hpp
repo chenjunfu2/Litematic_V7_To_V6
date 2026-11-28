@@ -958,6 +958,195 @@ void ProcessAttributeModifiers(const NBT_Type::String &strV7TagKey, NBT_Node &no
 	return;
 }
 
+/*
+两处分界，第一处在1.20.5（与转换器首个接受版本一致），第二处在1.21.5，特别的，show_in_tooltip也在1.21.5+重构
+来自大肥鱼看代码的结论：
+1.20.1 – 1.20.4   旧版   tag.CanDestroy / tag.CanPlaceOn
+1.20.5 – 1.21.4   类型1  components.can_break:{predicates:[...], show_in_tooltip}
+1.21.5 – 26.3     类型2  components.can_break: {...} 或 [...]
+*/
+
+NBT_Type::List BlockPredicateComponent2StringList(NBT_Type::Compound &cpdBlockPredicate)
+{
+	//1.21.5+的components与predicates直接丢弃，无法使用，仅处理blocks、state、nbt
+	auto *pBlocks = cpdBlockPredicate.Has(MU8STRV("blocks"));
+	if (pBlocks == NULL)//首先，必须有blocks，否则无法进行任何生成
+	{
+		return {};//返回空
+	}
+
+	NBT_Type::List listBlockPredicateString{};
+	if (pBlocks->IsString())
+	{
+		listBlockPredicateString.AddBack(std::move(pBlocks->GetString()));
+	}
+	else if (pBlocks->IsList())
+	{
+		listBlockPredicateString.Reserve(pBlocks->GetList().Size());
+		for (auto &it : pBlocks->GetList())
+		{
+			if (!it.IsString())
+			{
+				continue;
+			}
+
+			listBlockPredicateString.AddBack(std::move(it));
+		}
+	}
+	else
+	{
+		return {};//返回空
+	}
+
+	auto *pState = cpdBlockPredicate.HasCompound(MU8STRV("state"));
+	NBT_Type::String strState{};
+	if (pState != NULL && !pState->Empty())//min/max 全部丢弃
+	{
+		strState.push_back('[');
+		for (auto &[k, v] : *pState)//非空，至少1元素
+		{
+			if (v.IsString())
+			{
+				strState += k;
+				strState += '=';
+				strState += v.GetString();
+				strState += ',';
+				continue;
+			}
+			//else if(v.IsCompound())
+			//{
+			//	auto &cpdV = v.GetCompound();
+			//	auto *pMin = cpdV.HasString(MU8STRV("min"));
+			//	auto *pMax = cpdV.HasString(MU8STRV("max"));
+			//	//因为没有方块类型信息（那得导入致死量数据），所以只要索引不是闭合的，那么就只能放弃（跳过）
+			//	//同时因为没有类型信息，枚举只能是整数，还得和前面的进行排列组合，过于复杂毫无必要
+			//	//最终决定完全放弃此形式的约束转换映射
+			//}
+			else
+			{
+				continue;//ignore
+			}
+		}
+
+		if (strState.back() == ',')//因为开头至少插入一个'['，这里back保证安全，非ub
+		{
+			strState.back() = ']';
+		}
+		else
+		{
+			strState.push_back(']');//如果pState非空但是最后一个还不是逗号，说明内部全不满足约束，那么得到空[]，安全且可提示此项转换失败
+		}
+	}
+
+	auto *pNbt = cpdBlockPredicate.Has(MU8STRV("nbt"));
+	NBT_Type::String strSNBT{};
+	if (pNbt != NULL)
+	{
+		if (pNbt->IsString())
+		{
+			strSNBT = std::move(pNbt->GetString());
+		}
+		else if (pNbt->IsCompound())
+		{
+			strSNBT = NBT_Helper::Serialize<NBT_Helper::DefaultCompoundSort<true>, false, true>(pNbt->GetCompound());
+		}
+		else
+		{
+			//ignore
+		}
+	}
+
+	//准备拼接
+	NBT_Type::String strTmp = std::move(strState);
+	strTmp += std::move(strSNBT);
+	if (strTmp.empty())
+	{
+		return listBlockPredicateString;
+	}
+
+	for (auto &it : listBlockPredicateString)
+	{
+		it.SetString() += strSNBT;
+	}
+	return listBlockPredicateString;
+}
+
+template<auto NewKey>
+requires(IsMU8StringArray<decltype(NewKey)>)
+void ProcessCanDo(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
+{
+	constexpr auto strNewKey = RAWARR2STR(NewKey);
+
+	if (iV7McDataVersion >= MC_1_21_5_MINECRAFT_DATA_VERSION)//1.21.5+
+	{
+		//只能是Compound
+		if (nodeV7TagVal.IsCompound())
+		{
+			auto &cpdPredicate = nodeV7TagVal.GetCompound();
+			NBT_Type::List listV6Predicates = BlockPredicateComponent2StringList(cpdPredicate);
+			cpdV6TagData.Put(strNewKey, std::move(listV6Predicates));
+			return;
+		}
+		else if (nodeV7TagVal.IsList())
+		{
+			NBT_Type::List listV6Predicates{};
+			for (auto &it : nodeV7TagVal.GetList())
+			{
+				if (!it.IsCompound())//每个都必须是compound
+				{
+					continue;
+				}
+				auto &cpdPredicate = it.GetCompound();
+				listV6Predicates.Merge(BlockPredicateComponent2StringList(cpdPredicate));
+			}
+
+			cpdV6TagData.Put(strNewKey, std::move(listV6Predicates));
+			return;
+		}
+		else
+		{
+			cpdV6TagData.Put(strNewKey, std::move(nodeV7TagVal));
+			return;
+		}
+	}
+	else//1.20.5 – 1.21.4
+	{
+		//只能是Compound
+		if (!nodeV7TagVal.IsCompound())
+		{
+			cpdV6TagData.Put(strNewKey, std::move(nodeV7TagVal));
+			return;
+		}
+
+		auto &cpdV7 = nodeV7TagVal.GetCompound();
+
+		//尝试hide flag
+		TrySetHideFlag(cpdV7, cpdV6TagData, HideFlag::CAN_DESTROY);
+
+		//内含List
+		auto *pPredicates = cpdV7.HasList(MU8STRV("predicates"));
+		if (pPredicates == NULL)
+		{
+			cpdV6TagData.Put(strNewKey, std::move(nodeV7TagVal));
+			return;
+		}
+
+		NBT_Type::List listV6Predicates{};
+		for (auto &it : *pPredicates)
+		{
+			if (!it.IsCompound())//每个都必须是compound
+			{
+				continue;
+			}
+			auto &cpdPredicate = it.GetCompound();
+			listV6Predicates.Merge(BlockPredicateComponent2StringList(cpdPredicate));
+		}
+
+		cpdV6TagData.Put(strNewKey, std::move(listV6Predicates));
+		return;
+	}
+}
+
 //物品Tag处理
 void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &strItemId, NBT_Type::Compound &cpdV6Tag, const NBT_Type::Int iV7McDataVersion)
 {
@@ -983,9 +1172,6 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:recipes"),					{ false,	UseTagType::V6Tag,			RenameOnly<MU8RAW("Recipes")> } },
 		{ MU8STR("minecraft:suspicious_stew_effects"),	{ false,	UseTagType::V6Tag,			RenameOnly<MU8RAW("effects")> } },
 		{ MU8STR("minecraft:trim"),						{ false,	UseTagType::V6Tag,			RenameOnly<MU8RAW("Trim")> } },
-
-		{ MU8STR("minecraft:can_break"),				{ false,	UseTagType::V6Tag,			RenameOnly<MU8RAW("CanDestroy")> } },
-		{ MU8STR("minecraft:can_place_on"),				{ false,	UseTagType::V6Tag,			RenameOnly<MU8RAW("CanPlaceOn")> } },
 		{ MU8STR("minecraft:custom_model_data"),		{ false,	UseTagType::V6Tag,			RenameOnly<MU8RAW("CustomModelData")> } },
 		{ MU8STR("minecraft:damage"),					{ false,	UseTagType::V6Tag,			RenameOnly<MU8RAW("Damage")> } },
 		{ MU8STR("minecraft:debug_stick_state"),		{ false,	UseTagType::V6Tag,			RenameOnly<MU8RAW("DebugProperty")> } },
@@ -1003,6 +1189,9 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:unbreakable"),				{ false,	UseTagType::V6Tag,			RenameAndProcess<MU8RAW("Unbreakable"),			ProcessUnbreakable> } },
 		{ MU8STR("minecraft:axolotl/variant"),			{ false,	UseTagType::V6Tag,			RenameAndProcess<MU8RAW("Variant"),				ProcessAxolotlVariant> } },
 
+		{ MU8STR("minecraft:can_break"),				{ false,	UseTagType::V6Tag,			ProcessCanDo<MU8RAW("CanDestroy")> } },
+		{ MU8STR("minecraft:can_place_on"),				{ false,	UseTagType::V6Tag,			ProcessCanDo<MU8RAW("CanPlaceOn")> } },
+
 		{ MU8STR("minecraft:attribute_modifiers"),		{ false,	UseTagType::V6Tag,			ProcessAttributeModifiers } },
 		{ MU8STR("minecraft:custom_data"),				{ false,	UseTagType::V6Tag,			ProcessCustomData } },
 		{ MU8STR("minecraft:lodestone_tracker"),		{ false,	UseTagType::V6Tag,			ProcessLodestoneTracker } },
@@ -1010,6 +1199,7 @@ void ProcessComponentsTag(NBT_Type::Compound &cpdV7Tag, const NBT_Type::String &
 		{ MU8STR("minecraft:writable_book_content"),	{ false,	UseTagType::V6Tag,			ProcessWritableBookContent } },
 		{ MU8STR("minecraft:written_book_content"),		{ false,	UseTagType::V6Tag,			ProcessWrittenBookContent } },
 		{ MU8STR("minecraft:bucket_entity_data"),		{ false,	UseTagType::V6Tag,			ProcessBucketEntityData } },
+		//{ MU8STR("minecraft:tooltip_display"),			{ false,	UseTagType::V6Tag,			//TODO } },
 
 
 		{ MU8STR("minecraft:tropical_fish/pattern"),	{ false,	UseTagType::V6Tag,			ProcessTropicalFishData } },

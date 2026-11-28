@@ -11,12 +11,15 @@
 #include <utility>
 #include <type_traits>
 #include <concepts>
+#include <optional>
+#include <charconv>
 
 //定义
+#define MC_1_21_5_MINECRAFT_DATA_VERSION 4325//物品组件二次修改关键版本
 #define MC_1_21_4_MINECRAFT_DATA_VERSION 4189//文本组件修改关键版本
 #define MC_1_21_2_MINECRAFT_DATA_VERSION 4080//属性ID修改关键版本
 #define MC_1_21_0_MINECRAFT_DATA_VERSION 3953//属性uuid+name → id关键版本
-
+//转换器仅接受1.20.5+之后的版本
 
 struct NoneValue//空值占位符
 {};
@@ -47,8 +50,7 @@ requires
 	NBT_String_Helper::Is_NBT_String_Or_View<std::remove_cvref_t<ST>> &&
 	(
 		std::is_same_v<std::remove_cvref_t<DV>, NoneValue> ||
-		tagType == NBT_TAG::ENUM_END ||//短路求值保护TagToType_T
-		std::is_constructible_v<NBT_Type::TagToType_T<tagType>, DV>
+		std::is_constructible_v<TagToTypeSafe_T<tagType>, DV>//如果NoneValue，那么前面短路，否则tagType是END，那么测试NBT_NODE，否则按类型要求测试
 	)
 )
 bool TryRenameMove(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::Compound &cpdTarget, ST &&strTarget, DV &&defaultVal = NoneValue{})
@@ -151,7 +153,7 @@ bool TryRenameTransfer(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::
 		NBT_Node tmpTarget{};
 		if constexpr (tagType == NBT_TAG::ENUM_END)//不解包
 		{
-			if (!std::invoke(funcTransfer, *pSources, tmpTarget))
+			if (!std::invoke(std::forward<F>(funcTransfer), *pSources, tmpTarget))
 			{
 				return false;
 			}
@@ -160,7 +162,7 @@ bool TryRenameTransfer(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::
 		{
 			using Type_T = NBT_Type::TagToType_T<tagType>;//必不可能为NBT_TAG::ENUM_END
 			if (pSources->GetTag() != tagType ||//短路求值保护Get<Type_T>()
-				!std::invoke(funcTransfer, pSources->Get<Type_T>(), tmpTarget))
+				!std::invoke(std::forward<F>(funcTransfer), pSources->Get<Type_T>(), tmpTarget))
 			{
 				return false;
 			}
@@ -174,6 +176,26 @@ bool TryRenameTransfer(NBT_Type::Compound &cpdSource, SS &&strSource, NBT_Type::
 		return false;
 	}
 }
+
+std::optional<NBT_Type::Int> String2Int(const NBT_Type::String &strNumber)
+{
+	if (strNumber.empty())
+	{
+		return std::nullopt;
+	}
+
+	auto sv = strNumber.GetCharTypeView();
+	NBT_Type::Int iRet{};
+	auto [ptr, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), iRet);
+
+	if (ec != std::errc{} || ptr != (sv.data() + sv.size()))
+	{
+		return std::nullopt;
+	}
+
+	return iRet;
+}
+
 
 #define MU8RAW(charLiteralString) U8TOMU8RAW(u8##charLiteralString)
 #define RAWARR2STR(MUTF8RawArray) NBT_Type::String::View{ MUTF8RawArray.data(), MUTF8RawArray.size() }
@@ -207,6 +229,7 @@ using MapProcessFunc_P = MapProcessFunc_T *;
 
 //重命名并转换处理
 template<auto NewKey, IsProcessFunc auto ProcessFunc>
+requires(IsMU8StringArray<decltype(NewKey)>)
 void RenameAndProcess(const NBT_Type::String &strV7TagKey, NBT_Node &nodeV7TagVal, NBT_Type::Compound &cpdV6TagData, const NBT_Type::Int iV7McDataVersion)
 {
 	constexpr auto strNewKey = RAWARR2STR(NewKey);
@@ -639,6 +662,7 @@ enum class HideFlag : NBT_Type::Int
 	UPGRADES		= 1 << 7,	//盔甲纹饰
 };
 
+//use < MC_1_21_5_MINECRAFT_DATA_VERSION
 void TrySetHideFlag(NBT_Type::Compound &cpdV7, NBT_Type::Compound &cpdV6, HideFlag tag)
 {
 	if (auto *pShow = cpdV7.HasByte(MU8STRV("show_in_tooltip")); pShow != NULL && *pShow == 0)
@@ -649,6 +673,7 @@ void TrySetHideFlag(NBT_Type::Compound &cpdV7, NBT_Type::Compound &cpdV6, HideFl
 }
 
 //TODO:大量重构复杂重复逻辑为TryRenameMove等辅助函数，减少代码
+//TODO:尽量重构那些ProcessCanBreak、ProcessAttributeModifiers之类的函数内部处理值的方式，除非多个值，否则改成编译期绑定比如ProcessAttributeModifiers<MU8RAW("AttributeModifiers")>
 //TODO:MUSTR尽量全改MU8STRV，NBT库全线支持透明查找
 //TODO:HideFlags完善（物品相关）
 //TODO:CanPlace、CanBreak等物品其它属性转换，方块状态谓词转换
